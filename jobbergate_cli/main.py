@@ -16,6 +16,61 @@ def get_parsed_args(argv):
         help="Jobbergate CLI Operations.",
     )
 
+    # Applications
+    list_applications_parser = subparsers.add_parser(
+        "list-applications",
+        help="List applications.",
+    )
+
+    create_application_parser = subparsers.add_parser(
+        "create-application",
+        help="Create an application.",
+    )
+    create_application_parser.add_argument(
+        "-n",
+        "--name",
+        required=True,
+        dest="create_application_name",
+        help="Name of the application.",
+    )
+
+    get_application_parser = subparsers.add_parser(
+        "get-application",
+        help="Return an application.",
+    )
+    get_application_parser.add_argument(
+        "-i",
+        "--id",
+        required=True,
+        dest="get_application_id",
+        help="Application id.",
+    )
+
+    update_application_parser = subparsers.add_parser(
+        "update-application",
+        help="Update an application.",
+    )
+    update_application_parser.add_argument(
+        "-i",
+        "--id",
+        required=True,
+        dest="update_application_id",
+        help="Id of the desired application to update.",
+    )
+
+    delete_application_parser = subparsers.add_parser(
+        "delete-application",
+        help="Delete an application.",
+    )
+    delete_application_parser.add_argument(
+        "-i",
+        "--id",
+        required=True,
+        dest="delete_application_id",
+        help="Id of the desired application to delete.",
+    )
+
+    # Job Scripts
     list_job_scripts_parser = subparsers.add_parser(
         "list-job-scripts",
         help="List job scripts.",
@@ -45,6 +100,18 @@ def get_parsed_args(argv):
         help="Id of the desired job script to return.",
     )
 
+    update_job_script_parser = subparsers.add_parser(
+        "update-job-script",
+        help="Update a job-script",
+    )
+    update_job_script_parser.add_argument(
+        "-i",
+        "--id",
+        required=True,
+        dest="update_job_script_id",
+        help="Id of the desired job script to update.",
+    )
+
     delete_job_script_parser = subparsers.add_parser(
         "delete-job-script",
         help="Delete a job-script",
@@ -57,6 +124,60 @@ def get_parsed_args(argv):
         help="Id of the desired job script to delete.",
     )
 
+    # Job Submissions
+    list_job_submissions_parser = subparsers.add_parser(
+        "list-job-submissions",
+        help="List job submissions.",
+    )
+
+    create_job_submission_parser = subparsers.add_parser(
+        "create-job-submission",
+        help="Create a job submission.",
+    )
+    create_job_submission_parser.add_argument(
+        "-n",
+        "--name",
+        required=True,
+        dest="create_job_submission_name",
+        help="Name of the job submission.",
+    )
+
+    get_job_submission_parser = subparsers.add_parser(
+        "get-job-submission",
+        help="Return a job submission",
+    )
+    get_job_submission_parser.add_argument(
+        "-i",
+        "--id",
+        required=True,
+        dest="get_job_submission_id",
+        help="Id of the desired job submission to return.",
+    )
+
+    update_job_submission_parser = subparsers.add_parser(
+        "update-job-submission",
+        help="Update a job submission.",
+    )
+    update_job_submission_parser.add_argument(
+        "-i",
+        "--id",
+        required=True,
+        dest="update_job_submission_id",
+        help="Id of the desired job submission to update.",
+    )
+
+    delete_job_submission_parser = subparsers.add_parser(
+        "delete-job-submission",
+        help="Delete a job submission.",
+    )
+    delete_job_submission_parser.add_argument(
+        "-i",
+        "--id",
+        required=True,
+        dest="delete_job_submission_id",
+        help="Id of the desired job submission to delete.",
+    )
+
     return parser.parse_args(argv)
 
 
@@ -64,9 +185,22 @@ def main(argv=sys.argv[1:]):
     # Get the cli input arguments
     args = get_parsed_args(argv)
 
+    # Try to use pre-existing token, if doesn't exist or invalid,
+    # try to get a new one.
     # Allow the use to pass their jobbergate username and password as 
-    # command line arguments. If none are supplied launch an interactive
-    # username password acquisition.
+    # command line arguments. If a token isn't found and the username and password
+    # are not supplied at runtime, we will launch an interactive
+    # username password acquisition session.
+    token = Path("/tmp/jobbergate.token")
+    import jwt
+
+    if token.exists():
+        token = jwt.decode(
+            token.read_text(),
+            'secret',
+            algorithms=['HS256']
+        )
+
     if args.username and args.password:
         user_pass = {'username': args.username, 'password': args.password}
     else:
