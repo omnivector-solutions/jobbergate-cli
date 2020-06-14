@@ -1,34 +1,16 @@
 #!/usr/bin/env python3
-import requests
-import sys
-
-from requests.auth import HTTPBasicAuth
+import os
 
 
 class JobbergateApi:
 
-    def __init__(self, username=None, password=None, token=None):
+    def __init__(self, token=None):
 
-        self.jobbergate_api_url = os.environ['JOBBERGATE_API_URL'].rstrip("/")
+        #self.jobbergate_api_url = os.environ['JOBBERGATE_API_URL'].rstrip("/")
+        self.token = token
 
-        if not (username and password) or not token:
-            print("Need to supply a jwt, or username + password")
-            sys.exit()
-        else:
-            if (username and password):
-                self._get_jwt_from_api({
-                    'username': username,
-                    'password': password
-                })
-            else:
-                self.token = token
-
-    def _get_jwt_from_api(self, data): 
-        resp = requests.get(
-            f"{self.jobbergate_api_url}/get-token",
-            auth=(data['username', data['password'],
-        )
-        self.token = resp['token']
+    def jobbergate_request(self):
+        pass
 
     # Job Scripts
     def list_job_scripts(self):

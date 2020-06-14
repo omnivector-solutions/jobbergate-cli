@@ -1,7 +1,66 @@
 #!/usr/bin/env python3
-from argparse import ArgumentParser
+import getpass
+import json
+import requests
+import sys
 
-from jobbergate_api_wrapper import JobbergateAPI
+import jwt
+
+from argparse import ArgumentParser
+from datetime import datetime
+from pathlib import Path
+
+from jobbergate_api_wrapper import JobbergateApi
+
+
+JOBBERGATE_API_JWT_PATH = Path("/tmp/jobbergate.token")
+
+JOBBERGATE_API_ENDPOINT = "http://127.0.0.1:8000"
+
+JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT = f"{JOBBERGATE_API_ENDPOINT}/api-token-auth/"
+
+
+def interactive_get_username_password():
+    username = input("Please enter your username: ")
+    password = getpass.getpass()
+    return username, password
+
+
+def init_token(username, password):
+    """Get a new token from the api and write it to the token file.
+    """
+    resp = requests.post(
+        JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT,
+        data={"username": username, "password": password}
+    )
+    JOBBERGATE_API_JWT_PATH.write_text(resp.json()['token'])
+
+
+def is_token_valid():
+    """Return true/false depending on whether the token is valid or not.
+    """
+    token = dict()
+
+    if JOBBERGATE_API_JWT_PATH.exists():
+        token = decode_token_to_dict(JOBBERGATE_API_JWT_PATH.read_text())
+        if datetime.fromtimestamp(token['exp']) > datetime.now():
+            return True
+        else:
+            return False
+    else:
+        return False
+
+
+def decode_token_to_dict(encoded_token):
+    try:
+        token = jwt.decode(
+            encoded_token,
+            verify=False,
+        )
+    except jwt.exceptions.InvalidTokenError as e:
+        print(e)
+        sys.exit()
+    return token
 
 
 def get_parsed_args(argv):
@@ -9,6 +68,22 @@ def get_parsed_args(argv):
     """
     parser = ArgumentParser(
         description="Jobbergate CLI"
+    )
+
+    parser.add_argument(
+        '-u',
+        '--username',
+        dest='username',
+        required=False,
+        help="Jobbergate username",
+    )
+
+    parser.add_argument(
+        '-p',
+        '--password',
+        dest='password',
+        required=False,
+        help="Jobbergate password",
     )
 
     subparsers = parser.add_subparsers(
@@ -178,6 +253,10 @@ def get_parsed_args(argv):
         help="Id of the desired job submission to delete.",
     )
 
+    if len(argv)<1:
+        parser.print_help(sys.stderr)
+    sys.exit(1)
+
     return parser.parse_args(argv)
 
 
@@ -185,28 +264,22 @@ def main(argv=sys.argv[1:]):
     # Get the cli input arguments
     args = get_parsed_args(argv)
 
-    # Try to use pre-existing token, if doesn't exist or invalid,
-    # try to get a new one.
-    # Allow the use to pass their jobbergate username and password as 
-    # command line arguments. If a token isn't found and the username and password
-    # are not supplied at runtime, we will launch an interactive
-    # username password acquisition session.
-    token = Path("/tmp/jobbergate.token")
-    import jwt
+    # Grab the pre-existing token, if doesn't exist or is invalid then grab a new one.
+    #
+    # Allow the user to pass their jobbergate username and password as command line
+    # arguments. If a token isn't found or invalid AND the username and password
+    # are not supplied at runtime, we will launch an interactive session to
+    # acquire the username password.
+    if not is_token_valid():
+        if args.username and args.password:
+            username, password = args.username, args.password
+        else:
+            username, password = interactive_get_username_password()
+        init_token(username, password)
 
-    if token.exists():
-        token = jwt.decode(
-            token.read_text(),
-            'secret',
-            algorithms=['HS256']
-        )
-
-    if args.username and args.password:
-        user_pass = {'username': args.username, 'password': args.password}
-    else:
-        user_pass = get_user_pass_interactive()
-
-    api = JobbergateApi(**user_pass)
+    token = decode_token_to_dict(JOBBERGATE_API_JWT_PATH.read_text())
+    
+    api = JobbergateApi(token)
 
     # Job Scripts
     if args.command == 'list-job-scripts':
