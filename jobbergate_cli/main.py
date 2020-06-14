@@ -10,7 +10,7 @@ from argparse import ArgumentParser
 from datetime import datetime
 from pathlib import Path
 
-from jobbergate_api_wrapper import JobbergateApi
+from jobbergate_cli.jobbergate_api_wrapper import JobbergateApi
 
 
 JOBBERGATE_API_JWT_PATH = Path("/tmp/jobbergate.token")
