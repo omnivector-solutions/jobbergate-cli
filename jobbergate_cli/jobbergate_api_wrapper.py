@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import os
+import requests
 
+JOBBERGATE_API_ENDPOINT = "http://0.0.0.0:8000"
 
 class JobbergateApi:
 
@@ -46,7 +48,10 @@ class JobbergateApi:
 
     # Applications
     def list_applications(self):
-        pass
+        application_list = requests.get(f"{JOBBERGATE_API_ENDPOINT}/application/")
+        print(application_list)
+        return application_list
+        # pass
 
     def create_application(self, application_name):
         pass

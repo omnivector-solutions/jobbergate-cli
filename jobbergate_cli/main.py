@@ -92,7 +92,8 @@ def get_parsed_args(argv):
     )
 
     # Applications
-    list_applications_parser = subparsers.add_parser(
+    # list_applications_parser = subparsers.add_parser(
+    parser.add_argument(
         "list-applications",
         help="List applications.",
     )
@@ -263,6 +264,7 @@ def get_parsed_args(argv):
 def main(argv=sys.argv[1:]):
     # Get the cli input arguments
     args = get_parsed_args(argv)
+    print(args)
 
     # Grab the pre-existing token, if doesn't exist or is invalid then grab a new one.
     #
