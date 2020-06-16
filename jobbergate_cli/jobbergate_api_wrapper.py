@@ -46,7 +46,7 @@ class JobbergateApi:
         f = open('config/application.json', "r")
         data = json.loads(f.read())
         # data['job_script_name'] = job_script_name
-        #TODO how to collect data that will update the job-script
+        #TODO how to collect data that will be updated for the job-script
         resp = requests.put(
             f"{JOBBERGATE_API_ENDPOINT}/job-script/{job_script_id}",
             data=data,
@@ -91,7 +91,7 @@ class JobbergateApi:
     def update_job_submission(self, job_submission_id):
         f = open('config/application.json', "r")
         data = json.loads(f.read())
-        # TODO how to collect data that will update the job-script
+        # TODO how to collect data that will updated for the job-submission
         resp = requests.put(
             f"{JOBBERGATE_API_ENDPOINT}/job-submission/{job_submission_id}",
             data=data,

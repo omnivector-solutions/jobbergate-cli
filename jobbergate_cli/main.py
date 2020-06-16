@@ -271,9 +271,9 @@ if not is_token_valid():
 token = decode_token_to_dict(JOBBERGATE_API_JWT_PATH.read_text())
 user_id = token['user_id']
 
-# api = JobbergateApi(token=token)
-api = JobbergateApi()
-api.token = JOBBERGATE_API_JWT_PATH.read_text()
+api = JobbergateApi(token=token)
+# api = JobbergateApi()
+# api.token = JOBBERGATE_API_JWT_PATH.read_text()
 # api = JobbergateApi(JOBBERGATE_API_JWT_PATH.read_text())
 print(f"api.token is {api.token}")
 # Job Scripts
@@ -343,7 +343,7 @@ if args.command == 'list-applications':
     sys.exit(0)
 
 if args.command == 'create-application':
-    resp = api.create_application(application_name=args.create_application_name)
+    resp = api.create_application(args.create_application_name)
     print(resp)
     sys.exit(0)
 
@@ -358,7 +358,7 @@ if args.command == 'update-application':
     sys.exit(0)
 
 if args.command == 'delete-application':
-    # resp = api.delete_application(args.delete_application_id)
+    resp = api.delete_application(args.delete_application_id)
     print(resp)
     sys.exit(0)
 
