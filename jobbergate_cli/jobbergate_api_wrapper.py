@@ -52,12 +52,27 @@ class JobbergateApi:
     def list_applications(self):
         application_list = requests.get(
             f"{JOBBERGATE_API_ENDPOINT}/application/",
-            auth=("skeef", "skeef25"))
+            auth=("skeef", "skeef25"),
+            verify=False)
         # test_str = f"application_list.text is {application_list.text}"
         return application_list
         # pass
 
     def create_application(self, application_name):
+        resp = requests.post(
+            f"{JOBBERGATE_API_ENDPOINT}/application/",
+            data={
+                "application_name": application_name,
+                "application_description": "testapp6",
+                "application_location": "testapp6",
+                "application_dir_listing": "testapp6",
+                "application_dir_listing_acquired": True,
+                "application_owner": 1,
+                "created_at": "2020-06-16T19:34:27.939706Z",
+                "updated_at": "2020-06-16T19:34:27.939754Z"
+            },
+            auth=("skeef", "skeef25"),
+            verify=False)
         pass
 
     def get_application(self, application_id):

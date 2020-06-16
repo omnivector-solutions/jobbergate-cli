@@ -2,6 +2,7 @@
 import getpass
 import json
 import requests
+from requests_jwt import JWTAuth
 import sys
 
 import jwt
@@ -336,34 +337,71 @@ if args.command == 'delete-job-submission':
 # Applications
 if args.command == 'list-applications':
     print(f"testing list-app {args}")
-    headers = {"Authorization": JOBBERGATE_API_JWT_PATH.read_text()}
+    # headers = {"Authorization": JOBBERGATE_API_JWT_PATH.read_text()}
     # resp = api.list_applications()
     resp = requests.get(
             f"{JOBBERGATE_API_ENDPOINT}/application/",
             auth=(args.username, args.password),
             # headers=headers,
             verify=False)
+    # auth = JWTAuth(JOBBERGATE_API_JWT_PATH.read_text())
+    # resp = requests.get(
+    #     f"{JOBBERGATE_API_ENDPOINT}/application/",
+    #     auth=auth)
     print(f"resp is {resp}")
     print(f"resp.text is {resp.text}")
     sys.exit(0)
 
 if args.command == 'create-application':
-    resp = api.create_application(args.create_application_name)
+    # resp = api.create_application(application_name=args.create_application_name)
+    resp = requests.post(
+        f"{JOBBERGATE_API_ENDPOINT}/application/",
+        data={
+            "application_name": args.create_application_name,
+            "application_description": "",
+            "application_location": "",
+            "application_dir_listing": "",
+            "application_dir_listing_acquired": True,
+            "application_owner": user_id,
+            "created_at": "",
+            "updated_at": ""
+        },
+        auth=(args.username, args.password),
+        verify=False)
     print(resp)
     sys.exit(0)
 
 if args.command == 'get-application':
-    resp = api.get_application(args.get_application_id)
-    print(resp)
+    # resp = api.get_application(args.get_application_id)
+    resp = requests.get(
+        f"{JOBBERGATE_API_ENDPOINT}/application/",
+        auth=(args.username, args.password),
+        # headers=headers,
+        verify=False)
+    print(resp.text)
     sys.exit(0)
 
 if args.command == 'update-application':
-    resp = api.update_application(args.update_application_id)
-    print(resp)
+    # resp = api.update_application(args.update_application_id)
+    resp = requests.put(
+        f"{JOBBERGATE_API_ENDPOINT}/application/{args.update_application_id}",
+        data={
+            "application_name": "TEST_NEW_NAME",
+            "application_description": "",
+            "application_location": "",
+            "application_dir_listing": "",
+            "application_dir_listing_acquired": True,
+            "application_owner": user_id,
+            "created_at": "",
+            "updated_at": ""
+        },
+        auth=(args.username, args.password),
+        verify=False)
+    print(resp.text)
     sys.exit(0)
 
 if args.command == 'delete-application':
-    resp = api.delete_application(args.delete_application_id)
+    # resp = api.delete_application(args.delete_application_id)
     print(resp)
     sys.exit(0)
 
