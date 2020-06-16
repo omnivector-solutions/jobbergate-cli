@@ -17,35 +17,94 @@ class JobbergateApi:
 
     # Job Scripts
     def list_job_scripts(self):
-        pass
+        jobscript_list = requests.get(
+            f"{JOBBERGATE_API_ENDPOINT}/job-script/",
+            headers={'Authorization': 'JWT ' + self.token},
+            verify=False)
+        return jobscript_list
 
     def create_job_script(self, job_script_name, application_id):
-        pass
+        f = open('config/jobsubmission.json', "r")
+        data = json.loads(f.read())
+        data['job_script_name'] = job_script_name
+        data['application'] = application_id
+        resp = requests.post(
+            f"{JOBBERGATE_API_ENDPOINT}/job-submission/",
+            data=data,
+            headers={'Authorization': 'JWT ' + self.token},
+            verify=False)
+        return resp
 
     def get_job_script(self, job_script_id):
-        pass
+        resp = requests.get(
+            f"{JOBBERGATE_API_ENDPOINT}/job-script/{job_script_id}",
+            headers={'Authorization': 'JWT ' + self.token},
+            verify=False)
+        return resp
 
     def update_job_script(self, job_script_id):
-        pass
+        f = open('config/application.json', "r")
+        data = json.loads(f.read())
+        # data['job_script_name'] = job_script_name
+        #TODO how to collect data that will update the job-script
+        resp = requests.put(
+            f"{JOBBERGATE_API_ENDPOINT}/job-script/{job_script_id}",
+            data=data,
+            headers={'Authorization': 'JWT ' + self.token},
+            verify=False)
+        return resp
 
     def delete_job_script(self, job_script_id):
-        pass
+        resp = requests.delete(
+            f"{JOBBERGATE_API_ENDPOINT}/job-script/{job_script_id}",
+            headers={'Authorization': 'JWT ' + self.token},
+            verify=False)
+        return resp
 
     # Job Submissions
     def list_job_submissions(self):
-        pass
+        jobsubmission_list = requests.get(
+            f"{JOBBERGATE_API_ENDPOINT}/job-submission/",
+            headers={'Authorization': 'JWT ' + self.token},
+            verify=False)
+        return jobsubmission_list
 
     def create_job_submission(self, job_submission_name, job_script_id):
-        pass
+        f = open('config/jobsubmission.json', "r")
+        data = json.loads(f.read())
+        data['job_submission_name'] = job_submission_name
+        data['job_script'] = job_script_id
+        resp = requests.post(
+            f"{JOBBERGATE_API_ENDPOINT}/job-submission/",
+            data=data,
+            headers={'Authorization': 'JWT ' + self.token},
+            verify=False)
+        return resp
 
     def get_job_submission(self, job_submission_id):
-        pass
+        resp = requests.get(
+            f"{JOBBERGATE_API_ENDPOINT}/job-submission/{job_submission_id}",
+            headers={'Authorization': 'JWT ' + self.token},
+            verify=False)
+        return resp
 
     def update_job_submission(self, job_submission_id):
-        pass
+        f = open('config/application.json', "r")
+        data = json.loads(f.read())
+        # TODO how to collect data that will update the job-script
+        resp = requests.put(
+            f"{JOBBERGATE_API_ENDPOINT}/job-submission/{job_submission_id}",
+            data=data,
+            headers={'Authorization': 'JWT ' + self.token},
+            verify=False)
+        return resp
 
     def delete_job_submission(self, job_submission_id):
-        pass
+        resp = requests.delete(
+            f"{JOBBERGATE_API_ENDPOINT}/job-submission/{job_submission_id}",
+            headers={'Authorization': 'JWT ' + self.token},
+            verify=False)
+        return resp
 
     # Applications
     def list_applications(self):
@@ -54,12 +113,7 @@ class JobbergateApi:
             # auth=("skeef", "skeef25"),
             headers={'Authorization': 'JWT ' + self.token},
             verify=False)
-        # print(var_does_not_exist)
-        # test_cmd = f'curl -H "Authorization: JWT {self.token}" http://0.0.0.0:8000/application/'
-        # application_list = os.system(test_cmd)
-        # test_str = f"application_list.text is {application_list.text}"
         return application_list
-        # pass
 
     def create_application(self, application_name):
         f = open('config/application.json', "r")
