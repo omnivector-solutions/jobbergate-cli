@@ -10,6 +10,8 @@ class JobbergateApi:
 
         #self.jobbergate_api_url = os.environ['JOBBERGATE_API_URL'].rstrip("/")
         self.token = token
+        print(f"self.token is {self.token}")
+        self.headers = f"Authorization: Bearer {self.token}"
 
     def jobbergate_request(self):
         pass
@@ -48,8 +50,10 @@ class JobbergateApi:
 
     # Applications
     def list_applications(self):
-        application_list = requests.get(f"{JOBBERGATE_API_ENDPOINT}/application/")
-        print(application_list)
+        application_list = requests.get(
+            f"{JOBBERGATE_API_ENDPOINT}/application/",
+            auth=("skeef", "skeef25"))
+        # test_str = f"application_list.text is {application_list.text}"
         return application_list
         # pass
 
