@@ -72,6 +72,9 @@ def decode_token_to_dict(encoded_token):
         sys.exit()
     return token
 
+# def get_parsed_args(argv):
+"""Create argument parser and return cli args.
+"""
 # Get the cli input arguments
 parser = ArgumentParser(
     description="Jobbergate CLI"
@@ -278,10 +281,15 @@ delete_job_submission_parser.add_argument(
     help="Id of the desired job submission to delete.",
 )
 
+# if len(argv) < 1:
+#     parser.print_help(sys.stderr)
+# sys.exit(1)
+
 args = parser.parse_args()
-
-print(args)
-
+    # return parser.parse_args(argv)
+# def main(argv=sys.argv[1:]):
+# Get the cli input arguments
+# args = get_parsed_args(argv)
 # Grab the pre-existing token, if doesn't exist or is invalid then grab a new one.
 #
 # Allow the user to pass their jobbergate username and password as command line

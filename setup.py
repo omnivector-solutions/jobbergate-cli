@@ -9,6 +9,7 @@ setup(
     license='MIT',
     long_description=open('README.md').read(),
     install_requires=raw_reqs,
+    # data_files=[('config', ['config/*.json'])],
     entry_points = {
         'console_scripts': ['jobbergate-cli=jobbergate_cli.main:main'],
     }
