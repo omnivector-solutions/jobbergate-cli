@@ -4,6 +4,7 @@ import json
 import requests
 from requests_jwt import JWTAuth
 import sys
+import os
 
 import jwt
 
@@ -19,6 +20,15 @@ JOBBERGATE_API_JWT_PATH = Path("/tmp/jobbergate.token")
 JOBBERGATE_API_ENDPOINT = "http://127.0.0.1:8000"
 
 JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT = f"{JOBBERGATE_API_ENDPOINT}/api-token-auth/"
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
+
+JOB_SCRIPT_CONFIG = os.path.join(dir_path, "config", "jobscript.json")
+
+JOB_SUBMISSION_CONFIG = os.path.join(dir_path, "config", "jobsubmission.json")
+
+APPLICATION_CONFIG = os.path.join(dir_path, "config", "application.json")
+
 
 def interactive_get_username_password():
     username = input("Please enter your username: ")
@@ -271,11 +281,15 @@ if not is_token_valid():
 token = decode_token_to_dict(JOBBERGATE_API_JWT_PATH.read_text())
 user_id = token['user_id']
 
-api = JobbergateApi(token=token)
-# api = JobbergateApi()
-# api.token = JOBBERGATE_API_JWT_PATH.read_text()
-# api = JobbergateApi(JOBBERGATE_API_JWT_PATH.read_text())
-print(f"api.token is {api.token}")
+api = JobbergateApi(
+    token=JOBBERGATE_API_JWT_PATH.read_text(),
+    job_script_config=JOB_SCRIPT_CONFIG,
+    job_submission_config=JOB_SUBMISSION_CONFIG,
+    application_config=APPLICATION_CONFIG,
+    api_endpoint=JOBBERGATE_API_ENDPOINT)
+
+
+print(f"api.job_script_config is {api.job_script_config}")
 # Job Scripts
 if args.command == 'list-job-scripts':
     resp = api.list_job_scripts()
