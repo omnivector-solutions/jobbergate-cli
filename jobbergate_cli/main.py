@@ -17,7 +17,7 @@ from jobbergate_cli.jobbergate_api_wrapper import JobbergateApi
 
 JOBBERGATE_API_JWT_PATH = Path("/tmp/jobbergate.token")
 
-JOBBERGATE_API_ENDPOINT = "http://127.0.0.1:8000"
+JOBBERGATE_API_ENDPOINT = "http://0.0.0.0:8000"
 
 JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT = f"{JOBBERGATE_API_ENDPOINT}/api-token-auth/"
 
@@ -172,6 +172,14 @@ create_job_script_parser.add_argument(
     help="Name of the job-script to create.",
 )
 
+create_job_script_parser.add_argument(
+    "-i",
+    "--id",
+    required=True,
+    dest="create_job_script_application_id",
+    help="id of the application for job-script to create.",
+)
+
 get_job_script_parser = subparsers.add_parser(
     "get-job-script",
     help="Return a job-script",
@@ -224,6 +232,14 @@ create_job_submission_parser.add_argument(
     required=True,
     dest="create_job_submission_name",
     help="Name of the job submission.",
+)
+
+create_job_submission_parser.add_argument(
+    "-i",
+    "--id",
+    required=True,
+    dest="create_job_submission_job_script_id",
+    help="id of the job script for the job submission.",
 )
 
 get_job_submission_parser = subparsers.add_parser(
@@ -286,10 +302,10 @@ api = JobbergateApi(
     job_script_config=JOB_SCRIPT_CONFIG,
     job_submission_config=JOB_SUBMISSION_CONFIG,
     application_config=APPLICATION_CONFIG,
-    api_endpoint=JOBBERGATE_API_ENDPOINT)
+    api_endpoint=JOBBERGATE_API_ENDPOINT,
+    user_id=user_id)
 
 
-print(f"api.job_script_config is {api.job_script_config}")
 # Job Scripts
 if args.command == 'list-job-scripts':
     resp = api.list_job_scripts()
@@ -315,7 +331,7 @@ if args.command == 'update-job-script':
     sys.exit(0)
 
 if args.command == 'delete-job-script':
-    resp = api.delete_job_script(args.get_job_script_id)
+    resp = api.delete_job_script(args.delete_job_script_id)
     print(resp)
     sys.exit(0)
 
@@ -353,7 +369,6 @@ if args.command == 'list-applications':
     print(f"testing list-app {args}")
     resp = api.list_applications()
     print(f"resp is {resp}")
-    print(f"resp.text is {resp.text}")
     sys.exit(0)
 
 if args.command == 'create-application':

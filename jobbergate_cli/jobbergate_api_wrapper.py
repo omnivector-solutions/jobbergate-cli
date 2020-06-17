@@ -2,7 +2,7 @@
 import os
 import json
 import requests
-
+import datetime
 
 class JobbergateApi:
 
@@ -11,13 +11,15 @@ class JobbergateApi:
                  job_script_config=None,
                  job_submission_config=None,
                  application_config=None,
-                 api_endpoint=None):
+                 api_endpoint=None,
+                 user_id=None):
 
         self.token = token
         self.job_script_config = job_script_config
         self.job_submission_config = job_submission_config
         self.application_config = application_config
         self.api_endpoint = api_endpoint
+        self.user_id = user_id
 
     def jobbergate_request(self):
         pass
@@ -27,7 +29,7 @@ class JobbergateApi:
         jobscript_list = requests.get(
             f"{self.api_endpoint}/job-script/",
             headers={'Authorization': 'JWT ' + self.token},
-            verify=False)
+            verify=False).json()
         return jobscript_list
 
     def create_job_script(self, job_script_name, application_id):
@@ -35,37 +37,41 @@ class JobbergateApi:
         data = json.loads(f.read())
         data['job_script_name'] = job_script_name
         data['application'] = application_id
+        data['job_script_owner'] = self.user_id
+        print(f"job script data is {data}")
         resp = requests.post(
-            f"{self.api_endpoint}/job-submission/",
+            f"{self.api_endpoint}/job-script/",
             data=data,
             headers={'Authorization': 'JWT ' + self.token},
-            verify=False)
+            verify=False).text
         return resp
 
     def get_job_script(self, job_script_id):
         resp = requests.get(
             f"{self.api_endpoint}/job-script/{job_script_id}",
             headers={'Authorization': 'JWT ' + self.token},
-            verify=False)
+            verify=False).json()
         return resp
 
     def update_job_script(self, job_script_id):
-        f = open(self.job_script_config, "r")
-        data = json.loads(f.read())
-        # data['job_script_name'] = job_script_name
+        data = requests.get(
+            f"{self.api_endpoint}/job-script/{job_script_id}",
+            headers={'Authorization': 'JWT ' + self.token},
+            verify=False).json()
+        data['job_script_name'] = "TEST_NEW_JOBSCRIPT_NAME_CLI"
         #TODO how to collect data that will be updated for the job-script
         resp = requests.put(
-            f"{self.api_endpoint}/job-script/{job_script_id}",
+            f"{self.api_endpoint}/job-script/{job_script_id}/",
             data=data,
             headers={'Authorization': 'JWT ' + self.token},
-            verify=False)
+            verify=False).text
         return resp
 
     def delete_job_script(self, job_script_id):
         resp = requests.delete(
             f"{self.api_endpoint}/job-script/{job_script_id}",
             headers={'Authorization': 'JWT ' + self.token},
-            verify=False)
+            verify=False).text
         return resp
 
     # Job Submissions
@@ -73,7 +79,7 @@ class JobbergateApi:
         jobsubmission_list = requests.get(
             f"{self.api_endpoint}/job-submission/",
             headers={'Authorization': 'JWT ' + self.token},
-            verify=False)
+            verify=False).json()
         return jobsubmission_list
 
     def create_job_submission(self, job_submission_name, job_script_id):
@@ -81,26 +87,30 @@ class JobbergateApi:
         data = json.loads(f.read())
         data['job_submission_name'] = job_submission_name
         data['job_script'] = job_script_id
+        data['job_submission_owner'] = self.user_id
         resp = requests.post(
             f"{self.api_endpoint}/job-submission/",
             data=data,
             headers={'Authorization': 'JWT ' + self.token},
-            verify=False)
+            verify=False).text
         return resp
 
     def get_job_submission(self, job_submission_id):
         resp = requests.get(
             f"{self.api_endpoint}/job-submission/{job_submission_id}",
             headers={'Authorization': 'JWT ' + self.token},
-            verify=False)
+            verify=False).json()
         return resp
 
     def update_job_submission(self, job_submission_id):
-        f = open(self.job_submission_config, "r")
-        data = json.loads(f.read())
-        # TODO how to collect data that will updated for the job-submission
-        resp = requests.put(
+        data = requests.get(
             f"{self.api_endpoint}/job-submission/{job_submission_id}",
+            headers={'Authorization': 'JWT ' + self.token},
+            verify=False).json()
+        # TODO how to collect data that will updated for the job-submission
+        data['job_submission_name'] = "TEST_JOB_SUB_CLI"
+        resp = requests.put(
+            f"{self.api_endpoint}/job-submission/{job_submission_id}/",
             data=data,
             headers={'Authorization': 'JWT ' + self.token},
             verify=False)
@@ -110,7 +120,7 @@ class JobbergateApi:
         resp = requests.delete(
             f"{self.api_endpoint}/job-submission/{job_submission_id}",
             headers={'Authorization': 'JWT ' + self.token},
-            verify=False)
+            verify=False).text
         return resp
 
     # Applications
@@ -119,41 +129,48 @@ class JobbergateApi:
             f"{self.api_endpoint}/application/",
             # auth=("skeef", "skeef25"),
             headers={'Authorization': 'JWT ' + self.token},
-            verify=False)
+            verify=False).json()
         return application_list
 
     def create_application(self, application_name):
         f = open(self.application_config, "r")
         data = json.loads(f.read())
         data['application_name'] = application_name
+        data['application_owner'] = self.user_id
         resp = requests.post(
             f"{self.api_endpoint}/application/",
             data=data,
             headers={'Authorization': 'JWT ' + self.token},
-            verify=False)
+            verify=False).text
         return resp
 
     def get_application(self, application_id):
         resp = requests.get(
             f"{self.api_endpoint}/application/{application_id}",
             headers={'Authorization': 'JWT ' + self.token},
-            verify=False)
+            verify=False).json()
         return resp
 
     def update_application(self, application_id):
-        f = open(self.application_config, "r")
-        data = json.loads(f.read())
-        data['application_name'] = "TEST_NEW_APP_NAME10"
-        resp = requests.put(
+        data = requests.get(
             f"{self.api_endpoint}/application/{application_id}",
+            headers={'Authorization': 'JWT ' + self.token},
+            verify=False).json()
+        data['application_name'] = "TEST_NEW_APP_NAME10"
+        del data['id']
+        del data['created_at']
+        del data['updated_at']
+        print(f"app data is {data}")
+        resp = requests.put(
+            f"{self.api_endpoint}/application/{application_id}/",
             data=data,
             headers={'Authorization': 'JWT ' + self.token},
-            verify=False)
+            verify=False).text
         return resp
 
     def delete_application(self, application_id):
         resp = requests.delete(
             f"{self.api_endpoint}/application/{application_id}",
             headers={'Authorization': 'JWT ' + self.token},
-            verify=False)
+            verify=False).text
         return resp
