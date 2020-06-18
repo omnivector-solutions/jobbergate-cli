@@ -281,13 +281,7 @@ delete_job_submission_parser.add_argument(
     help="Id of the desired job submission to delete.",
 )
 
-# if len(argv) < 1:
-#     parser.print_help(sys.stderr)
-# sys.exit(1)
-
 args = parser.parse_args()
-    # return parser.parse_args(argv)
-# def main(argv=sys.argv[1:]):
 # Get the cli input arguments
 # args = get_parsed_args(argv)
 # Grab the pre-existing token, if doesn't exist or is invalid then grab a new one.
@@ -313,11 +307,10 @@ api = JobbergateApi(
     api_endpoint=JOBBERGATE_API_ENDPOINT,
     user_id=user_id)
 
-
 # Job Scripts
 if args.command == 'list-job-scripts':
     resp = api.list_job_scripts()
-    print(resp)
+    sys.stdout.write(str(resp))
     sys.exit(0)
 
 if args.command == 'create-job-script':
@@ -325,28 +318,28 @@ if args.command == 'create-job-script':
         args.create_job_script_name,
         args.create_job_script_application_id,
     )
-    print(resp)
+    sys.stdout.write(str(resp))
     sys.exit(0)
 
 if args.command == 'get-job-script':
     resp = api.get_job_script(args.get_job_script_id)
-    print(resp)
+    sys.stdout.write(str(resp))
     sys.exit(0)
 
 if args.command == 'update-job-script':
     resp = api.update_job_script(args.update_job_script_id)
-    print(resp)
+    sys.stdout.write(str(resp))
     sys.exit(0)
 
 if args.command == 'delete-job-script':
     resp = api.delete_job_script(args.delete_job_script_id)
-    print(resp)
+    sys.stdout.write(str(resp))
     sys.exit(0)
 
 # Job Submissions
 if args.command == 'list-job-submissions':
     resp = api.list_job_submissions()
-    print(resp)
+    sys.stdout.write(str(resp))
     sys.exit(0)
 
 if args.command == 'create-job-submission':
@@ -354,51 +347,47 @@ if args.command == 'create-job-submission':
         args.create_job_submission_name,
         args.create_job_submission_job_script_id
     )
-    print(resp)
+    sys.stdout.write(str(resp))
     sys.exit(0)
 
 if args.command == 'get-job-submission':
     resp = api.get_job_submission(args.get_job_submission_id)
-    print(resp)
+    sys.stdout.write(str(resp))
     sys.exit(0)
 
 if args.command == 'update-job-submission':
     resp = api.update_job_submission(args.update_job_submission_id)
-    print(resp)
+    sys.stdout.write(str(resp))
     sys.exit(0)
 
 if args.command == 'delete-job-submission':
     resp = api.delete_job_submission(args.delete_job_submission_id)
-    print(resp)
+    sys.stdout.write(str(resp))
     sys.exit(0)
 
 # Applications
 if args.command == 'list-applications':
     print(f"testing list-app {args}")
     resp = api.list_applications()
-    print(f"resp is {resp}")
+    sys.stdout.write(str(resp))
     sys.exit(0)
 
 if args.command == 'create-application':
     resp = api.create_application(args.create_application_name)
-    print(resp)
+    sys.stdout.write(str(resp))
     sys.exit(0)
 
 if args.command == 'get-application':
     resp = api.get_application(args.get_application_id)
-    print(resp.text)
+    sys.stdout.write(str(resp))
     sys.exit(0)
 
 if args.command == 'update-application':
     resp = api.update_application(args.update_application_id)
-    print(resp.text)
+    sys.stdout.write(str(resp))
     sys.exit(0)
 
 if args.command == 'delete-application':
     resp = api.delete_application(args.delete_application_id)
-    print(resp)
+    sys.stdout.write(str(resp))
     sys.exit(0)
-
-
-# if __name__ == "__main__":
-#     main()

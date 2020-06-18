@@ -2,7 +2,6 @@
 import os
 import json
 import requests
-import datetime
 
 class JobbergateApi:
 
