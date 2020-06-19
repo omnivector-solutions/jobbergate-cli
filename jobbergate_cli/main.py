@@ -140,8 +140,8 @@ def list_applications(ctx):
 
 @main.command('create-application')
 @click.option("--name",
-                "-n",
-                "create_application_name")
+              "-n",
+              "create_application_name")
 @click.pass_context
 def create_application(ctx, create_application_name):
     api = init_api(ctx.obj['user_id'])
@@ -152,8 +152,8 @@ def create_application(ctx, create_application_name):
 
 @main.command('get-application')
 @click.option("--id",
-                "-i",
-                "get_application_id")
+              "-i",
+              "get_application_id")
 @click.pass_context
 def get_application(ctx, get_application_id):
     api = init_api(ctx.obj['user_id'])
@@ -163,8 +163,8 @@ def get_application(ctx, get_application_id):
 
 @main.command('update-application')
 @click.option("--id",
-                "-i",
-                "update_application_id")
+              "-i",
+              "update_application_id")
 @click.pass_context
 def update_application(ctx, update_application_id):
     api = init_api(ctx.obj['user_id'])
@@ -174,7 +174,7 @@ def update_application(ctx, update_application_id):
 
 @main.command('delete-application')
 @click.option("--id",
-                "-i",
+              "-i",
               "delete_application_id")
 @click.pass_context
 def delete_application(ctx, delete_application_id):
@@ -182,6 +182,119 @@ def delete_application(ctx, delete_application_id):
     resp = api.delete_application(delete_application_id)
     sys.stdout.write(str(resp))
     sys.exit(0)
+
+@main.command('list-job-scripts')
+@click.pass_context
+def list_job_scripts(ctx):
+    api = init_api(ctx.obj['user_id'])
+    resp = api.list_job_scripts()
+    sys.stdout.write(str(resp))
+    sys.exit(0)
+
+@main.command('create-job-script')
+@click.option("--name",
+              "-n",
+              "create_job_script_name")
+@click.option("--id",
+              "-i",
+              "create_job_script_application_id")
+@click.pass_context
+def create_job_script(ctx, create_job_script_name, create_job_script_application_id):
+    api = init_api(ctx.obj['user_id'])
+    resp = api.create_job_script(create_job_script_name, create_job_script_application_id)
+    sys.stdout.write(str(resp))
+    sys.exit(0)
+
+
+@main.command('get-job-script')
+@click.option("--id",
+              "-i",
+              "get_job_script_id")
+@click.pass_context
+def get_job_script(ctx, get_job_script_id):
+    api = init_api(ctx.obj['user_id'])
+    resp = api.get_job_script(get_job_script_id)
+    sys.stdout.write(str(resp))
+    sys.exit(0)
+
+@main.command('update-job-script')
+@click.option("--id",
+              "-i",
+              "update_job_script_id")
+@click.pass_context
+def update_job_script(ctx, update_job_script_id):
+    api = init_api(ctx.obj['user_id'])
+    resp = api.update_job_script(update_job_script_id)
+    sys.stdout.write(str(resp))
+    sys.exit(0)
+
+@main.command('delete-job-script')
+@click.option("--id",
+              "-i",
+              "delete_job_script_id")
+@click.pass_context
+def delete_job_script(ctx, delete_job_script_id):
+    api = init_api(ctx.obj['user_id'])
+    resp = api.delete_job_script(delete_job_script_id)
+    sys.stdout.write(str(resp))
+    sys.exit(0)
+
+@main.command('list-job-submissions')
+@click.pass_context
+def list_job_submissions(ctx):
+    api = init_api(ctx.obj['user_id'])
+    resp = api.list_job_submissions()
+    sys.stdout.write(str(resp))
+    sys.exit(0)
+
+@main.command('create-job-submission')
+@click.option("--name",
+              "-n",
+              "create_job_submission_name")
+@click.option("--id",
+              "-i",
+              "create_job_submission_job_script_id")
+@click.pass_context
+def create_job_submission(ctx, create_job_submission_name, create_job_submission_job_script_id):
+    api = init_api(ctx.obj['user_id'])
+    resp = api.create_job_submission(create_job_submission_name, create_job_submission_job_script_id)
+    sys.stdout.write(str(resp))
+    sys.exit(0)
+
+
+@main.command('get-job-submission')
+@click.option("--id",
+              "-i",
+              "get_job_submission_id")
+@click.pass_context
+def get_job_submission(ctx, get_job_submission_id):
+    api = init_api(ctx.obj['user_id'])
+    resp = api.get_job_submission(get_job_submission_id)
+    sys.stdout.write(str(resp))
+    sys.exit(0)
+
+@main.command('update-job-submission')
+@click.option("--id",
+              "-i",
+              "update_job_submission_id")
+@click.pass_context
+def update_job_submission(ctx, update_job_submission_id):
+    api = init_api(ctx.obj['user_id'])
+    resp = api.update_job_submission(update_job_submission_id)
+    sys.stdout.write(str(resp))
+    sys.exit(0)
+
+@main.command('delete-job-submission')
+@click.option("--id",
+              "-i",
+              "delete_job_submission_id")
+@click.pass_context
+def delete_job_submission(ctx, delete_job_submission_id):
+    api = init_api(ctx.obj['user_id'])
+    resp = api.delete_job_submission(delete_job_submission_id)
+    sys.stdout.write(str(resp))
+    sys.exit(0)
+
 
 if __name__ == "__main__":
     main()
