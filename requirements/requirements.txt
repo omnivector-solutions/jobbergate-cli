@@ -1,2 +1,4 @@
 requests
 pyjwt
+click
+boto3
