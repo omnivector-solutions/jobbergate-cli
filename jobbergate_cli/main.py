@@ -142,10 +142,13 @@ def list_applications(ctx):
 @click.option("--name",
               "-n",
               "create_application_name")
+@click.option("--application_path",
+              "-a",
+              "create_application_path")
 @click.pass_context
-def create_application(ctx, create_application_name):
+def create_application(ctx, create_application_name, create_application_path):
     api = init_api(ctx.obj['user_id'])
-    resp = api.create_application(create_application_name)
+    resp = api.create_application(create_application_name, create_application_path)
     sys.stdout.write(str(resp))
     sys.exit(0)
 

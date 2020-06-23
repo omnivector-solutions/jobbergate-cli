@@ -2,6 +2,10 @@
 import os
 import json
 import requests
+import zipfile
+
+import boto3
+
 
 class JobbergateApi:
 
@@ -22,6 +26,13 @@ class JobbergateApi:
 
     def jobbergate_request(self):
         pass
+
+    def zipdir(self, zip_path, zip_file):
+        # ziph is zipfile handle
+        for root, dirs, files in os.walk(zip_path):
+            for file in files:
+                zip_file.write(os.path.join(root, file))
+
 
     # Job Scripts
     def list_job_scripts(self):
@@ -131,11 +142,21 @@ class JobbergateApi:
             verify=False).json()
         return application_list
 
-    def create_application(self, application_name):
+    def create_application(self, application_name, application_path):
         f = open(self.application_config, "r")
         data = json.loads(f.read())
         data['application_name'] = application_name
         data['application_owner'] = self.user_id
+
+        # hard code path for now
+        tmp_save_path = '/Users/stephenkeefauver/github/TEST/jobberappliation_TEST.zip'
+        zip_file = zipfile.ZipFile(tmp_save_path, 'w', zipfile.ZIP_DEFLATED)
+        self.zipdir(application_path, zip_file)
+        zip_file.close()
+
+        s3 = boto3.resource('s3')
+        s3.meta.client.upload_file(tmp_save_path, 'omnivector-misc', 'jobbergate-cli/test_app_upload.zip')
+
         resp = requests.post(
             f"{self.api_endpoint}/application/",
             data=data,
