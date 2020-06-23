@@ -29,6 +29,7 @@ JOB_SUBMISSION_CONFIG = os.path.join(dir_path, "config", "jobsubmission.json")
 
 APPLICATION_CONFIG = os.path.join(dir_path, "config", "application.json")
 
+JOBBERGATE_APPLICATION_BASE_PATH = "jobbergate-dev/jobbergate-api/"
 
 def interactive_get_username_password():
     username = input("Please enter your username: ")
@@ -148,7 +149,10 @@ def list_applications(ctx):
 @click.pass_context
 def create_application(ctx, create_application_name, create_application_path):
     api = init_api(ctx.obj['user_id'])
-    resp = api.create_application(create_application_name, create_application_path)
+    resp = api.create_application(
+        create_application_name,
+        create_application_path,
+        JOBBERGATE_APPLICATION_BASE_PATH)
     sys.stdout.write(str(resp))
     sys.exit(0)
 

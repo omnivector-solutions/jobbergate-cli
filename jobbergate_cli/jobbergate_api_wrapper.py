@@ -6,7 +6,6 @@ import zipfile
 
 import boto3
 
-
 class JobbergateApi:
 
     def __init__(self,
@@ -142,7 +141,7 @@ class JobbergateApi:
             verify=False).json()
         return application_list
 
-    def create_application(self, application_name, application_path):
+    def create_application(self, application_name, application_path, base_path):
         f = open(self.application_config, "r")
         data = json.loads(f.read())
         data['application_name'] = application_name
@@ -150,12 +149,19 @@ class JobbergateApi:
 
         # hard code path for now
         tmp_save_path = '/Users/stephenkeefauver/github/TEST/jobberappliation_TEST.zip'
+        bucket_name = 'omnivector-misc'
         zip_file = zipfile.ZipFile(tmp_save_path, 'w', zipfile.ZIP_DEFLATED)
         self.zipdir(application_path, zip_file)
         zip_file.close()
 
+        s3_key = base_path + str(self.user_id) + "/" + "APP_ID" + "/jobberappliation_TEST.zip"
+        print(f"s3_key is {s3_key}")
         s3 = boto3.resource('s3')
-        s3.meta.client.upload_file(tmp_save_path, 'omnivector-misc', 'jobbergate-cli/test_app_upload.zip')
+        bucket = s3.Bucket(bucket_name)
+
+        bucket.upload_file(tmp_save_path, s3_key)
+        # upload = s3.meta.client.upload_file(tmp_save_path, , s3_path)
+        # print(upload)
 
         resp = requests.post(
             f"{self.api_endpoint}/application/",
