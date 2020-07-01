@@ -17,7 +17,7 @@ from jobbergate_cli.jobbergate_api_wrapper import JobbergateApi
 
 JOBBERGATE_API_JWT_PATH = Path("/tmp/jobbergate.token")
 
-JOBBERGATE_API_ENDPOINT = "jobbergate-api-staging.omnivector.solutions"
+JOBBERGATE_API_ENDPOINT = "https://jobbergate-api-staging.omnivector.solutions"
 
 JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT = f"{JOBBERGATE_API_ENDPOINT}/api-token-auth/"
 
