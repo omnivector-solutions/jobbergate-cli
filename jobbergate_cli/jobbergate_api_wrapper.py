@@ -131,6 +131,9 @@ class JobbergateApi:
             stdout=PIPE,
             stderr=PIPE)
         output, err = p.communicate(b"sbatch output")
+        print(f"output: {output}")
+        print(f"err: {err}")
+
         rc = p.returncode
         print(rc)
 
