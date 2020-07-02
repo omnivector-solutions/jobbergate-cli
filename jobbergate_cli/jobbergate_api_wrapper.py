@@ -28,11 +28,14 @@ class JobbergateApi:
     def jobbergate_request(self):
         pass
 
-    def tardir(self, path, tar_name, application_name):
+    def tardir(self, path, tar_name):
+        # archive = tarfile.open(tar_name, "w|gz")
+        # archive.add(path, arcname=application_name)
+        # archive.close()
         with tarfile.open(tar_name, "w:gz") as tar_handle:
             for root, dirs, files in os.walk(path):
                 for file in files:
-                    tar_handle.add(os.path.join(root, file), arcname=application_name)
+                    tar_handle.add(os.path.join(root, file))
 
     # Job Scripts
     def list_job_scripts(self):
@@ -118,7 +121,7 @@ class JobbergateApi:
 
         print(f"application_filename {application_filename}")
         application_tar = tarfile.open(application_filename)
-        application_tar.extract(f"{application_name}.sh")
+        application_tar.extract(f"{application_name}.sh", "./")
         application_tar.close()
 
         print(os.getcwd())
@@ -189,7 +192,7 @@ class JobbergateApi:
         #  jobbergate-cli create-application --name osu_hello --application_path /Users/stephenkeefauver/github/jobbergate-cli/osu_hello
         tar_name = f"{application_name}.tar.gz"
 
-        self.tardir(application_path, tar_name, application_name)
+        self.tardir(application_path, tar_name)
 
         s3_key = base_path + str(self.user_id) + "/" + application_name + f"/{application_name}.tar.gz"
         print(f"s3_key is {s3_key}")
