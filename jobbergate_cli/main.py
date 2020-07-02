@@ -14,7 +14,6 @@ from pathlib import Path
 
 from jobbergate_cli.jobbergate_api_wrapper import JobbergateApi
 
-
 JOBBERGATE_API_JWT_PATH = Path("/tmp/jobbergate.token")
 
 JOBBERGATE_API_ENDPOINT = "https://jobbergate-api-staging.omnivector.solutions"
@@ -24,13 +23,31 @@ JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT = f"{JOBBERGATE_API_ENDPOINT}/api-token-aut
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-JOB_SCRIPT_CONFIG = os.path.join(dir_path, "config", "jobscript.json")
-
-JOB_SUBMISSION_CONFIG = os.path.join(dir_path, "config", "jobsubmission.json")
-
-APPLICATION_CONFIG = os.path.join(dir_path, "config", "application.json")
-
 JOBBERGATE_APPLICATION_BASE_PATH = "jobbergate-dev/jobbergate-api/"
+
+APPLICATION_CONFIG = {
+    "application_name": "",
+    "application_description": "TEST_DESC",
+    "application_location": "TEST_LOC",
+    "application_dir_listing": "TEST_DIR_LISTING",
+    "application_dir_listing_acquired": True,
+    "application_owner": ""
+}
+
+JOB_SCRIPT_CONFIG = {
+    "job_script_name": "",
+    "job_script_description": "TEST_DESC",
+    "job_script_data_as_string": "TEST_DATA_AS_STR",
+    "job_script_owner": "",
+    "application": ""
+}
+
+JOB_SUBMISSION_CONFIG = {
+    "job_submission_name": "",
+    "job_submission_description": "TEST_DESC",
+    "job_submission_owner": "",
+    "job_script": ""
+}
 
 def interactive_get_username_password():
     username = input("Please enter your username: ")
