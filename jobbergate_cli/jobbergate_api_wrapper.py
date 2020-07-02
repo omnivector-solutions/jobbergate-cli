@@ -3,7 +3,7 @@ import os
 import subprocess
 import json
 import requests
-import zipfile
+import tarfile
 
 import boto3
 
@@ -28,21 +28,12 @@ class JobbergateApi:
     def jobbergate_request(self):
         pass
 
-    # def zipdir(self, zip_path, zip_file):
-    #     # ziph is zipfile handle
-    #
-    #     for root, dirs, files in os.walk(zip_path):
-    #         for file in files:
-    #             zip_file.write(file, basename(zip_path))
-
-    def zipdir(self, dirPath, zipPath):
-        zipf = zipfile.ZipFile(zipPath, mode='w')
-        lenDirPath = len(dirPath)
-        for root, _, files in os.walk(dirPath):
-            for file in files:
-                filePath = os.path.join(root, file)
-                zipf.write(filePath, filePath[lenDirPath:])
-        zipf.close()
+    def tardir(self, path, tar_name):
+        with tarfile.open(tar_name, "w:gz") as tar_handle:
+            for root, dirs, files in os.walk(path):
+                for file in files:
+                    tar_handle.add(os.path.join(root, file))
+        tarfile.close()
 
 
 
@@ -131,9 +122,9 @@ class JobbergateApi:
         self.bucket.download_file(application_location, application_filename)
 
         print(f"application_filename {application_filename}")
-
-        with zipfile.ZipFile(application_filename, 'r') as zip_ref:
-            zip_ref.extractall(os.curdir)
+        application_tar = tarfile.open(application_filename)
+        application_tar.extractall("./")
+        application_tar.close()
 
         subprocess.call(["sbatch", "-p", "partition1", f"{application_name}.sh"])
 
@@ -189,14 +180,14 @@ class JobbergateApi:
 
         # hard code path for now
         #  jobbergate-cli create-application --name osu_hello --application_path /Users/stephenkeefauver/github/jobbergate-cli/osu_hello
-        zipPath = f"/home/ubuntu/TEST/{application_name}.zip"
+        tar_name = f"{application_name}.tar.gz"
 
-        self.zipdir(application_path, zipPath)
+        self.tardir(application_path, tar_name)
 
-        s3_key = base_path + str(self.user_id) + "/" + application_name + f"/{application_name}.zip"
+        s3_key = base_path + str(self.user_id) + "/" + application_name + f"/{application_name}.tar.gz"
         print(f"s3_key is {s3_key}")
 
-        self.bucket.upload_file(zipPath, s3_key)
+        self.bucket.upload_file(tar_name, s3_key)
         data['application_location'] = s3_key
 
         resp = requests.post(
