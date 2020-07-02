@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import subprocess
 import json
 import requests
 import zipfile
@@ -22,15 +23,27 @@ class JobbergateApi:
         self.application_config = application_config
         self.api_endpoint = api_endpoint
         self.user_id = user_id
+        self.bucket = boto3.resource('s3').Bucket('omnivector-misc')
 
     def jobbergate_request(self):
         pass
 
-    def zipdir(self, zip_path, zip_file):
-        # ziph is zipfile handle
-        for root, dirs, files in os.walk(zip_path):
+    # def zipdir(self, zip_path, zip_file):
+    #     # ziph is zipfile handle
+    #
+    #     for root, dirs, files in os.walk(zip_path):
+    #         for file in files:
+    #             zip_file.write(file, basename(zip_path))
+
+    def zipdir(self, dirPath, zipPath):
+        zipf = zipfile.ZipFile(zipPath, mode='w')
+        lenDirPath = len(dirPath)
+        for root, _, files in os.walk(dirPath):
             for file in files:
-                zip_file.write(os.path.join(root, file))
+                filePath = os.path.join(root, file)
+                zipf.write(filePath, filePath[lenDirPath:])
+        zipf.close()
+
 
 
     # Job Scripts
@@ -97,12 +110,39 @@ class JobbergateApi:
         data['job_submission_name'] = job_submission_name
         data['job_script'] = job_script_id
         data['job_submission_owner'] = self.user_id
+
+        job_script = requests.get(
+            f"{self.api_endpoint}/job-script/{job_script_id}",
+            headers={'Authorization': 'JWT ' + self.token},
+            verify=False).json()
+
+        application_id = job_script['application']
+
+
+        application = requests.get(
+            f"{self.api_endpoint}/application/{application_id}",
+            headers={'Authorization': 'JWT ' + self.token},
+            verify=False).json()
+
+        application_location = application['application_location']
+        application_name = application['application_name']
+        application_filename = application_location.split("/")[-1]
+
+        self.bucket.download_file(application_location, application_filename)
+
+        print(f"application_filename {application_filename}")
+
+        with zipfile.ZipFile(application_filename, 'r') as zip_ref:
+            zip_ref.extractall(os.curdir)
+
+        subprocess.call(["sbatch", "-p", "partition1", f"{application_name}.sh"])
+
         resp = requests.post(
             f"{self.api_endpoint}/job-submission/",
             data=data,
             headers={'Authorization': 'JWT ' + self.token},
             verify=False).text
-        return resp
+        return resp, job_script, application
 
     def get_job_submission(self, job_submission_id):
         resp = requests.get(
@@ -148,20 +188,16 @@ class JobbergateApi:
         data['application_owner'] = self.user_id
 
         # hard code path for now
-        tmp_save_path = '/Users/stephenkeefauver/github/TEST/jobberappliation_TEST.zip'
-        bucket_name = 'omnivector-misc'
-        zip_file = zipfile.ZipFile(tmp_save_path, 'w', zipfile.ZIP_DEFLATED)
-        self.zipdir(application_path, zip_file)
-        zip_file.close()
+        #  jobbergate-cli create-application --name osu_hello --application_path /Users/stephenkeefauver/github/jobbergate-cli/osu_hello
+        zipPath = f"/home/ubuntu/TEST/{application_name}.zip"
 
-        s3_key = base_path + str(self.user_id) + "/" + "APP_ID" + "/jobberappliation_TEST.zip"
+        self.zipdir(application_path, zipPath)
+
+        s3_key = base_path + str(self.user_id) + "/" + application_name + f"/{application_name}.zip"
         print(f"s3_key is {s3_key}")
-        s3 = boto3.resource('s3')
-        bucket = s3.Bucket(bucket_name)
 
-        bucket.upload_file(tmp_save_path, s3_key)
-        # upload = s3.meta.client.upload_file(tmp_save_path, , s3_path)
-        # print(upload)
+        self.bucket.upload_file(zipPath, s3_key)
+        data['application_location'] = s3_key
 
         resp = requests.post(
             f"{self.api_endpoint}/application/",
