@@ -46,8 +46,7 @@ class JobbergateApi:
         return jobscript_list
 
     def create_job_script(self, job_script_name, application_id):
-        f = open(self.job_script_config, "r")
-        data = json.loads(f.read())
+        data = self.job_script_config
         data['job_script_name'] = job_script_name
         data['application'] = application_id
         data['job_script_owner'] = self.user_id
@@ -96,8 +95,7 @@ class JobbergateApi:
         return jobsubmission_list
 
     def create_job_submission(self, job_submission_name, job_script_id):
-        f = open(self.job_submission_config, "r")
-        data = json.loads(f.read())
+        data = self.job_submission_config
         data['job_submission_name'] = job_submission_name
         data['job_script'] = job_script_id
         data['job_submission_owner'] = self.user_id
@@ -173,8 +171,7 @@ class JobbergateApi:
         return application_list
 
     def create_application(self, application_name, application_path, base_path):
-        f = open(self.application_config, "r")
-        data = json.loads(f.read())
+        data = self.application_config
         data['application_name'] = application_name
         data['application_owner'] = self.user_id
 
