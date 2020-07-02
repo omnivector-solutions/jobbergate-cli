@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import os
-import subprocess
+from subprocess import Popen, PIPE
 import json
 import requests
 import tarfile
@@ -125,7 +125,14 @@ class JobbergateApi:
         print(os.getcwd())
         print(os.listdir())
 
-        subprocess.call(["sbatch", "-p", "partition1", f"{application_name}.sh"])
+        p = Popen(
+            ["sbatch", "-p", "partition1", f"{application_name}.sh"],
+            stdin=PIPE,
+            stdout=PIPE,
+            stderr=PIPE)
+        output, err = p.communicate(b"sbatch output")
+        rc = p.returncode
+        print(rc)
 
         resp = requests.post(
             f"{self.api_endpoint}/job-submission/",
