@@ -119,6 +119,7 @@ class JobbergateApi:
         print(f"application_filename {application_filename}")
         application_tar = tarfile.open(application_filename)
         application_tar.extractall()
+        application_tar.close()
 
         print(os.getcwd())
         print(os.listdir())
