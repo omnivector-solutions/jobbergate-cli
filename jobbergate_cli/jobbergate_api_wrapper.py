@@ -32,7 +32,10 @@ class JobbergateApi:
         with tarfile.open(tar_name, "w:gz") as tar_handle:
             for root, dirs, files in os.walk(path):
                 for file in files:
-                    tar_handle.add(os.path.join(root, file))
+                    tar_handle.addfile(
+                        tarfile.TarInfo(
+                            file,
+                            open(os.path.join(root, file))))
 
     # Job Scripts
     def list_job_scripts(self):
@@ -118,7 +121,7 @@ class JobbergateApi:
 
         print(f"application_filename {application_filename}")
         application_tar = tarfile.open(application_filename)
-        application_tar.extractfile(f"{application_name}.sh")
+        application_tar.extract(f"{application_name}.sh")
         application_tar.close()
 
         print(os.getcwd())
