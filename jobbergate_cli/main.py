@@ -151,7 +151,6 @@ def main(ctx, username, password):
 @main.command('list-applications')
 @click.pass_context
 def list_applications(ctx):
-    print(f"testing list-app")
     api = init_api(ctx.obj['user_id'])
     resp = api.list_applications()
     sys.stdout.write(str(resp))
