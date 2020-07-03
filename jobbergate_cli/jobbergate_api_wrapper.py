@@ -119,7 +119,6 @@ class JobbergateApi:
 
         self.bucket.download_file(application_location, application_filename)
 
-        print(f"application_filename {application_filename}")
         application_tar = tarfile.open(application_filename)
         for member in application_tar.getmembers():
             if member.isreg():  # skip if the TarInfo is not files
@@ -127,8 +126,6 @@ class JobbergateApi:
                 application_tar.extract(member, ".")  # extract
         application_tar.close()
 
-        print(os.getcwd())
-        print(os.listdir())
 
         p = Popen(
             ["sbatch", "-p", "partition1", f"{application_name}.sh"],
