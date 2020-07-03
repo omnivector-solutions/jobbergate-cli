@@ -104,6 +104,7 @@ class JobbergateApi:
             f"{self.api_endpoint}/job-script/{job_script_id}",
             headers={'Authorization': 'JWT ' + self.token},
             verify=False).json()
+        print(f"job_script data: {job_script}")
 
         application_id = job_script['application']
 
@@ -113,6 +114,7 @@ class JobbergateApi:
             headers={'Authorization': 'JWT ' + self.token},
             verify=False).json()
 
+        print(f"application data: {application}")
         application_location = application['application_location']
         application_name = application['application_name']
         application_filename = application_location.split("/")[-1]
