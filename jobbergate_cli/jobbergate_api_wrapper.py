@@ -121,7 +121,10 @@ class JobbergateApi:
 
         print(f"application_filename {application_filename}")
         application_tar = tarfile.open(application_filename)
-        application_tar.extract(f"{application_name}.sh", "./")
+        for member in application_tar.getmembers():
+            if member.isreg():  # skip if the TarInfo is not files
+                member.name = os.path.basename(member.name)  # remove the path by reset it
+                application_tar.extract(member, ".")  # extract
         application_tar.close()
 
         print(os.getcwd())
