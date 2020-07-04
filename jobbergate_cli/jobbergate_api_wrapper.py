@@ -50,7 +50,6 @@ class JobbergateApi:
         data['job_script_name'] = job_script_name
         data['application'] = application_id
         data['job_script_owner'] = self.user_id
-        print(f"job script data is {data}")
         resp = requests.post(
             f"{self.api_endpoint}/job-script/",
             data=data,
@@ -104,7 +103,6 @@ class JobbergateApi:
             f"{self.api_endpoint}/job-script/{job_script_id}",
             headers={'Authorization': 'JWT ' + self.token},
             verify=False).json()
-        print(f"job_script data: {job_script}")
 
         application_id = job_script['application']
 
@@ -114,7 +112,6 @@ class JobbergateApi:
             headers={'Authorization': 'JWT ' + self.token},
             verify=False).json()
 
-        print(f"application data: {application}")
         application_location = application['application_location']
         application_name = application['application_name']
         application_filename = application_location.split("/")[-1]
@@ -197,7 +194,6 @@ class JobbergateApi:
         self.tardir(application_path, tar_name)
 
         s3_key = base_path + str(self.user_id) + "/" + application_name + f"/{application_name}.tar.gz"
-        print(f"s3_key is {s3_key}")
 
         self.bucket.upload_file(tar_name, s3_key)
         data['application_location'] = s3_key
@@ -225,7 +221,6 @@ class JobbergateApi:
         del data['id']
         del data['created_at']
         del data['updated_at']
-        print(f"app data is {data}")
         resp = requests.put(
             f"{self.api_endpoint}/application/{application_id}/",
             data=data,
