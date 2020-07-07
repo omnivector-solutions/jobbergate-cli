@@ -182,7 +182,7 @@ class JobbergateApi:
 
         self.tardir(application_path, tar_name)
 
-        s3_key = base_path + str(self.user_id) + "/" + application_name + f"/{application_name}.tar.gz"
+        s3_key = f"{base_path}{str(self.user_id)}/{application_name}/{tar_name}"
 
         self.bucket.upload_file(tar_name, s3_key)
         data['application_location'] = s3_key
