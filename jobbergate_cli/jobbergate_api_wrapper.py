@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 import os
+from subprocess import Popen, PIPE
 import json
 import requests
+import tarfile
+
+import boto3
 
 class JobbergateApi:
 
@@ -19,9 +23,16 @@ class JobbergateApi:
         self.application_config = application_config
         self.api_endpoint = api_endpoint
         self.user_id = user_id
+        self.bucket = boto3.resource('s3').Bucket('omnivector-misc')
 
     def jobbergate_request(self):
         pass
+
+    def tardir(self, path, tar_name):
+        with tarfile.open(tar_name, "w:gz") as tar_handle:
+            for root, dirs, files in os.walk(path):
+                for file in files:
+                    tar_handle.add(os.path.join(root, file))
 
     # Job Scripts
     def list_job_scripts(self):
@@ -32,12 +43,10 @@ class JobbergateApi:
         return jobscript_list
 
     def create_job_script(self, job_script_name, application_id):
-        f = open(self.job_script_config, "r")
-        data = json.loads(f.read())
+        data = self.job_script_config
         data['job_script_name'] = job_script_name
         data['application'] = application_id
         data['job_script_owner'] = self.user_id
-        print(f"job script data is {data}")
         resp = requests.post(
             f"{self.api_endpoint}/job-script/",
             data=data,
@@ -82,17 +91,50 @@ class JobbergateApi:
         return jobsubmission_list
 
     def create_job_submission(self, job_submission_name, job_script_id):
-        f = open(self.job_submission_config, "r")
-        data = json.loads(f.read())
+        data = self.job_submission_config
         data['job_submission_name'] = job_submission_name
         data['job_script'] = job_script_id
         data['job_submission_owner'] = self.user_id
+
+        job_script = self.get_job_script(job_script_id)
+
+        application_id = job_script['application']
+
+
+        application = self.get_application(application_id)
+
+        application_location = application['application_location']
+        application_name = application['application_name']
+        application_filename = application_location.split("/")[-1]
+
+        self.bucket.download_file(application_location, application_filename)
+
+        application_tar = tarfile.open(application_filename)
+        for member in application_tar.getmembers():
+            if member.isreg():  # skip if the TarInfo is not files
+                member.name = os.path.basename(member.name)  # remove the path by reset it
+                application_tar.extract(member, ".")  # extract
+        application_tar.close()
+
+
+        p = Popen(
+            ["sbatch", "-p", "partition1", f"{application_name}.sh"],
+            stdin=PIPE,
+            stdout=PIPE,
+            stderr=PIPE)
+        output, err = p.communicate(b"sbatch output")
+        print(f"output: {output}")
+        print(f"err: {err}")
+
+        rc = p.returncode
+        print(rc)
+
         resp = requests.post(
             f"{self.api_endpoint}/job-submission/",
             data=data,
             headers={'Authorization': 'JWT ' + self.token},
             verify=False).text
-        return resp
+        return resp, job_script, application
 
     def get_job_submission(self, job_submission_id):
         resp = requests.get(
@@ -131,11 +173,20 @@ class JobbergateApi:
             verify=False).json()
         return application_list
 
-    def create_application(self, application_name):
-        f = open(self.application_config, "r")
-        data = json.loads(f.read())
+    def create_application(self, application_name, application_path, base_path):
+        data = self.application_config
         data['application_name'] = application_name
         data['application_owner'] = self.user_id
+
+        tar_name = f"{application_name}.tar.gz"
+
+        self.tardir(application_path, tar_name)
+
+        s3_key = f"{base_path}{str(self.user_id)}/{application_name}/{tar_name}"
+
+        self.bucket.upload_file(tar_name, s3_key)
+        data['application_location'] = s3_key
+
         resp = requests.post(
             f"{self.api_endpoint}/application/",
             data=data,
@@ -159,7 +210,6 @@ class JobbergateApi:
         del data['id']
         del data['created_at']
         del data['updated_at']
-        print(f"app data is {data}")
         resp = requests.put(
             f"{self.api_endpoint}/application/{application_id}/",
             data=data,
