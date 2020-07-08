@@ -2,7 +2,6 @@
 import getpass
 import json
 import requests
-from requests_jwt import JWTAuth
 import sys
 import os
 
