@@ -118,7 +118,7 @@ class JobbergateApi:
 
 
         p = Popen(
-            ["slurm.sbatch", "-p", "debug", f"{application_name}.sh"],
+            ["slurm.sbatch", "-p", "partition1", f"{application_name}.sh"],
             stdin=PIPE,
             stdout=PIPE,
             stderr=PIPE)
