@@ -40,26 +40,27 @@ class JobbergateApi:
             f"{self.api_endpoint}/job-script/",
             headers={'Authorization': 'JWT ' + self.token},
             verify=False).json()
-        return jobscript_list
+        return json.dumps(jobscript_list, indent=4, sort_keys=True)
 
     def create_job_script(self, job_script_name, application_id):
         data = self.job_script_config
         data['job_script_name'] = job_script_name
         data['application'] = application_id
         data['job_script_owner'] = self.user_id
-        resp = requests.post(
+        job_script = requests.post(
             f"{self.api_endpoint}/job-script/",
             data=data,
             headers={'Authorization': 'JWT ' + self.token},
-            verify=False).text
-        return resp
+            verify=False).json()
+        return json.dumps(job_script, indent=4, sort_keys=True)
+        # return resp
 
     def get_job_script(self, job_script_id):
-        resp = requests.get(
+        job_script = requests.get(
             f"{self.api_endpoint}/job-script/{job_script_id}",
             headers={'Authorization': 'JWT ' + self.token},
             verify=False).json()
-        return resp
+        return json.dumps(job_script, indent=4, sort_keys=True)
 
     def update_job_script(self, job_script_id):
         data = requests.get(
@@ -68,12 +69,12 @@ class JobbergateApi:
             verify=False).json()
         data['job_script_name'] = "TEST_NEW_JOBSCRIPT_NAME_CLI"
         #TODO how to collect data that will be updated for the job-script
-        resp = requests.put(
+        job_script = requests.put(
             f"{self.api_endpoint}/job-script/{job_script_id}/",
             data=data,
             headers={'Authorization': 'JWT ' + self.token},
-            verify=False).text
-        return resp
+            verify=False).json()
+        return json.dumps(job_script, indent=4, sort_keys=True)
 
     def delete_job_script(self, job_script_id):
         resp = requests.delete(
@@ -88,7 +89,7 @@ class JobbergateApi:
             f"{self.api_endpoint}/job-submission/",
             headers={'Authorization': 'JWT ' + self.token},
             verify=False).json()
-        return jobsubmission_list
+        return json.dumps(jobsubmission_list, indent=4, sort_keys=True)
 
     def create_job_submission(self, job_submission_name, job_script_id):
         data = self.job_submission_config
@@ -129,19 +130,19 @@ class JobbergateApi:
         rc = p.returncode
         print(rc)
 
-        resp = requests.post(
+        job_submission = requests.post(
             f"{self.api_endpoint}/job-submission/",
             data=data,
             headers={'Authorization': 'JWT ' + self.token},
             verify=False).text
-        return resp, job_script, application
+        return json.dumps(job_submission, indent=4, sort_keys=True), job_script, application
 
     def get_job_submission(self, job_submission_id):
-        resp = requests.get(
+        job_submission = requests.get(
             f"{self.api_endpoint}/job-submission/{job_submission_id}",
             headers={'Authorization': 'JWT ' + self.token},
             verify=False).json()
-        return resp
+        return json.dumps(job_submission, indent=4, sort_keys=True)
 
     def update_job_submission(self, job_submission_id):
         data = requests.get(
@@ -150,12 +151,12 @@ class JobbergateApi:
             verify=False).json()
         # TODO how to collect data that will updated for the job-submission
         data['job_submission_name'] = "TEST_JOB_SUB_CLI"
-        resp = requests.put(
+        job_submission = requests.put(
             f"{self.api_endpoint}/job-submission/{job_submission_id}/",
             data=data,
             headers={'Authorization': 'JWT ' + self.token},
-            verify=False)
-        return resp
+            verify=False).json()
+        return json.dumps(job_submission, indent=4, sort_keys=True)
 
     def delete_job_submission(self, job_submission_id):
         resp = requests.delete(
@@ -171,7 +172,7 @@ class JobbergateApi:
             # auth=("skeef", "skeef25"),
             headers={'Authorization': 'JWT ' + self.token},
             verify=False).json()
-        return application_list
+        return json.dumps(application_list, indent=4, sort_keys=True)
 
     def create_application(self, application_name, application_path, base_path):
         data = self.application_config
@@ -187,19 +188,19 @@ class JobbergateApi:
         self.bucket.upload_file(tar_name, s3_key)
         data['application_location'] = s3_key
 
-        resp = requests.post(
+        application = requests.post(
             f"{self.api_endpoint}/application/",
             data=data,
             headers={'Authorization': 'JWT ' + self.token},
-            verify=False).text
-        return resp
+            verify=False).json()
+        return json.dumps(application, indent=4, sort_keys=True)
 
     def get_application(self, application_id):
-        resp = requests.get(
+        application = requests.get(
             f"{self.api_endpoint}/application/{application_id}",
             headers={'Authorization': 'JWT ' + self.token},
             verify=False).json()
-        return resp
+        return json.dumps(application, indent=4, sort_keys=True)
 
     def update_application(self, application_id):
         data = requests.get(
@@ -210,12 +211,12 @@ class JobbergateApi:
         del data['id']
         del data['created_at']
         del data['updated_at']
-        resp = requests.put(
+        application = requests.put(
             f"{self.api_endpoint}/application/{application_id}/",
             data=data,
             headers={'Authorization': 'JWT ' + self.token},
             verify=False).text
-        return resp
+        return json.dumps(application, indent=4, sort_keys=True)
 
     def delete_application(self, application_id):
         resp = requests.delete(

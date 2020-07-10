@@ -4,6 +4,7 @@ import json
 import requests
 import sys
 import os
+import urllib3
 
 import jwt
 
@@ -23,6 +24,8 @@ JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT = f"{JOBBERGATE_API_ENDPOINT}/api-token-aut
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 JOBBERGATE_APPLICATION_BASE_PATH = "jobbergate-dev/jobbergate-api/"
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 APPLICATION_CONFIG = {
     "application_name": "",
@@ -61,7 +64,6 @@ def init_token(username, password):
         JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT,
         data={"username": username, "password": password}
     )
-    print(f"token resp: {resp}")
     JOBBERGATE_API_JWT_PATH.write_text(resp.json()['token'])
 
 
