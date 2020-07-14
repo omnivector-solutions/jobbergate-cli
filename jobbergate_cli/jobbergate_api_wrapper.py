@@ -6,6 +6,7 @@ import requests
 import tarfile
 
 import boto3
+from tabulate import tabulate
 
 class JobbergateApi:
 
@@ -40,7 +41,8 @@ class JobbergateApi:
             f"{self.api_endpoint}/job-script/",
             headers={'Authorization': 'JWT ' + self.token},
             verify=False).json()
-        return json.dumps(jobscript_list, indent=4, sort_keys=True)
+        # return json.dumps(jobscript_list, indent=4, sort_keys=True)
+        return tabulate((my_dict for my_dict in jobscript_list), headers="keys")
 
     def create_job_script(self, job_script_name, application_id):
         data = self.job_script_config
@@ -52,8 +54,7 @@ class JobbergateApi:
             data=data,
             headers={'Authorization': 'JWT ' + self.token},
             verify=False).json()
-        return json.dumps(job_script, indent=4, sort_keys=True)
-        # return resp
+        return tabulate((my_dict for my_dict in job_script), headers="keys")
 
     def get_job_script(self, job_script_id):
         job_script = requests.get(
@@ -61,6 +62,7 @@ class JobbergateApi:
             headers={'Authorization': 'JWT ' + self.token},
             verify=False).json()
         return json.dumps(job_script, indent=4, sort_keys=True)
+        return tabulate((my_dict for my_dict in job_script), headers="keys")
 
     def update_job_script(self, job_script_id):
         data = requests.get(
@@ -74,6 +76,7 @@ class JobbergateApi:
             data=data,
             headers={'Authorization': 'JWT ' + self.token},
             verify=False).json()
+        return tabulate((my_dict for my_dict in job_script), headers="keys")
         return json.dumps(job_script, indent=4, sort_keys=True)
 
     def delete_job_script(self, job_script_id):
@@ -85,11 +88,11 @@ class JobbergateApi:
 
     # Job Submissions
     def list_job_submissions(self):
-        jobsubmission_list = requests.get(
+        job_submission_list = requests.get(
             f"{self.api_endpoint}/job-submission/",
             headers={'Authorization': 'JWT ' + self.token},
             verify=False).json()
-        return json.dumps(jobsubmission_list, indent=4, sort_keys=True)
+        return tabulate((my_dict for my_dict in job_submission_list), headers="keys")
 
     def create_job_submission(self, job_submission_name, job_script_id):
         data = self.job_submission_config
@@ -135,14 +138,14 @@ class JobbergateApi:
             data=data,
             headers={'Authorization': 'JWT ' + self.token},
             verify=False).text
-        return json.dumps(job_submission, indent=4, sort_keys=True), job_script, application
+        return tabulate((my_dict for my_dict in job_submission), headers="keys"), job_script, application
 
     def get_job_submission(self, job_submission_id):
         job_submission = requests.get(
             f"{self.api_endpoint}/job-submission/{job_submission_id}",
             headers={'Authorization': 'JWT ' + self.token},
             verify=False).json()
-        return json.dumps(job_submission, indent=4, sort_keys=True)
+        return tabulate((my_dict for my_dict in job_submission), headers="keys")
 
     def update_job_submission(self, job_submission_id):
         data = requests.get(
@@ -156,7 +159,7 @@ class JobbergateApi:
             data=data,
             headers={'Authorization': 'JWT ' + self.token},
             verify=False).json()
-        return json.dumps(job_submission, indent=4, sort_keys=True)
+        return tabulate((my_dict for my_dict in job_submission), headers="keys")
 
     def delete_job_submission(self, job_submission_id):
         resp = requests.delete(
@@ -172,7 +175,7 @@ class JobbergateApi:
             # auth=("skeef", "skeef25"),
             headers={'Authorization': 'JWT ' + self.token},
             verify=False).json()
-        return json.dumps(application_list, indent=4, sort_keys=True)
+        return tabulate((my_dict for my_dict in application_list), headers="keys")
 
     def create_application(self, application_name, application_path, base_path):
         data = self.application_config
@@ -193,14 +196,14 @@ class JobbergateApi:
             data=data,
             headers={'Authorization': 'JWT ' + self.token},
             verify=False).json()
-        return json.dumps(application, indent=4, sort_keys=True)
+        return tabulate((my_dict for my_dict in application), headers="keys")
 
     def get_application(self, application_id):
         application = requests.get(
             f"{self.api_endpoint}/application/{application_id}",
             headers={'Authorization': 'JWT ' + self.token},
             verify=False).json()
-        return json.dumps(application, indent=4, sort_keys=True)
+        return tabulate((my_dict for my_dict in application), headers="keys")
 
     def update_application(self, application_id):
         data = requests.get(
@@ -216,7 +219,7 @@ class JobbergateApi:
             data=data,
             headers={'Authorization': 'JWT ' + self.token},
             verify=False).text
-        return json.dumps(application, indent=4, sort_keys=True)
+        return tabulate((my_dict for my_dict in application), headers="keys")
 
     def delete_application(self, application_id):
         resp = requests.delete(

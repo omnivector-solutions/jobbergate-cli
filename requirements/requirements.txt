@@ -2,3 +2,4 @@ requests
 pyjwt
 click
 boto3
+tabulate
