@@ -35,62 +35,114 @@ class JobbergateApi:
                 for file in files:
                     tar_handle.add(os.path.join(root, file))
 
+    def jobbergate_request(self, method, endpoint, data=None):
+        if method == "GET":
+            response = requests.get(
+                endpoint,
+                headers={'Authorization': 'JWT ' + self.token},
+                verify=False).json()
+        if method == "PUT":
+            response = requests.put(
+                endpoint,
+                data=data,
+                headers={'Authorization': 'JWT ' + self.token},
+                verify=False).json()
+        if method == "DELETE":
+            response = requests.delete(
+                endpoint,
+                headers={'Authorization': 'JWT ' + self.token},
+                verify=False).text
+        if method == "POST":
+            response = requests.post(
+                endpoint,
+                data=data,
+                headers={'Authorization': 'JWT ' + self.token},
+                verify=False).json()
+        return response
+
+    def tabulate_response(self, response):
+        if type(response) == list:
+            tabulate_response = tabulate(
+                (my_dict for my_dict in response),
+                headers="keys"
+            )
+        elif type(response) == dict:
+            tabulate_response = tabulate(
+                response.items()
+            )
+
+        return tabulate_response
+
     # Job Scripts
     def list_job_scripts(self):
-        jobscript_list = requests.get(
-            f"{self.api_endpoint}/job-script/",
-            headers={'Authorization': 'JWT ' + self.token},
-            verify=False).json()
-        # return json.dumps(jobscript_list, indent=4, sort_keys=True)
-        return tabulate((my_dict for my_dict in jobscript_list), headers="keys")
+        response = self.jobbergate_request(
+            method="GET",
+            endpoint=f"{self.api_endpoint}/job-script/"
+        )
+        response_formatted = self.tabulate_response(response)
+        return response_formatted
 
     def create_job_script(self, job_script_name, application_id):
         data = self.job_script_config
         data['job_script_name'] = job_script_name
         data['application'] = application_id
         data['job_script_owner'] = self.user_id
-        job_script = requests.post(
-            f"{self.api_endpoint}/job-script/",
-            data=data,
-            headers={'Authorization': 'JWT ' + self.token},
-            verify=False).json()
-        return tabulate((my_dict for my_dict in job_script), headers="keys")
+
+        response = self.jobbergate_request(
+            method="POST",
+            endpoint=f"{self.api_endpoint}/job-script/",
+            data=data
+        )
+
+        response_formatted = self.tabulate_response(response)
+
+        return response_formatted
 
     def get_job_script(self, job_script_id):
-        job_script = requests.get(
-            f"{self.api_endpoint}/job-script/{job_script_id}",
-            headers={'Authorization': 'JWT ' + self.token},
-            verify=False).json()
-        return tabulate((my_dict for my_dict in job_script), headers="keys")
+        response = self.jobbergate_request(
+            method="GET",
+            endpoint=f"{self.api_endpoint}/job-script/{job_script_id}"
+        )
+
+        response_formatted = self.tabulate_response(response)
+
+        return response_formatted
 
     def update_job_script(self, job_script_id):
-        data = requests.get(
-            f"{self.api_endpoint}/job-script/{job_script_id}",
-            headers={'Authorization': 'JWT ' + self.token},
-            verify=False).json()
+        data = self.jobbergate_request(
+            method="GET",
+            endpoint=f"{self.api_endpoint}/job-script/{job_script_id}"
+        )
         data['job_script_name'] = "TEST_NEW_JOBSCRIPT_NAME_CLI"
         #TODO how to collect data that will be updated for the job-script
-        job_script = requests.put(
-            f"{self.api_endpoint}/job-script/{job_script_id}/",
-            data=data,
-            headers={'Authorization': 'JWT ' + self.token},
-            verify=False).json()
-        return tabulate((my_dict for my_dict in job_script), headers="keys")
+        response = self.jobbergate_request(
+            method="PUT",
+            endpoint=f"{self.api_endpoint}/job-script/{job_script_id}/",
+            data=data
+        )
+
+        response_formatted = self.tabulate_response(response)
+
+        return response_formatted
 
     def delete_job_script(self, job_script_id):
-        resp = requests.delete(
-            f"{self.api_endpoint}/job-script/{job_script_id}",
-            headers={'Authorization': 'JWT ' + self.token},
-            verify=False).text
-        return resp
+        response = self.jobbergate_request(
+            method="DELETE",
+            endpoint=f"{self.api_endpoint}/job-script/{job_script_id}"
+        )
+
+        return response
 
     # Job Submissions
     def list_job_submissions(self):
-        job_submission_list = requests.get(
-            f"{self.api_endpoint}/job-submission/",
-            headers={'Authorization': 'JWT ' + self.token},
-            verify=False).json()
-        return tabulate((my_dict for my_dict in job_submission_list), headers="keys")
+        response = self.jobbergate_request(
+            method="GET",
+            endpoint=f"{self.api_endpoint}/job-submission/"
+        )
+
+        response_formatted = self.tabulate_response(response)
+
+        return response_formatted
 
     def create_job_submission(self, job_submission_name, job_script_id):
         data = self.job_submission_config
@@ -98,12 +150,18 @@ class JobbergateApi:
         data['job_script'] = job_script_id
         data['job_submission_owner'] = self.user_id
 
-        job_script = self.get_job_script(job_script_id)
+        job_script = self.jobbergate_request(
+            method="GET",
+            endpoint=f"{self.api_endpoint}/job-script/{job_script_id}"
+        )
+        print(type(job_script))
 
         application_id = job_script['application']
 
-
-        application = self.get_application(application_id)
+        application = self.jobbergate_request(
+            method="GET",
+            endpoint=f"{self.api_endpoint}/application/{application_id}"
+        )
 
         application_location = application['application_location']
         application_name = application['application_name']
@@ -131,49 +189,60 @@ class JobbergateApi:
         rc = p.returncode
         print(rc)
 
-        job_submission = requests.post(
-            f"{self.api_endpoint}/job-submission/",
-            data=data,
-            headers={'Authorization': 'JWT ' + self.token},
-            verify=False).text
-        return tabulate((my_dict for my_dict in job_submission), headers="keys"), job_script, application
+        response = self.jobbergate_request(
+            method="POST",
+            endpoint=f"{self.api_endpoint}/job-submission/",
+            data=data
+        )
+
+        response_formatted = self.tabulate_response(response)
+
+        return response_formatted, job_script, application
 
     def get_job_submission(self, job_submission_id):
-        job_submission = requests.get(
-            f"{self.api_endpoint}/job-submission/{job_submission_id}",
-            headers={'Authorization': 'JWT ' + self.token},
-            verify=False).json()
-        return tabulate((my_dict for my_dict in job_submission), headers="keys")
+        response = self.jobbergate_request(
+            method="GET",
+            endpoint=f"{self.api_endpoint}/job-submission/{job_submission_id}"
+        )
+
+        response_formatted = self.tabulate_response(response)
+
+        return response_formatted
 
     def update_job_submission(self, job_submission_id):
-        data = requests.get(
-            f"{self.api_endpoint}/job-submission/{job_submission_id}",
-            headers={'Authorization': 'JWT ' + self.token},
-            verify=False).json()
+        data = self.jobbergate_request(
+            method="GET",
+            endpoint=f"{self.api_endpoint}/job-submission/{job_submission_id}"
+        )
         # TODO how to collect data that will updated for the job-submission
         data['job_submission_name'] = "TEST_JOB_SUB_CLI"
-        job_submission = requests.put(
-            f"{self.api_endpoint}/job-submission/{job_submission_id}/",
-            data=data,
-            headers={'Authorization': 'JWT ' + self.token},
-            verify=False).json()
-        return tabulate((my_dict for my_dict in job_submission), headers="keys")
+        response = self.jobbergate_request(
+            method="PUT",
+            endpoint=f"{self.api_endpoint}/job-submission/{job_submission_id}/"
+        )
+
+        response_formatted = self.tabulate_response(response)
+
+        return response_formatted
 
     def delete_job_submission(self, job_submission_id):
-        resp = requests.delete(
-            f"{self.api_endpoint}/job-submission/{job_submission_id}",
-            headers={'Authorization': 'JWT ' + self.token},
-            verify=False).text
-        return resp
+        response = self.jobbergate_request(
+            method="DELETE",
+            endpoint=f"{self.api_endpoint}/job-submission/{job_submission_id}"
+        )
+
+        return response
 
     # Applications
     def list_applications(self):
-        application_list = requests.get(
-            f"{self.api_endpoint}/application/",
-            # auth=("skeef", "skeef25"),
-            headers={'Authorization': 'JWT ' + self.token},
-            verify=False).json()
-        return tabulate((my_dict for my_dict in application_list), headers="keys")
+        response = self.jobbergate_request(
+            method="GET",
+            endpoint=f"{self.api_endpoint}/application/"
+        )
+
+        response_formatted = self.tabulate_response(response)
+
+        return response_formatted
 
     def create_application(self, application_name, application_path, base_path):
         data = self.application_config
@@ -189,39 +258,50 @@ class JobbergateApi:
         self.bucket.upload_file(tar_name, s3_key)
         data['application_location'] = s3_key
 
-        application = requests.post(
-            f"{self.api_endpoint}/application/",
-            data=data,
-            headers={'Authorization': 'JWT ' + self.token},
-            verify=False).json()
-        return tabulate((my_dict for my_dict in application), headers="keys")
+        response = self.jobbergate_request(
+            method="POST",
+            endpoint=f"{self.api_endpoint}/application/",
+            data=data
+        )
+
+        response_formatted = self.tabulate_response(response)
+
+        return response_formatted
 
     def get_application(self, application_id):
-        application = requests.get(
-            f"{self.api_endpoint}/application/{application_id}",
-            headers={'Authorization': 'JWT ' + self.token},
-            verify=False).json()
-        return tabulate((my_dict for my_dict in application), headers="keys")
+        response = self.jobbergate_request(
+            method="GET",
+            endpoint=f"{self.api_endpoint}/application/{application_id}"
+        )
+
+        response_formatted = self.tabulate_response(response)
+
+        return response_formatted
 
     def update_application(self, application_id):
-        data = requests.get(
-            f"{self.api_endpoint}/application/{application_id}",
-            headers={'Authorization': 'JWT ' + self.token},
-            verify=False).json()
+        data = self.jobbergate_request(
+            method="GET",
+            endpoint=f"{self.api_endpoint}/application/{application_id}"
+        )
+
         data['application_name'] = "TEST_NEW_APP_NAME10"
         del data['id']
         del data['created_at']
         del data['updated_at']
-        application = requests.put(
-            f"{self.api_endpoint}/application/{application_id}/",
-            data=data,
-            headers={'Authorization': 'JWT ' + self.token},
-            verify=False).text
-        return tabulate((my_dict for my_dict in application), headers="keys")
+        response = self.jobbergate_request(
+            method="PUT",
+            endpoint=f"{self.api_endpoint}/application/{application_id}/",
+            data=data
+        )
+
+        response_formatted = self.tabulate_response(response)
+
+        return response_formatted
 
     def delete_application(self, application_id):
-        resp = requests.delete(
-            f"{self.api_endpoint}/application/{application_id}",
-            headers={'Authorization': 'JWT ' + self.token},
-            verify=False).text
-        return resp
+        response = self.jobbergate_request(
+            method="DELETE",
+            endpoint=f"{self.api_endpoint}/application/{application_id}"
+        )
+
+        return response
