@@ -154,7 +154,6 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/job-script/{job_script_id}"
         )
-        print(type(job_script))
 
         application_id = job_script['application']
 
