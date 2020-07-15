@@ -60,6 +60,20 @@ class JobbergateApi:
                 verify=False).json()
         return response
 
+    def jobbergate_run(self, application_name):
+        p = Popen(
+            ["sbatch", "-p", "partition1", f"{application_name}.sh"],
+            stdin=PIPE,
+            stdout=PIPE,
+            stderr=PIPE)
+        output, err = p.communicate(b"sbatch output")
+
+        rc = p.returncode
+        print(rc)
+
+        return output, err, rc
+
+
     def tabulate_response(self, response):
         if type(response) == list:
             tabulate_response = tabulate(
@@ -175,18 +189,12 @@ class JobbergateApi:
                 application_tar.extract(member, ".")  # extract
         application_tar.close()
 
+        output, err, rc = self.jobbergate_run(application_name)
 
-        p = Popen(
-            ["sbatch", "-p", "partition1", f"{application_name}.sh"],
-            stdin=PIPE,
-            stdout=PIPE,
-            stderr=PIPE)
-        output, err = p.communicate(b"sbatch output")
         print(f"output: {output}")
         print(f"err: {err}")
-
-        rc = p.returncode
         print(rc)
+
 
         response = self.jobbergate_request(
             method="POST",
