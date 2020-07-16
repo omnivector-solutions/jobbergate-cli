@@ -73,6 +73,8 @@ class JobbergateApi:
         output, err = p.communicate(b"sbatch output")
 
         rc = p.returncode
+        print(f"output: {output}")
+        print(f"err: {err}")
         print(rc)
 
         return output, err, rc
@@ -196,11 +198,6 @@ class JobbergateApi:
         #TODO need to work out collecting paramters for job_script based on config
 
         output, err, rc = self.jobbergate_run(application_name)
-
-        print(f"output: {output}")
-        print(f"err: {err}")
-        print(rc)
-
 
         response = self.jobbergate_request(
             method="POST",
