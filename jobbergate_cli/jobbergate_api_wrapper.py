@@ -60,9 +60,13 @@ class JobbergateApi:
                 verify=False).json()
         return response
 
-    def jobbergate_run(self, application_name):
+    def jobbergate_run(self, application_name, *argv):
+        cmd = ["sbatch", "-p", "partition1", f"{application_name}.sh"]
+        for arg in argv:
+            cmd.append(arg)
+        print(cmd)
         p = Popen(
-            ["sbatch", "-p", "partition1", f"{application_name}.sh"],
+            cmd,
             stdin=PIPE,
             stdout=PIPE,
             stderr=PIPE)
@@ -128,7 +132,6 @@ class JobbergateApi:
             endpoint=f"{self.api_endpoint}/job-script/{job_script_id}"
         )
         data['job_script_name'] = "TEST_NEW_JOBSCRIPT_NAME_CLI"
-        #TODO how to collect data that will be updated for the job-script
         response = self.jobbergate_request(
             method="PUT",
             endpoint=f"{self.api_endpoint}/job-script/{job_script_id}/",
@@ -168,6 +171,7 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/job-script/{job_script_id}"
         )
+        print(job_script)
 
         application_id = job_script['application']
 
@@ -188,6 +192,8 @@ class JobbergateApi:
                 member.name = os.path.basename(member.name)  # remove the path by reset it
                 application_tar.extract(member, ".")  # extract
         application_tar.close()
+
+        #TODO need to work out collecting paramters for job_script based on config
 
         output, err, rc = self.jobbergate_run(application_name)
 
