@@ -3,3 +3,4 @@ pyjwt
 click
 boto3
 tabulate
+jinja2

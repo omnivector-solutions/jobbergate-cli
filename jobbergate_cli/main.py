@@ -16,8 +16,8 @@ from jobbergate_cli.jobbergate_api_wrapper import JobbergateApi
 
 JOBBERGATE_API_JWT_PATH = Path("/tmp/jobbergate.token")
 
-JOBBERGATE_API_ENDPOINT = "https://jobbergate-api-staging.omnivector.solutions"
-# JOBBERGATE_API_ENDPOINT = "http://0.0.0.0:8000"
+# JOBBERGATE_API_ENDPOINT = "https://jobbergate-api-staging.omnivector.solutions"
+JOBBERGATE_API_ENDPOINT = "http://0.0.0.0:8000"
 
 JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT = f"{JOBBERGATE_API_ENDPOINT}/api-token-auth/"
 
@@ -168,9 +168,10 @@ def list_applications(ctx):
 def create_application(ctx, create_application_name, create_application_path):
     api = init_api(ctx.obj['user_id'])
     resp = api.create_application(
-        create_application_name,
-        create_application_path,
-        JOBBERGATE_APPLICATION_BASE_PATH)
+        application_name=create_application_name,
+        application_path=create_application_path,
+        base_path=JOBBERGATE_APPLICATION_BASE_PATH,
+        param_file=param_file)
     sys.stdout.write(str(resp))
     sys.exit(0)
 
@@ -223,10 +224,14 @@ def list_job_scripts(ctx):
 @click.option("--id",
               "-i",
               "create_job_script_application_id")
+@click.option("--param-file",
+              "-p",
+              "param_file",
+              type=click.Path(),)
 @click.pass_context
-def create_job_script(ctx, create_job_script_name, create_job_script_application_id):
+def create_job_script(ctx, create_job_script_name, create_job_script_application_id, param_file):
     api = init_api(ctx.obj['user_id'])
-    resp = api.create_job_script(create_job_script_name, create_job_script_application_id)
+    resp = api.create_job_script(create_job_script_name, create_job_script_application_id, param_file)
     sys.stdout.write(str(resp))
     sys.exit(0)
 
