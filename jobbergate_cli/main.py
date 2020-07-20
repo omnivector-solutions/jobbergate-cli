@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import getpass
-import json
 import requests
 import sys
 import os
@@ -17,6 +16,7 @@ from jobbergate_cli.jobbergate_api_wrapper import JobbergateApi
 JOBBERGATE_API_JWT_PATH = Path("/tmp/jobbergate.token")
 
 # JOBBERGATE_API_ENDPOINT = "https://jobbergate-api-staging.omnivector.solutions"
+#TODO Pending lambd size issue on serverless deploy of API
 JOBBERGATE_API_ENDPOINT = "http://0.0.0.0:8000"
 
 JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT = f"{JOBBERGATE_API_ENDPOINT}/api-token-auth/"
@@ -80,7 +80,6 @@ def is_token_valid():
             return False
     else:
         return False
-
 
 def decode_token_to_dict(encoded_token):
     try:
@@ -170,11 +169,9 @@ def create_application(ctx, create_application_name, create_application_path):
     resp = api.create_application(
         application_name=create_application_name,
         application_path=create_application_path,
-        base_path=JOBBERGATE_APPLICATION_BASE_PATH,
-        param_file=param_file)
+        base_path=JOBBERGATE_APPLICATION_BASE_PATH)
     sys.stdout.write(str(resp))
     sys.exit(0)
-
 
 @main.command('get-application')
 @click.option("--id",
@@ -324,7 +321,6 @@ def delete_job_submission(ctx, delete_job_submission_id):
     resp = api.delete_job_submission(delete_job_submission_id)
     sys.stdout.write(str(resp))
     sys.exit(0)
-
 
 if __name__ == "__main__":
     main()

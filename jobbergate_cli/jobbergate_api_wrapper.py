@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 import os
 from subprocess import Popen, PIPE
-import json
 import requests
 import tarfile
-from jinja2 import Template
 
 from tabulate import tabulate
 
@@ -65,7 +63,6 @@ class JobbergateApi:
         cmd = ["sbatch", "-p", "partition1", f"{application_name}.sh"]
         for arg in argv:
             cmd.append(arg)
-        print(cmd)
         p = Popen(
             cmd,
             stdin=PIPE,
@@ -210,17 +207,7 @@ class JobbergateApi:
 
         response_formatted = self.tabulate_response(response)
 
-        # application_filename = application_location.split("/")[-1]
-        # application_location = application['application_location']
-        #
-        # application_tar = tarfile.open(application_filename)
-        # for member in application_tar.getmembers():
-        #     if member.isreg():  # skip if the TarInfo is not files
-        #         member.name = os.path.basename(member.name)  # remove the path by reset it
-        #         application_tar.extract(member, ".")  # extract
-        # application_tar.close()
-        #
-        # #TODO need to work out collecting paramters for job_script based on config
+        #TODO need to work out collecting paramters for job_script based on config in app
 
         return response_formatted, job_script, application
 
@@ -269,7 +256,7 @@ class JobbergateApi:
 
         return response_formatted
 
-    def create_application(self, application_name, application_path, base_path, param_file):
+    def create_application(self, application_name, application_path, base_path):
         '''
         create an application based on path provided by the user
         '''
