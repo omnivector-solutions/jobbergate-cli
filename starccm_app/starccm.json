@@ -1,7 +1,0 @@
-{
-  "slurm_job_id": "starccmref",
-  "nodes": 2,
-  "ntaks": 80,
-  "sim_file":"/tmp/SteadyFlowBackwardFacingStep_final.sim",
-  "job_script":  "starccm-example.sh.j2"
-}
