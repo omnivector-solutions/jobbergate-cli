@@ -109,7 +109,6 @@ class JobbergateApi:
         data['job_script_name'] = job_script_name
         data['application'] = application_id
         data['job_script_owner'] = self.user_id
-        data['job_script_data_as_string'] = application_data['application_location']
 
         files = {'upload_file': open(param_file, 'rb')}
 
