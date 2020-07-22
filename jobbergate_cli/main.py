@@ -15,9 +15,8 @@ from jobbergate_cli.jobbergate_api_wrapper import JobbergateApi
 
 JOBBERGATE_API_JWT_PATH = Path("/tmp/jobbergate.token")
 
-# JOBBERGATE_API_ENDPOINT = "https://jobbergate-api-staging.omnivector.solutions"
-#TODO Pending lambd size issue on serverless deploy of API
-JOBBERGATE_API_ENDPOINT = "http://0.0.0.0:8000"
+JOBBERGATE_API_ENDPOINT = "https://jobbergate-api-production.omnivector.solutions"
+# JOBBERGATE_API_ENDPOINT = "http://0.0.0.0:8000"
 
 JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT = f"{JOBBERGATE_API_ENDPOINT}/api-token-auth/"
 
@@ -160,7 +159,7 @@ def list_applications(ctx):
 @click.option("--name",
               "-n",
               "create_application_name")
-@click.option("--application_path",
+@click.option("--application-path",
               "-a",
               "create_application_path")
 @click.pass_context
