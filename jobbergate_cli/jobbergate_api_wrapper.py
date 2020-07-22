@@ -60,7 +60,8 @@ class JobbergateApi:
         return response
 
     def jobbergate_run(self, application_name, *argv):
-        cmd = ["slurm.sbatch", "-p", "partition1", f"{application_name}.sh"]
+        # cmd = ["slurm.sbatch", "-p", "partition1", f"{application_name}.sh"]
+        cmd = ["slurm.sbatch", f"{application_name}.sh"]
         for arg in argv:
             cmd.append(arg)
         p = Popen(
