@@ -58,6 +58,7 @@ def interactive_get_username_password():
 def init_token(username, password):
     """Get a new token from the api and write it to the token file.
     """
+    print(f"endpoint is: {JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT}")
     resp = requests.post(
         JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT,
         data={"username": username, "password": password}
