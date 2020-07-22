@@ -16,6 +16,7 @@ from jobbergate_cli.jobbergate_api_wrapper import JobbergateApi
 JOBBERGATE_API_JWT_PATH = Path("/tmp/jobbergate.token")
 
 JOBBERGATE_API_ENDPOINT = "https://jobbergate-api-production.omnivector.solutions"
+# JOBBERGATE_API_ENDPOINT = "http://0.0.0.0:8000"
 
 JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT = f"{JOBBERGATE_API_ENDPOINT}/api-token-auth/"
 
@@ -58,7 +59,6 @@ def interactive_get_username_password():
 def init_token(username, password):
     """Get a new token from the api and write it to the token file.
     """
-    print(f"endpoint is: {JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT}")
     resp = requests.post(
         JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT,
         data={"username": username, "password": password}
