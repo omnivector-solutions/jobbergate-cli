@@ -15,14 +15,14 @@ from jobbergate_cli.jobbergate_api_wrapper import JobbergateApi
 
 JOBBERGATE_API_JWT_PATH = Path("/tmp/jobbergate.token")
 
-JOBBERGATE_API_ENDPOINT = "https://jobbergate-api-production.omnivector.solutions"
-# JOBBERGATE_API_ENDPOINT = "http://0.0.0.0:8000"
+# JOBBERGATE_API_ENDPOINT = "https://jobbergate-api-production.omnivector.solutions"
+JOBBERGATE_API_ENDPOINT = "http://0.0.0.0:8000"
 
 JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT = f"{JOBBERGATE_API_ENDPOINT}/api-token-auth/"
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-JOBBERGATE_APPLICATION_BASE_PATH = "jobbergate-dev/jobbergate-api/"
+JOBBERGATE_APPLICATION_BASE_PATH = "jobbergate-resources"
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 

@@ -8,6 +8,7 @@ __pycache__/
 osu_*
 mpi-*
 test_*
+*.tar*
 *demo*
 # Distribution / packaging
 .Python

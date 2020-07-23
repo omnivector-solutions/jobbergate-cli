@@ -60,8 +60,8 @@ class JobbergateApi:
         return response
 
     def jobbergate_run(self, application_name, *argv):
-        # cmd = ["slurm.sbatch", "-p", "partition1", f"{application_name}.sh"]
-        cmd = ["slurm.sbatch", f"{application_name}.sh"]
+        # cmd = ["slurm.sbatch", "-p", "partition1", "application.sh"]
+        cmd = ["slurm.sbatch", "application.sh"]
         for arg in argv:
             cmd.append(arg)
         p = Popen(
@@ -189,7 +189,7 @@ class JobbergateApi:
 
         application_name = application['application_name']
 
-        write_job_script = open(f"{application_name}.sh", 'w')
+        write_job_script = open("application.sh", 'w')
         write_job_script.write(job_script['job_script_data_as_string'])
         write_job_script.close()
 
@@ -265,15 +265,13 @@ class JobbergateApi:
         data['application_name'] = application_name
         data['application_owner'] = self.user_id
 
-        tar_name = f"{application_name}.tar.gz"
+        tar_name = "application.tar.gz"
+        s3_key = f"{base_path}/{str(self.user_id)}/{application_name}/application_id/{tar_name}"
+        data['application_location'] = s3_key
 
         self.tardir(application_path, tar_name, application_name)
 
-        s3_key = f"{base_path}{str(self.user_id)}/{application_name}/{tar_name}"
-
         files = {'upload_file': open(tar_name, 'rb')}
-
-        data['application_location'] = s3_key
 
         response = self.jobbergate_request(
             method="POST",
