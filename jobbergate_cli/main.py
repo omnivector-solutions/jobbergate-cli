@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import getpass
-import json
 import requests
 import sys
 import os
@@ -16,7 +15,7 @@ from jobbergate_cli.jobbergate_api_wrapper import JobbergateApi
 
 JOBBERGATE_API_JWT_PATH = Path("/tmp/jobbergate.token")
 
-JOBBERGATE_API_ENDPOINT = "https://jobbergate-api-staging.omnivector.solutions"
+JOBBERGATE_API_ENDPOINT = "https://jobbergate-api-production.omnivector.solutions"
 # JOBBERGATE_API_ENDPOINT = "http://0.0.0.0:8000"
 
 JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT = f"{JOBBERGATE_API_ENDPOINT}/api-token-auth/"
@@ -80,7 +79,6 @@ def is_token_valid():
             return False
     else:
         return False
-
 
 def decode_token_to_dict(encoded_token):
     try:
@@ -161,19 +159,18 @@ def list_applications(ctx):
 @click.option("--name",
               "-n",
               "create_application_name")
-@click.option("--application_path",
+@click.option("--application-path",
               "-a",
               "create_application_path")
 @click.pass_context
 def create_application(ctx, create_application_name, create_application_path):
     api = init_api(ctx.obj['user_id'])
     resp = api.create_application(
-        create_application_name,
-        create_application_path,
-        JOBBERGATE_APPLICATION_BASE_PATH)
+        application_name=create_application_name,
+        application_path=create_application_path,
+        base_path=JOBBERGATE_APPLICATION_BASE_PATH)
     sys.stdout.write(str(resp))
     sys.exit(0)
-
 
 @main.command('get-application')
 @click.option("--id",
@@ -223,10 +220,14 @@ def list_job_scripts(ctx):
 @click.option("--id",
               "-i",
               "create_job_script_application_id")
+@click.option("--param-file",
+              "-p",
+              "param_file",
+              type=click.Path(),)
 @click.pass_context
-def create_job_script(ctx, create_job_script_name, create_job_script_application_id):
+def create_job_script(ctx, create_job_script_name, create_job_script_application_id, param_file):
     api = init_api(ctx.obj['user_id'])
-    resp = api.create_job_script(create_job_script_name, create_job_script_application_id)
+    resp = api.create_job_script(create_job_script_name, create_job_script_application_id, param_file)
     sys.stdout.write(str(resp))
     sys.exit(0)
 
@@ -319,7 +320,6 @@ def delete_job_submission(ctx, delete_job_submission_id):
     resp = api.delete_job_submission(delete_job_submission_id)
     sys.stdout.write(str(resp))
     sys.exit(0)
-
 
 if __name__ == "__main__":
     main()

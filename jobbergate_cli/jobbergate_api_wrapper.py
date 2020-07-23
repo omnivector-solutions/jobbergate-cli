@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 import os
 from subprocess import Popen, PIPE
-import json
 import requests
 import tarfile
 
-import boto3
 from tabulate import tabulate
 
 class JobbergateApi:
@@ -24,18 +22,18 @@ class JobbergateApi:
         self.application_config = application_config
         self.api_endpoint = api_endpoint
         self.user_id = user_id
-        self.bucket = boto3.resource('s3').Bucket('omnivector-misc')
 
-    def jobbergate_request(self):
-        pass
+    def tardir(self, path, tar_name, application_name):
+        archive = tarfile.open(tar_name, "w|gz")
+        for root, dirs, files in os.walk(path):
+            for file in files:
+                archive.add(
+                    os.path.join(root, file),
+                    arcname=file
+                    )
+        archive.close()
 
-    def tardir(self, path, tar_name):
-        with tarfile.open(tar_name, "w:gz") as tar_handle:
-            for root, dirs, files in os.walk(path):
-                for file in files:
-                    tar_handle.add(os.path.join(root, file))
-
-    def jobbergate_request(self, method, endpoint, data=None):
+    def jobbergate_request(self, method, endpoint, data=None, files=None):
         if method == "GET":
             response = requests.get(
                 endpoint,
@@ -56,15 +54,16 @@ class JobbergateApi:
             response = requests.post(
                 endpoint,
                 data=data,
+                files=files,
                 headers={'Authorization': 'JWT ' + self.token},
                 verify=False).json()
         return response
 
     def jobbergate_run(self, application_name, *argv):
-        cmd = ["sbatch", "-p", "partition1", f"{application_name}.sh"]
+        # cmd = ["slurm.sbatch", "-p", "partition1", f"{application_name}.sh"]
+        cmd = ["slurm.sbatch", f"{application_name}.sh"]
         for arg in argv:
             cmd.append(arg)
-        print(cmd)
         p = Popen(
             cmd,
             stdin=PIPE,
@@ -100,16 +99,25 @@ class JobbergateApi:
         response_formatted = self.tabulate_response(response)
         return response_formatted
 
-    def create_job_script(self, job_script_name, application_id):
+    def create_job_script(self, job_script_name, application_id, param_file):
+
+        application_data = self.jobbergate_request(
+            method="GET",
+            endpoint=f"{self.api_endpoint}/application/{application_id}"
+        )
+
         data = self.job_script_config
         data['job_script_name'] = job_script_name
         data['application'] = application_id
         data['job_script_owner'] = self.user_id
 
+        files = {'upload_file': open(param_file, 'rb')}
+
         response = self.jobbergate_request(
             method="POST",
             endpoint=f"{self.api_endpoint}/job-script/",
-            data=data
+            data=data,
+            files=files
         )
 
         response_formatted = self.tabulate_response(response)
@@ -171,7 +179,6 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/job-script/{job_script_id}"
         )
-        print(job_script)
 
         application_id = job_script['application']
 
@@ -180,20 +187,11 @@ class JobbergateApi:
             endpoint=f"{self.api_endpoint}/application/{application_id}"
         )
 
-        application_location = application['application_location']
         application_name = application['application_name']
-        application_filename = application_location.split("/")[-1]
 
-        self.bucket.download_file(application_location, application_filename)
-
-        application_tar = tarfile.open(application_filename)
-        for member in application_tar.getmembers():
-            if member.isreg():  # skip if the TarInfo is not files
-                member.name = os.path.basename(member.name)  # remove the path by reset it
-                application_tar.extract(member, ".")  # extract
-        application_tar.close()
-
-        #TODO need to work out collecting paramters for job_script based on config
+        write_job_script = open(f"{application_name}.sh", 'w')
+        write_job_script.write(job_script['job_script_data_as_string'])
+        write_job_script.close()
 
 
         output, err, rc = self.jobbergate_run(application_name)
@@ -208,6 +206,8 @@ class JobbergateApi:
         )
 
         response_formatted = self.tabulate_response(response)
+
+        #TODO need to work out collecting paramters for job_script based on config in app
 
         return response_formatted, job_script, application
 
@@ -257,23 +257,29 @@ class JobbergateApi:
         return response_formatted
 
     def create_application(self, application_name, application_path, base_path):
+        '''
+        create an application based on path provided by the user
+        '''
+
         data = self.application_config
         data['application_name'] = application_name
         data['application_owner'] = self.user_id
 
         tar_name = f"{application_name}.tar.gz"
 
-        self.tardir(application_path, tar_name)
+        self.tardir(application_path, tar_name, application_name)
 
         s3_key = f"{base_path}{str(self.user_id)}/{application_name}/{tar_name}"
 
-        self.bucket.upload_file(tar_name, s3_key)
+        files = {'upload_file': open(tar_name, 'rb')}
+
         data['application_location'] = s3_key
 
         response = self.jobbergate_request(
             method="POST",
             endpoint=f"{self.api_endpoint}/application/",
-            data=data
+            data=data,
+            files=files
         )
 
         response_formatted = self.tabulate_response(response)
