@@ -9,6 +9,7 @@ osu_*
 mpi-*
 test_*
 *.tar*
+lgcy*
 *demo*
 # Distribution / packaging
 .Python
