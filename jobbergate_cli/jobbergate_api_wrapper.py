@@ -74,7 +74,7 @@ class JobbergateApi:
         rc = p.returncode
         print(rc)
 
-        return output, err, rc
+        return output.decode("utf-8"), err.decode("utf-8"), rc.decode("utf-8")
 
 
     def tabulate_response(self, response):
