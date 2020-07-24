@@ -72,7 +72,6 @@ class JobbergateApi:
         output, err = p.communicate(b"sbatch output")
 
         rc = p.returncode
-        print(rc)
 
         return output.decode("utf-8"), err.decode("utf-8"), rc
 
@@ -204,8 +203,10 @@ class JobbergateApi:
             endpoint=f"{self.api_endpoint}/job-submission/",
             data=data
         )
+        print("after submission post")
 
         response_formatted = self.tabulate_response(response)
+        print(f"response_formatted is {response_formatted}")
 
         #TODO need to work out collecting paramters for job_script based on config in app
 
