@@ -209,7 +209,7 @@ class JobbergateApi:
 
         #TODO need to work out collecting paramters for job_script based on config in app
 
-        return response_formatted, job_script, application
+        return response_formatted#, job_script, application
 
     def get_job_submission(self, job_submission_id):
         response = self.jobbergate_request(
