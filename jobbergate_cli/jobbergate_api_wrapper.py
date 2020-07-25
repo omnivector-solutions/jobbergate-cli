@@ -206,7 +206,7 @@ class JobbergateApi:
 
         response_formatted = self.tabulate_response(response)
 
-        return response_formatted#, job_script, application
+        return response_formatted
 
     def get_job_submission(self, job_submission_id):
         response = self.jobbergate_request(
