@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 import os
+import io
+import json
+
 from subprocess import Popen, PIPE
 import requests
 import tarfile
@@ -119,6 +122,47 @@ class JobbergateApi:
             files=files
         )
 
+        rendered_dict = json.loads(response['job_script_data_as_string'])
+
+        job_script_data_as_string = ""
+        for key, value in rendered_dict.items():
+            job_script_data_as_string += "\nNEW_FILE\n"
+            job_script_data_as_string += value
+
+        print(job_script_data_as_string)
+        response['job_script_data_as_string'] = job_script_data_as_string
+
+
+
+        # tar_response = self.jobbergate_request(
+        #     method="POST",
+        #     endpoint=f"{self.api_endpoint}/job-script/",
+        #     data=data,
+        #     files=files
+        # )
+        #
+        # print(type(tar_response.content))
+        # print(tar_response.text)
+        # print(tar_response.content)
+        # file_like_object = io.BytesIO(tar_response.content)
+        # tar = tarfile.open(fileobj=file_like_object, mode='r')
+        # # use "tar" as a regular TarFile object
+        # for member in tar.getmembers():
+        #     f = tar.extractfile(member)
+        #     print(f)
+
+        # tar = tarfile.open(fileobj=tar_response.content)
+        # tar.extractall()
+        # with open('test.tar', 'wb') as f:
+        #     tarfile.write(tar_response.content)
+        #     # my_tar = tarfile.open(tarfile)
+        #     tarfile.extractall('.')  # specify which folder to extract to
+        #     tarfile.close()
+        # tar_name = "test.tar.gz"
+        # tar_file = open(tar_name, 'wb')
+        # tar_file.write(tar_response.content)
+        # tar_file.close()
+
         response_formatted = self.tabulate_response(response)
 
         return response_formatted
@@ -188,9 +232,12 @@ class JobbergateApi:
 
         application_name = application['application_name']
 
-        write_job_script = open("application.sh", 'w')
-        write_job_script.write(job_script['job_script_data_as_string'])
-        write_job_script.close()
+        rendered_dict = json.loads(job_script['job_script_data_as_string'])
+
+        for key, value in rendered_dict.items():
+            write_file = open(key, 'w')
+            write_file.write(value)
+            write_file.close()
 
 
         output, err, rc = self.jobbergate_run(application_name)

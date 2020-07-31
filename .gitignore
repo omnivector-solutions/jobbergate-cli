@@ -9,6 +9,8 @@ osu_*
 mpi-*
 test_*
 *.tar*
+*java*
+application.sh
 lgcy*
 *demo*
 # Distribution / packaging
