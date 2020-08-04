@@ -1,0 +1,21 @@
+{
+  "cluster": "Nash",
+  "default_template": "starccm-generic-template.j2",
+  "supporting_files": [
+    "java-generic-template.j2"],
+  "supporting_files_output_name": {
+  "java-generic-template.j2": "starccmMesh.java"
+  },
+  "module_dir": "/share/apps/cd-adapco/RHEL",
+  "workflow": "Mesh",
+  "cores_per_node": 40,
+  "module": "",
+  "filename": "/cluster/sesonas13/sssler/startests/SteadyFlowBackwardFacingStep_final.sim",
+  "timelimit": 1,
+  "cores": 20,
+  "jobname": "Star-CCM+",
+  "simsteps":  "",
+  "stageup": "true",
+  "submitnow": "true",
+  "output_directory": "."
+}

@@ -1,0 +1,43 @@
+---
+# Templates
+default_template: 'starccm-generic-template.j2'
+beskow_template: 'starccm-beskow-template.j2'
+java_template: 'java-generic-template.j2'
+
+# Directory from which to populate modules list
+module_dir: '/share/apps/cd-adapco/RHEL5'
+
+# Hard coded available versions on the Beskow cluster (KTH)
+beskow_available_versions:
+    - "starccm+/14.06.012-dp"
+    - "starccm+/14.06.012-dp-scania"
+    - "starccm+/14.06.012-sp"
+    - "starccm+/14.06.012-sp-scania"
+    - "starccm+/14.04.013-dp"
+    - "starccm+/14.04.013-dp-scania"
+    - "starccm+/14.04.013-sp"
+    - "starccm+/14.04.013-sp-scania"
+    - "starccm+/14.02.012-dp"
+    - "starccm+/14.02.012-sp"
+    - "starccm+/14.02.010-dp"
+    - "starccm+/14.02.010-dp-scania"
+    - "starccm+/14.02.010-sp"
+    - "starccm+/14.02.010-sp-scania"
+    - "starccm+/13.06.012-dp"
+    - "starccm+/13.06.012-dp-scania"
+    - "starccm+/13.06.012-sp"
+    - "starccm+/13.06.012-sp-scania"
+    - "starccm+/13.06.011-dp"
+    - "starccm+/13.06.011-dp-scania"
+    - "starccm+/13.06.011-sp"
+    - "starccm+/13.06.011-sp-scania"
+    - "starccm+/13.04.011-dp"
+    - "starccm+/13.04.011-sp"
+    - "starccm+/13.04.010-dp"
+    - "starccm+/13.04.010-dp-scania"
+    - "starccm+/13.04.010-sp"
+    - "starccm+/13.04.010-sp-scania"
+    - "starccm+/13.02.011-dp"
+    - "starccm+/13.02.011-dp-scania"
+    - "starccm+/13.02.011-sp"
+    - "starccm+/13.02.011-sp-scania"

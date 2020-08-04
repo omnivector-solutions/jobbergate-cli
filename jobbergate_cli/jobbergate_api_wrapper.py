@@ -129,7 +129,6 @@ class JobbergateApi:
             job_script_data_as_string += "\nNEW_FILE\n"
             job_script_data_as_string += value
 
-        print(job_script_data_as_string)
         response['job_script_data_as_string'] = job_script_data_as_string
 
 
@@ -172,6 +171,15 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/job-script/{job_script_id}"
         )
+
+        rendered_dict = json.loads(response['job_script_data_as_string'])
+
+        job_script_data_as_string = ""
+        for key, value in rendered_dict.items():
+            job_script_data_as_string += "\nNEW_FILE\n"
+            job_script_data_as_string += value
+
+        response['job_script_data_as_string'] = job_script_data_as_string
 
         response_formatted = self.tabulate_response(response)
 
