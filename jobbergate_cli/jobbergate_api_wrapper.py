@@ -102,12 +102,6 @@ class JobbergateApi:
         return response_formatted
 
     def create_job_script(self, job_script_name, application_id, param_file):
-
-        application_data = self.jobbergate_request(
-            method="GET",
-            endpoint=f"{self.api_endpoint}/application/{application_id}"
-        )
-
         data = self.job_script_config
         data['job_script_name'] = job_script_name
         data['application'] = application_id
@@ -130,37 +124,6 @@ class JobbergateApi:
             job_script_data_as_string += value
 
         response['job_script_data_as_string'] = job_script_data_as_string
-
-
-
-        # tar_response = self.jobbergate_request(
-        #     method="POST",
-        #     endpoint=f"{self.api_endpoint}/job-script/",
-        #     data=data,
-        #     files=files
-        # )
-        #
-        # print(type(tar_response.content))
-        # print(tar_response.text)
-        # print(tar_response.content)
-        # file_like_object = io.BytesIO(tar_response.content)
-        # tar = tarfile.open(fileobj=file_like_object, mode='r')
-        # # use "tar" as a regular TarFile object
-        # for member in tar.getmembers():
-        #     f = tar.extractfile(member)
-        #     print(f)
-
-        # tar = tarfile.open(fileobj=tar_response.content)
-        # tar.extractall()
-        # with open('test.tar', 'wb') as f:
-        #     tarfile.write(tar_response.content)
-        #     # my_tar = tarfile.open(tarfile)
-        #     tarfile.extractall('.')  # specify which folder to extract to
-        #     tarfile.close()
-        # tar_name = "test.tar.gz"
-        # tar_file = open(tar_name, 'wb')
-        # tar_file.write(tar_response.content)
-        # tar_file.close()
 
         response_formatted = self.tabulate_response(response)
 
@@ -246,7 +209,6 @@ class JobbergateApi:
             write_file = open(key, 'w')
             write_file.write(value)
             write_file.close()
-
 
         output, err, rc = self.jobbergate_run(application_name)
 

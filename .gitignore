@@ -13,6 +13,7 @@ test_*
 application.sh
 lgcy*
 *demo*
+~*
 # Distribution / packaging
 .Python
 build/
