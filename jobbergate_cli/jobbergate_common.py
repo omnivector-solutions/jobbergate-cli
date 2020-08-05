@@ -2,7 +2,7 @@ import os
 import urllib3
 from pathlib import Path
 
-JOBBERGATE_USER_TOKEN_DIR = "~/.local/cache/jobbergate-cli"
+JOBBERGATE_USER_TOKEN_DIR = f"{str(Path.home())}/.local/cache/jobbergate-cli"
 
 JOBBERGATE_API_JWT_PATH = Path(f"{JOBBERGATE_USER_TOKEN_DIR}/jobbergate.token")
 
