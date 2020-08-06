@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import os
-import io
 import json
 
 from subprocess import Popen, PIPE
@@ -26,7 +25,7 @@ class JobbergateApi:
         self.api_endpoint = api_endpoint
         self.user_id = user_id
 
-    def tardir(self, path, tar_name, application_name):
+    def tardir(self, path, tar_name):
         archive = tarfile.open(tar_name, "w|gz")
         for root, dirs, files in os.walk(path):
             for file in files:
@@ -78,29 +77,33 @@ class JobbergateApi:
 
         return output.decode("utf-8"), err.decode("utf-8"), rc
 
+    def tabulate_decorator(func):
+        def wrapper(*args, **kwargs):
+            # getting the returned value
+            response = func(*args, **kwargs)
+            if type(response) == list:
+                tabulate_response = tabulate(
+                    (my_dict for my_dict in response),
+                    headers="keys"
+                )
+            elif type(response) == dict:
+                tabulate_response = tabulate(
+                    response.items()
+                )
 
-    def tabulate_response(self, response):
-        if type(response) == list:
-            tabulate_response = tabulate(
-                (my_dict for my_dict in response),
-                headers="keys"
-            )
-        elif type(response) == dict:
-            tabulate_response = tabulate(
-                response.items()
-            )
-
-        return tabulate_response
+            return tabulate_response
+        return wrapper
 
     # Job Scripts
+    @tabulate_decorator
     def list_job_scripts(self):
         response = self.jobbergate_request(
             method="GET",
             endpoint=f"{self.api_endpoint}/job-script/"
         )
-        response_formatted = self.tabulate_response(response)
-        return response_formatted
+        return response
 
+    @tabulate_decorator
     def create_job_script(self, job_script_name, application_id, param_file):
         data = self.job_script_config
         data['job_script_name'] = job_script_name
@@ -125,10 +128,9 @@ class JobbergateApi:
 
         response['job_script_data_as_string'] = job_script_data_as_string
 
-        response_formatted = self.tabulate_response(response)
+        return response
 
-        return response_formatted
-
+    @tabulate_decorator
     def get_job_script(self, job_script_id):
         response = self.jobbergate_request(
             method="GET",
@@ -144,10 +146,9 @@ class JobbergateApi:
 
         response['job_script_data_as_string'] = job_script_data_as_string
 
-        response_formatted = self.tabulate_response(response)
+        return response
 
-        return response_formatted
-
+    @tabulate_decorator
     def update_job_script(self, job_script_id):
         data = self.jobbergate_request(
             method="GET",
@@ -160,29 +161,25 @@ class JobbergateApi:
             data=data
         )
 
-        response_formatted = self.tabulate_response(response)
-
-        return response_formatted
+        return response
 
     def delete_job_script(self, job_script_id):
         response = self.jobbergate_request(
             method="DELETE",
             endpoint=f"{self.api_endpoint}/job-script/{job_script_id}"
         )
-
         return response
 
     # Job Submissions
+    @tabulate_decorator
     def list_job_submissions(self):
         response = self.jobbergate_request(
             method="GET",
             endpoint=f"{self.api_endpoint}/job-submission/"
         )
+        return response
 
-        response_formatted = self.tabulate_response(response)
-
-        return response_formatted
-
+    @tabulate_decorator
     def create_job_submission(self, job_submission_name, job_script_id):
         data = self.job_submission_config
         data['job_submission_name'] = job_submission_name
@@ -220,21 +217,18 @@ class JobbergateApi:
             endpoint=f"{self.api_endpoint}/job-submission/",
             data=data
         )
+        return response
 
-        response_formatted = self.tabulate_response(response)
-
-        return response_formatted
-
+    @tabulate_decorator
     def get_job_submission(self, job_submission_id):
         response = self.jobbergate_request(
             method="GET",
             endpoint=f"{self.api_endpoint}/job-submission/{job_submission_id}"
         )
 
-        response_formatted = self.tabulate_response(response)
+        return response
 
-        return response_formatted
-
+    @tabulate_decorator
     def update_job_submission(self, job_submission_id):
         data = self.jobbergate_request(
             method="GET",
@@ -246,30 +240,25 @@ class JobbergateApi:
             method="PUT",
             endpoint=f"{self.api_endpoint}/job-submission/{job_submission_id}/"
         )
-
-        response_formatted = self.tabulate_response(response)
-
-        return response_formatted
+        return response
 
     def delete_job_submission(self, job_submission_id):
         response = self.jobbergate_request(
             method="DELETE",
             endpoint=f"{self.api_endpoint}/job-submission/{job_submission_id}"
         )
-
         return response
 
     # Applications
+    @tabulate_decorator
     def list_applications(self):
         response = self.jobbergate_request(
             method="GET",
             endpoint=f"{self.api_endpoint}/application/"
         )
+        return response
 
-        response_formatted = self.tabulate_response(response)
-
-        return response_formatted
-
+    @tabulate_decorator
     def create_application(self, application_name, application_path, base_path):
         '''
         create an application based on path provided by the user
@@ -283,7 +272,7 @@ class JobbergateApi:
         s3_key = f"{base_path}/{str(self.user_id)}/{application_name}/application_id/{tar_name}"
         data['application_location'] = s3_key
 
-        self.tardir(application_path, tar_name, application_name)
+        self.tardir(application_path, tar_name)
 
         files = {'upload_file': open(tar_name, 'rb')}
 
@@ -294,20 +283,18 @@ class JobbergateApi:
             files=files
         )
 
-        response_formatted = self.tabulate_response(response)
+        return response
 
-        return response_formatted
-
+    @tabulate_decorator
     def get_application(self, application_id):
         response = self.jobbergate_request(
             method="GET",
             endpoint=f"{self.api_endpoint}/application/{application_id}"
         )
 
-        response_formatted = self.tabulate_response(response)
+        return response
 
-        return response_formatted
-
+    @tabulate_decorator
     def update_application(self, application_id):
         data = self.jobbergate_request(
             method="GET",
@@ -323,10 +310,7 @@ class JobbergateApi:
             endpoint=f"{self.api_endpoint}/application/{application_id}/",
             data=data
         )
-
-        response_formatted = self.tabulate_response(response)
-
-        return response_formatted
+        return response
 
     def delete_application(self, application_id):
         response = self.jobbergate_request(
