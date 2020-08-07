@@ -101,6 +101,7 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/job-script/"
         )
+        response = [{k: v for k, v in d.items() if k != 'job_script_data_as_string'} for d in response]
         return response
 
     @tabulate_decorator
