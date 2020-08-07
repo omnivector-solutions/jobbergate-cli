@@ -1,54 +1,29 @@
 #!/usr/bin/env python3
+import os
 import getpass
 import requests
 import sys
-import os
-import urllib3
+from pathlib import Path
 
 import jwt
 
 import click
 from datetime import datetime
-from pathlib import Path
 
 from jobbergate_cli.jobbergate_api_wrapper import JobbergateApi
+from jobbergate_cli.jobbergate_common import JOBBERGATE_API_JWT_PATH, JOBBERGATE_API_ENDPOINT, \
+    JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT, JOBBERGATE_APPLICATION_BASE_PATH, \
+    APPLICATION_CONFIG, JOB_SCRIPT_CONFIG, JOB_SUBMISSION_CONFIG, JOBBERGATE_USER_TOKEN_DIR
 
-JOBBERGATE_API_JWT_PATH = Path("/tmp/jobbergate.token")
-
-JOBBERGATE_API_ENDPOINT = "https://jobbergate-api-production.omnivector.solutions"
-# JOBBERGATE_API_ENDPOINT = "http://0.0.0.0:8000"
-
-JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT = f"{JOBBERGATE_API_ENDPOINT}/api-token-auth/"
-
-dir_path = os.path.dirname(os.path.realpath(__file__))
-
-JOBBERGATE_APPLICATION_BASE_PATH = "jobbergate-resources"
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-APPLICATION_CONFIG = {
-    "application_name": "",
-    "application_description": "TEST_DESC",
-    "application_location": "TEST_LOC",
-    "application_dir_listing": "TEST_DIR_LISTING",
-    "application_dir_listing_acquired": True,
-    "application_owner": ""
-}
-
-JOB_SCRIPT_CONFIG = {
-    "job_script_name": "",
-    "job_script_description": "TEST_DESC",
-    "job_script_data_as_string": "TEST_DATA_AS_STR",
-    "job_script_owner": "",
-    "application": ""
-}
-
-JOB_SUBMISSION_CONFIG = {
-    "job_submission_name": "",
-    "job_submission_description": "TEST_DESC",
-    "job_submission_owner": "",
-    "job_script": ""
-}
+class Api(object):
+    def __init__(self, user_id=None):
+        self.api = JobbergateApi(
+            token=JOBBERGATE_API_JWT_PATH.read_text(),
+            job_script_config=JOB_SCRIPT_CONFIG,
+            job_submission_config=JOB_SUBMISSION_CONFIG,
+            application_config=APPLICATION_CONFIG,
+            api_endpoint=JOBBERGATE_API_ENDPOINT,
+            user_id=user_id)
 
 def interactive_get_username_password():
     username = input("Please enter your username: ")
@@ -101,6 +76,8 @@ def init_api(user_id):
         user_id=user_id)
     return api
 
+def load_config():
+    pass
 
 # Get the cli input arguments
 # args = get_parsed_args(argv)
@@ -135,6 +112,10 @@ def main(ctx, username, password):
     @click.pass_context makes username, password, token and user_id available to the other cmd
     """
     ctx.ensure_object(dict)
+
+    # create dir for token if it doesnt exist
+    Path(JOBBERGATE_USER_TOKEN_DIR).mkdir(parents=True, exist_ok=True)
+
     if not is_token_valid():
         if username and password:
             ctx.obj['username'] = username
@@ -145,13 +126,13 @@ def main(ctx, username, password):
             ctx.obj['password'] = password
         init_token(username, password)
     ctx.obj['token'] = decode_token_to_dict(JOBBERGATE_API_JWT_PATH.read_text())
-    ctx.obj['user_id'] = ctx.obj['token']['user_id']
+
+    ctx.obj = Api(user_id=ctx.obj['token']['user_id'])
 
 @main.command('list-applications')
-@click.pass_context
+@click.pass_obj
 def list_applications(ctx):
-    api = init_api(ctx.obj['user_id'])
-    resp = api.list_applications()
+    resp = ctx.api.list_applications()
     sys.stdout.write(str(resp))
     sys.exit(0)
 
@@ -162,10 +143,9 @@ def list_applications(ctx):
 @click.option("--application-path",
               "-a",
               "create_application_path")
-@click.pass_context
+@click.pass_obj
 def create_application(ctx, create_application_name, create_application_path):
-    api = init_api(ctx.obj['user_id'])
-    resp = api.create_application(
+    resp = ctx.api.create_application(
         application_name=create_application_name,
         application_path=create_application_path,
         base_path=JOBBERGATE_APPLICATION_BASE_PATH)
@@ -176,10 +156,9 @@ def create_application(ctx, create_application_name, create_application_path):
 @click.option("--id",
               "-i",
               "get_application_id")
-@click.pass_context
+@click.pass_obj
 def get_application(ctx, get_application_id):
-    api = init_api(ctx.obj['user_id'])
-    resp = api.get_application(get_application_id)
+    resp = ctx.api.get_application(get_application_id)
     sys.stdout.write(str(resp))
     sys.exit(0)
 
@@ -187,10 +166,9 @@ def get_application(ctx, get_application_id):
 @click.option("--id",
               "-i",
               "update_application_id")
-@click.pass_context
+@click.pass_obj
 def update_application(ctx, update_application_id):
-    api = init_api(ctx.obj['user_id'])
-    resp = api.update_application(update_application_id)
+    resp = ctx.api.update_application(update_application_id)
     sys.stdout.write(str(resp))
     sys.exit(0)
 
@@ -198,18 +176,16 @@ def update_application(ctx, update_application_id):
 @click.option("--id",
               "-i",
               "delete_application_id")
-@click.pass_context
+@click.pass_obj
 def delete_application(ctx, delete_application_id):
-    api = init_api(ctx.obj['user_id'])
-    resp = api.delete_application(delete_application_id)
+    resp = ctx.api.delete_application(delete_application_id)
     sys.stdout.write(str(resp))
     sys.exit(0)
 
 @main.command('list-job-scripts')
-@click.pass_context
+@click.pass_obj
 def list_job_scripts(ctx):
-    api = init_api(ctx.obj['user_id'])
-    resp = api.list_job_scripts()
+    resp = ctx.api.list_job_scripts()
     sys.stdout.write(str(resp))
     sys.exit(0)
 
@@ -224,10 +200,9 @@ def list_job_scripts(ctx):
               "-p",
               "param_file",
               type=click.Path(),)
-@click.pass_context
+@click.pass_obj
 def create_job_script(ctx, create_job_script_name, create_job_script_application_id, param_file):
-    api = init_api(ctx.obj['user_id'])
-    resp = api.create_job_script(create_job_script_name, create_job_script_application_id, param_file)
+    resp = ctx.api.create_job_script(create_job_script_name, create_job_script_application_id, param_file)
     sys.stdout.write(str(resp))
     sys.exit(0)
 
@@ -236,10 +211,9 @@ def create_job_script(ctx, create_job_script_name, create_job_script_application
 @click.option("--id",
               "-i",
               "get_job_script_id")
-@click.pass_context
+@click.pass_obj
 def get_job_script(ctx, get_job_script_id):
-    api = init_api(ctx.obj['user_id'])
-    resp = api.get_job_script(get_job_script_id)
+    resp = ctx.api.get_job_script(get_job_script_id)
     sys.stdout.write(str(resp))
     sys.exit(0)
 
@@ -247,10 +221,9 @@ def get_job_script(ctx, get_job_script_id):
 @click.option("--id",
               "-i",
               "update_job_script_id")
-@click.pass_context
+@click.pass_obj
 def update_job_script(ctx, update_job_script_id):
-    api = init_api(ctx.obj['user_id'])
-    resp = api.update_job_script(update_job_script_id)
+    resp = ctx.api.update_job_script(update_job_script_id)
     sys.stdout.write(str(resp))
     sys.exit(0)
 
@@ -258,18 +231,16 @@ def update_job_script(ctx, update_job_script_id):
 @click.option("--id",
               "-i",
               "delete_job_script_id")
-@click.pass_context
+@click.pass_obj
 def delete_job_script(ctx, delete_job_script_id):
-    api = init_api(ctx.obj['user_id'])
-    resp = api.delete_job_script(delete_job_script_id)
+    resp = ctx.api.delete_job_script(delete_job_script_id)
     sys.stdout.write(str(resp))
     sys.exit(0)
 
 @main.command('list-job-submissions')
-@click.pass_context
+@click.pass_obj
 def list_job_submissions(ctx):
-    api = init_api(ctx.obj['user_id'])
-    resp = api.list_job_submissions()
+    resp = ctx.api.list_job_submissions()
     sys.stdout.write(str(resp))
     sys.exit(0)
 
@@ -280,10 +251,9 @@ def list_job_submissions(ctx):
 @click.option("--id",
               "-i",
               "create_job_submission_job_script_id")
-@click.pass_context
+@click.pass_obj
 def create_job_submission(ctx, create_job_submission_name, create_job_submission_job_script_id):
-    api = init_api(ctx.obj['user_id'])
-    resp = api.create_job_submission(create_job_submission_name, create_job_submission_job_script_id)
+    resp = ctx.api.create_job_submission(create_job_submission_name, create_job_submission_job_script_id)
     sys.stdout.write(str(resp))
     sys.exit(0)
 
@@ -292,10 +262,9 @@ def create_job_submission(ctx, create_job_submission_name, create_job_submission
 @click.option("--id",
               "-i",
               "get_job_submission_id")
-@click.pass_context
+@click.pass_obj
 def get_job_submission(ctx, get_job_submission_id):
-    api = init_api(ctx.obj['user_id'])
-    resp = api.get_job_submission(get_job_submission_id)
+    resp = ctx.api.get_job_submission(get_job_submission_id)
     sys.stdout.write(str(resp))
     sys.exit(0)
 
@@ -303,10 +272,9 @@ def get_job_submission(ctx, get_job_submission_id):
 @click.option("--id",
               "-i",
               "update_job_submission_id")
-@click.pass_context
+@click.pass_obj
 def update_job_submission(ctx, update_job_submission_id):
-    api = init_api(ctx.obj['user_id'])
-    resp = api.update_job_submission(update_job_submission_id)
+    resp = ctx.api.update_job_submission(update_job_submission_id)
     sys.stdout.write(str(resp))
     sys.exit(0)
 
@@ -314,10 +282,9 @@ def update_job_submission(ctx, update_job_submission_id):
 @click.option("--id",
               "-i",
               "delete_job_submission_id")
-@click.pass_context
+@click.pass_obj
 def delete_job_submission(ctx, delete_job_submission_id):
-    api = init_api(ctx.obj['user_id'])
-    resp = api.delete_job_submission(delete_job_submission_id)
+    resp = ctx.api.delete_job_submission(delete_job_submission_id)
     sys.stdout.write(str(resp))
     sys.exit(0)
 
