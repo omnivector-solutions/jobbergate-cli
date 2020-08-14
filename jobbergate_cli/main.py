@@ -201,7 +201,7 @@ def list_job_scripts(ctx):
               "param_file",
               type=click.Path(),)
 @click.pass_obj
-def create_job_script(ctx, create_job_script_name, create_job_script_application_id, param_file):
+def create_job_script(ctx, create_job_script_name, create_job_script_application_id, param_file=None):
     resp = ctx.api.create_job_script(create_job_script_name, create_job_script_application_id, param_file)
     sys.stdout.write(str(resp))
     sys.exit(0)
@@ -251,9 +251,12 @@ def list_job_submissions(ctx):
 @click.option("--id",
               "-i",
               "create_job_submission_job_script_id")
+@click.option("--render-only",
+              "-ro"
+              "render_only")
 @click.pass_obj
-def create_job_submission(ctx, create_job_submission_name, create_job_submission_job_script_id):
-    resp = ctx.api.create_job_submission(create_job_submission_name, create_job_submission_job_script_id)
+def create_job_submission(ctx, create_job_submission_name, create_job_submission_job_script_id, render_only=None):
+    resp = ctx.api.create_job_submission(create_job_submission_name, create_job_submission_job_script_id, render_only)
     sys.stdout.write(str(resp))
     sys.exit(0)
 

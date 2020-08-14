@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 import json
+import importlib
 
 from subprocess import Popen, PIPE
 import requests
@@ -59,6 +60,7 @@ class JobbergateApi:
                 files=files,
                 headers={'Authorization': 'JWT ' + self.token},
                 verify=False).json()
+            print(response)
         return response
 
     def jobbergate_run(self, application_name, *argv):
@@ -94,6 +96,18 @@ class JobbergateApi:
             return tabulate_response
         return wrapper
 
+    def import_questions_into_jobbergate_cli(self, module_path, data):
+        spec = importlib.util.spec_from_file_location("Questions", module_path)
+        print(module_path)
+        module = importlib.util.module_from_spec(spec)
+        print(module)
+        print(type(module))
+        spec.loader.exec_module(module)
+        module.Questions(data)
+        return module
+        # module = importlib.import_module(module_path)
+        # return getattr(module, "questions")
+
     # Job Scripts
     @tabulate_decorator
     def list_job_scripts(self):
@@ -106,28 +120,43 @@ class JobbergateApi:
 
     @tabulate_decorator
     def create_job_script(self, job_script_name, application_id, param_file):
-        data = self.job_script_config
-        data['job_script_name'] = job_script_name
-        data['application'] = application_id
-        data['job_script_owner'] = self.user_id
+        if param_file:
+            data = self.job_script_config
+            data['job_script_name'] = job_script_name
+            data['application'] = application_id
+            data['job_script_owner'] = self.user_id
 
-        files = {'upload_file': open(param_file, 'rb')}
+            files = {'upload_file': open(param_file, 'rb')}
 
-        response = self.jobbergate_request(
-            method="POST",
-            endpoint=f"{self.api_endpoint}/job-script/",
-            data=data,
-            files=files
-        )
+            response = self.jobbergate_request(
+                method="POST",
+                endpoint=f"{self.api_endpoint}/job-script/",
+                data=data,
+                files=files
+            )
 
-        rendered_dict = json.loads(response['job_script_data_as_string'])
+            rendered_dict = json.loads(response['job_script_data_as_string'])
 
-        job_script_data_as_string = ""
-        for key, value in rendered_dict.items():
-            job_script_data_as_string += "\nNEW_FILE\n"
-            job_script_data_as_string += value
+            job_script_data_as_string = ""
+            for key, value in rendered_dict.items():
+                job_script_data_as_string += "\nNEW_FILE\n"
+                job_script_data_as_string += value
 
-        response['job_script_data_as_string'] = job_script_data_as_string
+            response['job_script_data_as_string'] = job_script_data_as_string
+
+        else:
+            print("no param file - testing questions")
+            app_data = self.jobbergate_request(
+                method="GET",
+                endpoint=f"{self.api_endpoint}/application/{application_id}"
+            )
+
+            # temp handling app location
+            test_data = {"test": "test"}
+            app_path = app_data['application_description'] + "controller.py"
+            questions = self.import_questions_into_jobbergate_cli(app_path, test_data)
+            test = questions.pre_Sim()
+            print(test)
 
         return response
 
@@ -181,7 +210,7 @@ class JobbergateApi:
         return response
 
     @tabulate_decorator
-    def create_job_submission(self, job_submission_name, job_script_id):
+    def create_job_submission(self, job_submission_name, job_script_id, render_only):
         data = self.job_submission_config
         data['job_submission_name'] = job_submission_name
         data['job_script'] = job_script_id
@@ -208,16 +237,23 @@ class JobbergateApi:
             write_file.write(value)
             write_file.close()
 
-        output, err, rc = self.jobbergate_run(application_name)
+        if render_only:
+            response = self.jobbergate_request(
+                method="POST",
+                endpoint=f"{self.api_endpoint}/job-submission/",
+                data=data
+            )
+        else:
+            output, err, rc = self.jobbergate_run(application_name)
 
-        print(f"output: {output}")
-        print(f"err: {err}")
+            print(f"output: {output}")
+            print(f"err: {err}")
 
-        response = self.jobbergate_request(
-            method="POST",
-            endpoint=f"{self.api_endpoint}/job-submission/",
-            data=data
-        )
+            response = self.jobbergate_request(
+                method="POST",
+                endpoint=f"{self.api_endpoint}/job-submission/",
+                data=data
+            )
         return response
 
     @tabulate_decorator
@@ -272,6 +308,7 @@ class JobbergateApi:
         tar_name = "application.tar.gz"
         s3_key = f"{base_path}/{str(self.user_id)}/{application_name}/application_id/{tar_name}"
         data['application_location'] = s3_key
+        data['application_description'] = application_path
 
         self.tardir(application_path, tar_name)
 

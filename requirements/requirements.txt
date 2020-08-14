@@ -4,3 +4,4 @@ click
 boto3
 tabulate
 jinja2
+pyyaml
