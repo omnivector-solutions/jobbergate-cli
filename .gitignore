@@ -8,6 +8,7 @@ __pycache__/
 osu_*
 mpi-*
 test_*
+param_dict.json
 *.tar*
 *java*
 application.sh

@@ -2,6 +2,8 @@
 import os
 import json
 import importlib
+import yaml
+import inquirer
 
 from subprocess import Popen, PIPE
 import requests
@@ -60,7 +62,6 @@ class JobbergateApi:
                 files=files,
                 headers={'Authorization': 'JWT ' + self.token},
                 verify=False).json()
-            print(response)
         return response
 
     def jobbergate_run(self, application_name, *argv):
@@ -120,11 +121,12 @@ class JobbergateApi:
 
     @tabulate_decorator
     def create_job_script(self, job_script_name, application_id, param_file):
+        data = self.job_script_config
+        data['job_script_name'] = job_script_name
+        data['application'] = application_id
+        data['job_script_owner'] = self.user_id
+
         if param_file:
-            data = self.job_script_config
-            data['job_script_name'] = job_script_name
-            data['application'] = application_id
-            data['job_script_owner'] = self.user_id
 
             files = {'upload_file': open(param_file, 'rb')}
 
@@ -151,12 +153,49 @@ class JobbergateApi:
                 endpoint=f"{self.api_endpoint}/application/{application_id}"
             )
 
-            # temp handling app location
-            test_data = {"test": "test"}
-            app_path = app_data['application_description'] + "controller.py"
-            questions = self.import_questions_into_jobbergate_cli(app_path, test_data)
-            test = questions.pre_Sim()
-            print(test)
+            config = yaml.safe_load(app_data['application_file'])
+            param_dict = {
+                "jobbergate_config": {},
+                "application_config":{}
+                          }
+            questions = []
+            for key, value in config.items():
+                for key2, value2 in value.items():
+                    value2 = [value2] if isinstance(value2, str) else value2
+                    question = inquirer.List(
+                        name=key2,
+                        message=f"Please enter {key2}",
+                        choices=[value2],)
+                    questions.append(question)
+            answers = inquirer.prompt(questions)
+            for key, value in config.items():
+                for key2, value2 in value.items():
+                    param_dict[key][key2] = answers[key2]
+            print(param_dict)
+
+            param_filename = 'param_dict.json'
+            param_file =  open(param_filename, 'w')
+            json.dump(param_dict, param_file)
+            param_file.close()
+
+            #TODO: Put below in function after testing - DRY
+            files = {'upload_file': open(param_filename, 'rb')}
+
+            response = self.jobbergate_request(
+                method="POST",
+                endpoint=f"{self.api_endpoint}/job-script/",
+                data=data,
+                files=files
+            )
+
+            rendered_dict = json.loads(response['job_script_data_as_string'])
+
+            job_script_data_as_string = ""
+            for key, value in rendered_dict.items():
+                job_script_data_as_string += "\n\nNEW_FILE\n\n"
+                job_script_data_as_string += value
+
+            response['job_script_data_as_string'] = job_script_data_as_string
 
         return response
 
@@ -293,6 +332,7 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/application/"
         )
+        response = [{k: v for k, v in d.items() if k != 'application_file'} for d in response]
         return response
 
     @tabulate_decorator
@@ -320,7 +360,7 @@ class JobbergateApi:
             data=data,
             files=files
         )
-
+        # del response['application_file']
         return response
 
     @tabulate_decorator
@@ -329,6 +369,7 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/application/{application_id}"
         )
+        # response = [{k: v for k, v in d.items() if k != 'application_file'} for d in response]
 
         return response
 
