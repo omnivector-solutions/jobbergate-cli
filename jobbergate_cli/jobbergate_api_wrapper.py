@@ -137,7 +137,7 @@ class JobbergateApi:
                 files=files
             )
 
-            print(type(response['job_script_data_as_string']))
+            print(response)
             rendered_dict = json.loads(response['job_script_data_as_string'])
 
             job_script_data_as_string = ""
