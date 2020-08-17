@@ -147,7 +147,6 @@ class JobbergateApi:
             response['job_script_data_as_string'] = job_script_data_as_string
 
         else:
-            print("no param file - testing questions")
             app_data = self.jobbergate_request(
                 method="GET",
                 endpoint=f"{self.api_endpoint}/application/{application_id}"
