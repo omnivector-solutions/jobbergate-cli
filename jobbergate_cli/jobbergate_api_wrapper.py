@@ -360,7 +360,7 @@ class JobbergateApi:
             data=data,
             files=files
         )
-        # del response['application_file']
+        del response['application_file']
         return response
 
     @tabulate_decorator
