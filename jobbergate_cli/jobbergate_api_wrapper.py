@@ -56,12 +56,22 @@ class JobbergateApi:
                 headers={'Authorization': 'JWT ' + self.token},
                 verify=False).text
         if method == "POST":
-            response = requests.post(
-                endpoint,
-                data=data,
-                files=files,
-                headers={'Authorization': 'JWT ' + self.token},
-                verify=False).json()
+            try:
+                response = requests.post(
+                    endpoint,
+                    data=data,
+                    files=files,
+                    headers={'Authorization': 'JWT ' + self.token},
+                    verify=False).json()
+            except Exception as e:
+                print(e)
+                response = requests.post(
+                    endpoint,
+                    data=data,
+                    files=files,
+                    headers={'Authorization': 'JWT ' + self.token},
+                    verify=False)
+                print(response)
         return response
 
     def jobbergate_run(self, application_name, *argv):
