@@ -71,7 +71,7 @@ class JobbergateApi:
                     files=files,
                     headers={'Authorization': 'JWT ' + self.token},
                     verify=False)
-                print(response)
+                print(response.content)
         return response
 
     def jobbergate_run(self, application_name, *argv):
