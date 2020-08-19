@@ -186,10 +186,13 @@ class JobbergateApi:
             jobbergate_yaml_file = open(CONFIG_PATH)
             jobbergate_yaml = yaml.load(jobbergate_yaml_file, Loader=yaml.FullLoader)
             module = self.import_questions_into_jobbergate_cli(module_path=MODULE_PATH)
-            print(dir(module.JobbergateApplication(jobbergate_yaml)))
+            a = module.JobbergateApplication(jobbergate_yaml)
+            print(a.application_config)
+            print(a.jobbergate_config)
+            print(a._questions)
             print(var_does_not_exist)
+            a.mainflow()
             questions = []
-            config = yaml.safe_load(app_data['application_config'])
             for i in range(len(self._questions)):
                 if hasattr(self._questions[i], "choices"):
                     question = inquirer.List(
@@ -208,8 +211,7 @@ class JobbergateApi:
                 "jobbergate_config": {},
                 "application_config":{}
                           }
-            print(config)
-            for key, value in config.items():
+            for key, value in jobbergate_yaml.items():
                 for key2, value2 in value.items():
                     param_dict[key][key2] = answers[key2]
             param_filename = '/tmp/param_dict.json'
