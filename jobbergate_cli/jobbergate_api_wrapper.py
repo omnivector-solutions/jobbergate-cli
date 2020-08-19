@@ -65,13 +65,6 @@ class JobbergateApi:
                     verify=False).json()
             except Exception as e:
                 print(e)
-                response = requests.post(
-                    endpoint,
-                    data=data,
-                    files=files,
-                    headers={'Authorization': 'JWT ' + self.token},
-                    verify=False)
-                print(response.text)
         return response
 
     def jobbergate_run(self, application_name, *argv):
