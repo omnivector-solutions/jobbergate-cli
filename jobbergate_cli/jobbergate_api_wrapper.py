@@ -29,7 +29,6 @@ class JobbergateApi:
         self.application_config = application_config
         self.api_endpoint = api_endpoint
         self.user_id = user_id
-        self._questions = []
 
     def tardir(self, path, tar_name):
         archive = tarfile.open(tar_name, "w|gz")
@@ -186,23 +185,21 @@ class JobbergateApi:
             jobbergate_yaml_file = open(CONFIG_PATH)
             jobbergate_yaml = yaml.load(jobbergate_yaml_file, Loader=yaml.FullLoader)
             module = self.import_questions_into_jobbergate_cli(module_path=MODULE_PATH)
-            a = module.JobbergateApplication(jobbergate_yaml)
-            print(a.application_config)
-            print(a.jobbergate_config)
-            print(a._questions)
-            print(var_does_not_exist)
-            a.mainflow()
+            application = module.JobbergateApplication(jobbergate_yaml)
+            # print(a.application_config)
+            # print(a.jobbergate_config)
+            # print(a._questions)
             questions = []
-            for i in range(len(self._questions)):
-                if hasattr(self._questions[i], "choices"):
+            for i in range(len(application._questions)):
+                if hasattr(application._questions[i], "choices"):
                     question = inquirer.List(
-                                    name=self._questions[i].variablename,
-                                    message=self._questions[i].message,
-                                    choices=self._questions[i].choices,)
+                                    name=application._questions[i].variablename,
+                                    message=application._questions[i].message,
+                                    choices=application._questions[i].choices,)
                 else:
                     question = inquirer.Text(
-                        name=self._questions[i].variablename,
-                        message=self._questions[i].message,)
+                        name=application._questions[i].variablename,
+                        message=application._questions[i].message,)
                 questions.append(question)
 
             print(questions)
