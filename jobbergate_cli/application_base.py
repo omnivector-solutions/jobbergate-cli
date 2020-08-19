@@ -2,7 +2,7 @@ import yaml
 
 class JobbergateApplicationBase:
     def __init__(self):
-        jobbergate_yaml = yaml.load("jobbergate.yaml")
+        jobbergate_yaml = yaml.load("/tmp/jobbergate.yaml")
         self._questions = list()
         self.jobbergate_config = jobbergate_yaml['jobbergate-config']
         self.application_config = jobbergate_yaml['application-config']

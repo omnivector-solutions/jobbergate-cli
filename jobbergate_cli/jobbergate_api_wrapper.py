@@ -11,6 +11,8 @@ import tarfile
 
 from tabulate import tabulate
 
+from jobbergate_cli.jobbergate_common import MODULE_PATH, CONFIG_PATH, MODULE_NAME
+
 class JobbergateApi:
 
     def __init__(self,
@@ -27,6 +29,7 @@ class JobbergateApi:
         self.application_config = application_config
         self.api_endpoint = api_endpoint
         self.user_id = user_id
+        self._questions = []
 
     def tardir(self, path, tar_name):
         archive = tarfile.open(tar_name, "w|gz")
@@ -100,17 +103,11 @@ class JobbergateApi:
             return tabulate_response
         return wrapper
 
-    def import_questions_into_jobbergate_cli(self, module_path, data):
-        spec = importlib.util.spec_from_file_location("Questions", module_path)
-        print(module_path)
+    def import_questions_into_jobbergate_cli(self, module_path):
+        spec = importlib.util.spec_from_file_location("JobbergateApplication", module_path)
         module = importlib.util.module_from_spec(spec)
-        print(module)
-        print(type(module))
         spec.loader.exec_module(module)
-        module.Questions(data)
         return module
-        # module = importlib.import_module(module_path)
-        # return getattr(module, "questions")
 
     # Job Scripts
     @tabulate_decorator
@@ -156,24 +153,35 @@ class JobbergateApi:
                 endpoint=f"{self.api_endpoint}/application/{application_id}"
             )
 
-            config = yaml.safe_load(app_data['application_file'])
-            param_dict = {
-                "jobbergate_config": {},
-                "application_config":{}
-                          }
-            questions = []
-            for key, value in config.items():
-                for key2, value2 in value.items():
-                    value2 = [value2] if isinstance(value2, str) else value2
-                    question = inquirer.List(
-                        name=key2,
-                        message=f"Please enter {key2}",
-                        choices=[value2],)
-                    questions.append(question)
-            answers = inquirer.prompt(questions)
-            for key, value in config.items():
-                for key2, value2 in value.items():
-                    param_dict[key][key2] = answers[key2]
+            # config = yaml.safe_load(app_data['application_file'])
+            # param_dict = {
+            #     "jobbergate_config": {},
+            #     "application_config":{}
+            #               }
+            # questions = []
+            # for key, value in config.items():
+            #     for key2, value2 in value.items():
+            #         value2 = [value2] if isinstance(value2, str) else value2
+            #         question = inquirer.List(
+            #             name=key2,
+            #             message=f"Please enter {key2}",
+            #             choices=[value2],)
+            #         questions.append(question)
+            # answers = inquirer.prompt(questions)
+            # for key, value in config.items():
+            #     for key2, value2 in value.items():
+            #         param_dict[key][key2] = answers[key2]
+            application_file = open(MODULE_PATH, "w")
+            w = application_file.write(app_data['application_file'])
+            application_file.close()
+
+            application_config = open(CONFIG_PATH, "w")
+            w = application_config.write(app_data['application_config'])
+            application_config.close()
+
+            module = self.import_questions_into_jobbergate_cli(module_path=MODULE_PATH)
+            print(dir(module))
+            module.JobbergateApplication.mainflow(self)
             print(param_dict)
 
             param_filename = 'param_dict.json'
@@ -363,7 +371,7 @@ class JobbergateApi:
             data=data,
             files=files
         )
-        del response['application_file']
+        # del response['application_file']
         return response
 
     @tabulate_decorator
