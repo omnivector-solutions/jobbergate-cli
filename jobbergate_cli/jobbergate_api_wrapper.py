@@ -153,7 +153,6 @@ class JobbergateApi:
                 endpoint=f"{self.api_endpoint}/application/{application_id}"
             )
 
-            # config = yaml.safe_load(app_data['application_file'])
             # param_dict = {
             #     "jobbergate_config": {},
             #     "application_config":{}
@@ -171,26 +170,57 @@ class JobbergateApi:
             # for key, value in config.items():
             #     for key2, value2 in value.items():
             #         param_dict[key][key2] = answers[key2]
+
+            # MODULE_PATH.write_text(app_data['application_file'])
+            # application_file.write_text(app_data['application_file'])
             application_file = open(MODULE_PATH, "w")
             w = application_file.write(app_data['application_file'])
             application_file.close()
 
-            application_config = open(CONFIG_PATH, "w")
-            w = application_config.write(app_data['application_config'])
-            application_config.close()
+            # CONFIG_PATH.write_text(app_data['application_config'])
+            # application_config.write(app_data['application_file'])
+            # application_config = open(CONFIG_PATH, "w")
+            # w = application_config.write(app_data['application_config'])
+            # application_config.close()
 
+            jobbergate_yaml_file = open(CONFIG_PATH)
+            jobbergate_yaml = yaml.load(jobbergate_yaml_file, Loader=yaml.FullLoader)
             module = self.import_questions_into_jobbergate_cli(module_path=MODULE_PATH)
-            print(dir(module))
-            module.JobbergateApplication.mainflow(self)
-            print(param_dict)
+            print(dir(module.JobbergateApplication(jobbergate_yaml)))
+            print(var_does_not_exist)
+            questions = []
+            config = yaml.safe_load(app_data['application_config'])
+            for i in range(len(self._questions)):
+                if hasattr(self._questions[i], "choices"):
+                    question = inquirer.List(
+                                    name=self._questions[i].variablename,
+                                    message=self._questions[i].message,
+                                    choices=self._questions[i].choices,)
+                else:
+                    question = inquirer.Text(
+                        name=self._questions[i].variablename,
+                        message=self._questions[i].message,)
+                questions.append(question)
 
-            param_filename = 'param_dict.json'
+            print(questions)
+            answers = inquirer.prompt(questions)
+            param_dict = {
+                "jobbergate_config": {},
+                "application_config":{}
+                          }
+            print(config)
+            for key, value in config.items():
+                for key2, value2 in value.items():
+                    param_dict[key][key2] = answers[key2]
+            param_filename = '/tmp/param_dict.json'
             param_file =  open(param_filename, 'w')
             json.dump(param_dict, param_file)
             param_file.close()
 
             #TODO: Put below in function after testing - DRY
             files = {'upload_file': open(param_filename, 'rb')}
+            print(param_dict)
+            print(var_does_not_exist)
 
             response = self.jobbergate_request(
                 method="POST",
