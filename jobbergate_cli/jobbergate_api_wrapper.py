@@ -171,7 +171,6 @@ class JobbergateApi:
             application = module.JobbergateApplication(param_dict)
 
             for i in range(len(application._questions)):
-                print(application._questions[i].__class__.__name__)
                 if application._questions[i].__class__.__name__ == 'List':
                     question = inquirer.List(
                                     name=application._questions[i].variablename,
@@ -209,9 +208,7 @@ class JobbergateApi:
                         message=shared_questions[i].message,)
                 questions_2.append(question)
             test_answers = inquirer.prompt(questions_2)
-            print("param_dict with test_answers:")
             param_dict['jobbergate_config'].update(test_answers)
-            print(param_dict)
             param_filename = '/tmp/param_dict.json'
             param_file =  open(param_filename, 'w')
             json.dump(param_dict, param_file)
@@ -219,7 +216,6 @@ class JobbergateApi:
 
             #TODO: Put below in function after testing - DRY
             files = {'upload_file': open(param_filename, 'rb')}
-            print(param_dict)
 
             response = self.jobbergate_request(
                 method="POST",
@@ -372,7 +368,7 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/application/"
         )
-        response = [{k: v for k, v in d.items() if k != 'application_file'} for d in response]
+        response = [{k: v for k, v in d.items() if k not in ['application_config', 'application_file']} for d in response]
         return response
 
     @tabulate_decorator
