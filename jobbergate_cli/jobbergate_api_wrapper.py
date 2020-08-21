@@ -151,25 +151,7 @@ class JobbergateApi:
                 method="GET",
                 endpoint=f"{self.api_endpoint}/application/{application_id}"
             )
-
-            param_dict = {
-                "jobbergate_config": {},
-                "application_config":{}
-                          }
             questions = []
-            # questions = []
-            # for key, value in config.items():
-            #     for key2, value2 in value.items():
-            #         value2 = [value2] if isinstance(value2, str) else value2
-            #         question = inquirer.List(
-            #             name=key2,
-            #             message=f"Please enter {key2}",
-            #             choices=[value2],)
-            #         questions.append(question)
-            # answers = inquirer.prompt(questions)
-            # for key, value in config.items():
-            #     for key2, value2 in value.items():
-            #         param_dict[key][key2] = answers[key2]
 
             # MODULE_PATH.write_text(app_data['application_file'])
             # application_file.write_text(app_data['application_file'])
@@ -184,14 +166,13 @@ class JobbergateApi:
             application_config.close()
 
             jobbergate_yaml_file = open(CONFIG_PATH)
-            jobbergate_yaml = yaml.load(jobbergate_yaml_file, Loader=yaml.FullLoader)
+            param_dict = yaml.load(jobbergate_yaml_file, Loader=yaml.FullLoader)
             module = self.import_questions_into_jobbergate_cli(module_path=MODULE_PATH)
-            application = module.JobbergateApplication(jobbergate_yaml)
-            # print(a.application_config)
-            # print(a.jobbergate_config)
-            # print(a._questions)
+            application = module.JobbergateApplication(param_dict)
+
             for i in range(len(application._questions)):
-                if hasattr(application._questions[i], "choices"):
+                print(application._questions[i].__class__.__name__)
+                if application._questions[i].__class__.__name__ == 'List':
                     question = inquirer.List(
                                     name=application._questions[i].variablename,
                                     message=application._questions[i].message,
@@ -203,17 +184,21 @@ class JobbergateApi:
                 questions.append(question)
 
             answers = inquirer.prompt(questions)
-            print(answers)
-            print(type(jobbergate_yaml['jobbergate_config']))
-            jobbergate_yaml['jobbergate_config'].update(answers)
-            print(jobbergate_yaml['jobbergate_config'])
+
+            param_dict['jobbergate_config'].update(answers)
+
             #test running questions in shared() - also why is it called 'shared'?
-            shared_questions = application.shared(data=jobbergate_yaml['jobbergate_config'])
-            print(shared_questions)
-            #awful name - pick a new one
+            shared_questions = application.shared(data=param_dict['jobbergate_config'])
+            # questions_2 awful name - pick a new one
             questions_2 = []
             for i in range(len(shared_questions)):
-                if hasattr(shared_questions[i], "choices"):
+                if shared_questions[i].default:
+                    print(shared_questions[i].variablename)
+                    question = inquirer.Text(
+                        name=shared_questions[i].variablename,
+                        message=shared_questions[i].message,
+                        default=shared_questions[i].default)
+                elif shared_questions[i].__class__.__name__ == 'List':
                     question = inquirer.List(
                                     name=shared_questions[i].variablename,
                                     message=shared_questions[i].message,
@@ -224,10 +209,9 @@ class JobbergateApi:
                         message=shared_questions[i].message,)
                 questions_2.append(question)
             test_answers = inquirer.prompt(questions_2)
-            print(test_answers)
-            for key, value in jobbergate_yaml.items():
-                for key2, value2 in value.items():
-                    param_dict[key][key2] = answers[key2]
+            print("param_dict with test_answers:")
+            param_dict['jobbergate_config'].update(test_answers)
+            print(param_dict)
             param_filename = '/tmp/param_dict.json'
             param_file =  open(param_filename, 'w')
             json.dump(param_dict, param_file)
