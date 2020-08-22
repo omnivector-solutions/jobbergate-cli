@@ -1,4 +1,3 @@
-GETS
 lint: ## Run linter
 	tox -e lint
 clean: ## Remove .tox and build dirs
