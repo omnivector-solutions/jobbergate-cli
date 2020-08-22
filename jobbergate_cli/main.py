@@ -256,21 +256,6 @@ def decode_token_to_dict(encoded_token):
     return token
 
 
-def init_api(user_id):
-    api = JobbergateApi(
-        token=JOBBERGATE_API_JWT_PATH.read_text(),
-        job_script_config=JOB_SCRIPT_CONFIG,
-        job_submission_config=JOB_SUBMISSION_CONFIG,
-        application_config=APPLICATION_CONFIG,
-        api_endpoint=JOBBERGATE_API_ENDPOINT,
-        user_id=user_id)
-    return api
-
-
-def load_config():
-    pass
-
-
 # Get the cli input arguments
 # args = get_parsed_args(argv)
 # Grab the pre-existing token, if doesn't exist or is invalid then grab a new one.
