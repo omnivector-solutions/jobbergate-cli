@@ -368,7 +368,8 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/application/"
         )
-        response = [{k: v for k, v in d.items() if k not in ['application_config', 'application_file']} for d in response]
+        suppress = ['application_config', 'application_file', 'created_at', 'updated_at', 'application_dir_listing', 'application_location', 'application_dir_listing_acquired']
+        response = [{k: v for k, v in d.items() if k not in suppress} for d in response]
         return response
 
     @tabulate_decorator
