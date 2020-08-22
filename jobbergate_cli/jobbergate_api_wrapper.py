@@ -115,7 +115,8 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/job-script/"
         )
-        response = [{k: v for k, v in d.items() if k != 'job_script_data_as_string'} for d in response]
+        suppress = ['created_at', 'updated_at', 'job_script_data_as_string']
+        response = [{k: v for k, v in d.items() if k not in suppress} for d in response]
         return response
 
     @tabulate_decorator
@@ -282,6 +283,8 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/job-submission/"
         )
+        suppress = ['created_at', 'updated_at']
+        response = [{k: v for k, v in d.items() if k not in suppress} for d in response]
         return response
 
     @tabulate_decorator

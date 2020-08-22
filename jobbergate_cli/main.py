@@ -251,8 +251,7 @@ def list_job_submissions(ctx):
 @click.option("--id",
               "-i",
               "create_job_submission_job_script_id")
-@click.option("--render-only",
-              "-ro"
+@click.option("--dry-run",
               "render_only")
 @click.pass_obj
 def create_job_submission(ctx, create_job_submission_name, create_job_submission_job_script_id, render_only=None):
