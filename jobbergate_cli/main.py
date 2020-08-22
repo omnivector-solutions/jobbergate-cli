@@ -11,9 +11,17 @@ import click
 from datetime import datetime
 
 from jobbergate_cli.jobbergate_api_wrapper import JobbergateApi
-from jobbergate_cli.jobbergate_common import JOBBERGATE_API_JWT_PATH, JOBBERGATE_API_ENDPOINT, \
-    JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT, JOBBERGATE_APPLICATION_BASE_PATH, \
-    APPLICATION_CONFIG, JOB_SCRIPT_CONFIG, JOB_SUBMISSION_CONFIG, JOBBERGATE_USER_TOKEN_DIR
+from jobbergate_cli.jobbergate_common import (
+    APPLICATION_CONFIG,
+    JOB_SCRIPT_CONFIG,
+    JOB_SUBMISSION_CONFIG,
+    JOBBERGATE_API_ENDPOINT,
+    JOBBERGATE_API_JWT_PATH,
+    JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT,
+    JOBBERGATE_APPLICATION_BASE_PATH,
+    JOBBERGATE_USER_TOKEN_DIR,
+)
+
 
 class Api(object):
     def __init__(self, user_id=None):
@@ -24,70 +32,6 @@ class Api(object):
             application_config=APPLICATION_CONFIG,
             api_endpoint=JOBBERGATE_API_ENDPOINT,
             user_id=user_id)
-
-def interactive_get_username_password():
-    username = input("Please enter your username: ")
-    password = getpass.getpass()
-    return username, password
-
-
-def init_token(username, password):
-    """Get a new token from the api and write it to the token file.
-    """
-    resp = requests.post(
-        JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT,
-        data={"username": username, "password": password}
-    )
-    JOBBERGATE_API_JWT_PATH.write_text(resp.json()['token'])
-
-
-def is_token_valid():
-    """Return true/false depending on whether the token is valid or not.
-    """
-    token = dict()
-
-    if JOBBERGATE_API_JWT_PATH.exists():
-        token = decode_token_to_dict(JOBBERGATE_API_JWT_PATH.read_text())
-        if datetime.fromtimestamp(token['exp']) > datetime.now():
-            return True
-        else:
-            return False
-    else:
-        return False
-
-def decode_token_to_dict(encoded_token):
-    try:
-        token = jwt.decode(
-            encoded_token,
-            verify=False,
-        )
-    except jwt.exceptions.InvalidTokenError as e:
-        print(e)
-        sys.exit()
-    return token
-
-def init_api(user_id):
-    api = JobbergateApi(
-        token=JOBBERGATE_API_JWT_PATH.read_text(),
-        job_script_config=JOB_SCRIPT_CONFIG,
-        job_submission_config=JOB_SUBMISSION_CONFIG,
-        application_config=APPLICATION_CONFIG,
-        api_endpoint=JOBBERGATE_API_ENDPOINT,
-        user_id=user_id)
-    return api
-
-def load_config():
-    pass
-
-# Get the cli input arguments
-# args = get_parsed_args(argv)
-# Grab the pre-existing token, if doesn't exist or is invalid then grab a new one.
-#
-# Allow the user to pass their jobbergate username and password as command line
-# arguments. If a token isn't found or invalid AND the username and password
-# are not supplied at runtime, we will launch an interactive session to
-# acquire the username password.
-
 
 
 # def get_parsed_args(argv):
@@ -105,29 +49,6 @@ def load_config():
     help='Your Jobbergate API password',
     hide_input=True
 )
-@click.pass_context
-def main(ctx, username, password):
-    """
-    ctx --> context
-    @click.pass_context makes username, password, token and user_id available to the other cmd
-    """
-    ctx.ensure_object(dict)
-
-    # create dir for token if it doesnt exist
-    Path(JOBBERGATE_USER_TOKEN_DIR).mkdir(parents=True, exist_ok=True)
-
-    if not is_token_valid():
-        if username and password:
-            ctx.obj['username'] = username
-            ctx.obj['password'] = password
-        else:
-            username, password = interactive_get_username_password()
-            ctx.obj['username'] = username
-            ctx.obj['password'] = password
-        init_token(username, password)
-    ctx.obj['token'] = decode_token_to_dict(JOBBERGATE_API_JWT_PATH.read_text())
-
-    ctx.obj = Api(user_id=ctx.obj['token']['user_id'])
 
 @main.command('list-applications')
 @click.pass_obj
@@ -289,6 +210,101 @@ def delete_job_submission(ctx, delete_job_submission_id):
     resp = ctx.api.delete_job_submission(delete_job_submission_id)
     sys.stdout.write(str(resp))
     sys.exit(0)
+
+
+def in
+
+def interactive_get_username_password():
+    username = input("Please enter your username: ")
+    password = getpass.getpass()
+    return username, password
+
+
+def init_token(username, password):
+    """Get a new token from the api and write it to the token file.
+    """
+    resp = requests.post(
+        JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT,
+        data={"username": username, "password": password}
+    )
+    JOBBERGATE_API_JWT_PATH.write_text(resp.json()['token'])
+
+
+def is_token_valid():
+    """Return true/false depending on whether the token is valid or not.
+    """
+    token = dict()
+
+    if JOBBERGATE_API_JWT_PATH.exists():
+        token = decode_token_to_dict(JOBBERGATE_API_JWT_PATH.read_text())
+        if datetime.fromtimestamp(token['exp']) > datetime.now():
+            return True
+        else:
+            return False
+    else:
+        return False
+
+def decode_token_to_dict(encoded_token):
+    try:
+        token = jwt.decode(
+            encoded_token,
+            verify=False,
+        )
+    except jwt.exceptions.InvalidTokenError as e:
+        print(e)
+        sys.exit()
+    return token
+
+
+def init_api(user_id):
+    api = JobbergateApi(
+        token=JOBBERGATE_API_JWT_PATH.read_text(),
+        job_script_config=JOB_SCRIPT_CONFIG,
+        job_submission_config=JOB_SUBMISSION_CONFIG,
+        application_config=APPLICATION_CONFIG,
+        api_endpoint=JOBBERGATE_API_ENDPOINT,
+        user_id=user_id)
+    return api
+
+
+def load_config():
+    pass
+
+
+# Get the cli input arguments
+# args = get_parsed_args(argv)
+# Grab the pre-existing token, if doesn't exist or is invalid then grab a new one.
+#
+# Allow the user to pass their jobbergate username and password as command line
+# arguments. If a token isn't found or invalid AND the username and password
+# are not supplied at runtime, we will launch an interactive session to
+# acquire the username password.
+@click.pass_context
+def main(ctx, username, password):
+    """
+    ctx --> context
+    @click.pass_context makes username, password, token and user_id available to the other cmd
+    """
+    ctx.ensure_object(dict)
+
+    # create dir for token if it doesnt exist
+    if not JOBBERGATE_USER_TOKEN_DIR.exists():
+        JOBBERGATE_USER_TOKEN_DIR.mkdir(parents=True)
+
+    if not is_token_valid():
+        if username and password:
+            ctx.obj['username'] = username
+            ctx.obj['password'] = password
+        else:
+            username, password = interactive_get_username_password()
+            ctx.obj['username'] = username
+            ctx.obj['password'] = password
+        init_token(username, password)
+    ctx.obj['token'] = decode_token_to_dict(JOBBERGATE_API_JWT_PATH.read_text())
+
+    ctx.obj = Api(user_id=ctx.obj['token']['user_id'])
+
+
 
 if __name__ == "__main__":
     main()

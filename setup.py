@@ -11,6 +11,6 @@ setup(
     install_requires=raw_reqs,
     # data_files=[('config', ['config/*.json'])],
     entry_points = {
-        'console_scripts': ['jobbergate-cli=jobbergate_cli.main:main'],
+        'console_scripts': ['jobbergate=jobbergate_cli.main:main'],
     }
 )
