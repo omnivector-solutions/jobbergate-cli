@@ -34,22 +34,6 @@ class Api(object):
             user_id=user_id)
 
 
-# def get_parsed_args(argv):
-"""Create argument parser and return cli args.
-"""
-# Get the cli input arguments
-@click.group()
-@click.option(
-    '--username',
-    '-u',
-    help='Your Jobbergate API Username',
-)
-@click.option(
-    '--password', '-p',
-    help='Your Jobbergate API password',
-    hide_input=True
-)
-
 def interactive_get_username_password():
     username = input("Please enter your username: ")
     password = getpass.getpass()
@@ -100,6 +84,18 @@ def decode_token_to_dict(encoded_token):
 # arguments. If a token isn't found or invalid AND the username and password
 # are not supplied at runtime, we will launch an interactive session to
 # acquire the username password.
+
+@click.group()
+@click.option(
+    '--username',
+    '-u',
+    help='Your Jobbergate API Username',
+)
+@click.option(
+    '--password', '-p',
+    help='Your Jobbergate API password',
+    hide_input=True
+)
 @click.pass_context
 def main(ctx, username, password):
     """
