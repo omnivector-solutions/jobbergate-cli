@@ -29,6 +29,17 @@ class JobbergateApi:
         self.application_config = application_config
         self.api_endpoint = api_endpoint
         self.user_id = user_id
+        # Suppress from list- and create- application:
+        self.application_suppress = [
+            'application_config',
+            'application_file',
+            'created_at',
+            'updated_at',
+            'application_dir_listing',
+            'application_location',
+            'application_dir_listing_acquired'
+        ]
+
 
     def tardir(self, path, tar_name):
         archive = tarfile.open(tar_name, "w|gz")
@@ -372,8 +383,7 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/application/"
         )
-        suppress = ['application_config', 'application_file', 'created_at', 'updated_at', 'application_dir_listing', 'application_location', 'application_dir_listing_acquired']
-        response = [{k: v for k, v in d.items() if k not in suppress} for d in response]
+        response = [{k: v for k, v in d.items() if k not in self.application_suppress} for d in response]
         return response
 
     @tabulate_decorator
@@ -401,7 +411,9 @@ class JobbergateApi:
             data=data,
             files=files
         )
-        # del response['application_file']
+
+        response = [{k: v for k, v in d.items() if k not in self.application_suppress} for d in response]
+        os.remove(tar_name)
         return response
 
     @tabulate_decorator
