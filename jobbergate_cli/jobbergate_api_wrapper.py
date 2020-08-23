@@ -246,8 +246,9 @@ class JobbergateApi:
                 shared_questions = application.shared(
                     data=param_dict['jobbergate_config']
                 )
-                # questions_2 awful name - pick a new one
+
                 questions_2 = []
+
                 questions_shared = self.assemble_questions(
                     questions=shared_questions,
                     question_list=questions_2
