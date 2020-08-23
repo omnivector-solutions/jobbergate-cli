@@ -188,28 +188,29 @@ class JobbergateApi:
             param_dict['jobbergate_config'].update(answers)
 
             #test running questions in shared() - also why is it called 'shared'?
-            shared_questions = application.shared(data=param_dict['jobbergate_config'])
-            # questions_2 awful name - pick a new one
-            questions_2 = []
-            for i in range(len(shared_questions)):
-                if shared_questions[i].default:
-                    print(shared_questions[i].variablename)
-                    question = inquirer.Text(
-                        name=shared_questions[i].variablename,
-                        message=shared_questions[i].message,
-                        default=shared_questions[i].default)
-                elif shared_questions[i].__class__.__name__ == 'List':
-                    question = inquirer.List(
-                                    name=shared_questions[i].variablename,
-                                    message=shared_questions[i].message,
-                                    choices=shared_questions[i].choices,)
-                else:
-                    question = inquirer.Text(
-                        name=shared_questions[i].variablename,
-                        message=shared_questions[i].message,)
-                questions_2.append(question)
-            test_answers = inquirer.prompt(questions_2)
-            param_dict['jobbergate_config'].update(test_answers)
+            if hasattr(application, "shared"):
+                shared_questions = application.shared(data=param_dict['jobbergate_config'])
+                # questions_2 awful name - pick a new one
+                questions_2 = []
+                for i in range(len(shared_questions)):
+                    if shared_questions[i].default:
+                        print(shared_questions[i].variablename)
+                        question = inquirer.Text(
+                            name=shared_questions[i].variablename,
+                            message=shared_questions[i].message,
+                            default=shared_questions[i].default)
+                    elif shared_questions[i].__class__.__name__ == 'List':
+                        question = inquirer.List(
+                                        name=shared_questions[i].variablename,
+                                        message=shared_questions[i].message,
+                                        choices=shared_questions[i].choices,)
+                    else:
+                        question = inquirer.Text(
+                            name=shared_questions[i].variablename,
+                            message=shared_questions[i].message,)
+                    questions_2.append(question)
+                    test_answers = inquirer.prompt(questions_2)
+                    param_dict['jobbergate_config'].update(test_answers)
             param_filename = '/tmp/param_dict.json'
             param_file =  open(param_filename, 'w')
             json.dump(param_dict, param_file)
