@@ -41,3 +41,9 @@ JOB_SUBMISSION_CONFIG = {
     "job_submission_owner": "",
     "job_script": ""
 }
+
+MODULE_PATH = "/tmp/application.py"
+
+CONFIG_PATH = "/tmp/jobbergate.yaml"
+
+MODULE_NAME = ""

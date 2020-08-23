@@ -1,6 +1,7 @@
 requests
 pyjwt
 click
-boto3
 tabulate
 jinja2
+pyyaml
+inquirer
