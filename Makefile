@@ -1,5 +1,5 @@
 lint: ## Run linter
-	tox -e lint
+    tox -e lint
 clean: ## Remove .tox and build dirs
 	rm -rf .tox/
 	rm -rf venv/

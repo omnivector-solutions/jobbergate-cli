@@ -148,7 +148,6 @@ class JobbergateApi:
                 files=files
             )
 
-            print(response)
             rendered_dict = json.loads(response['job_script_data_as_string'])
 
             job_script_data_as_string = ""
@@ -205,7 +204,6 @@ class JobbergateApi:
                 questions_2 = []
                 for i in range(len(shared_questions)):
                     if shared_questions[i].default:
-                        print(shared_questions[i].variablename)
                         question = inquirer.Text(
                             name=shared_questions[i].variablename,
                             message=shared_questions[i].message,
@@ -247,8 +245,7 @@ class JobbergateApi:
             response['job_script_data_as_string'] = job_script_data_as_string
 
         if debug == False:
-            print("no debug.. dropping job_script_data_as_string")
-            response = [{k: v for k, v in d.items() if k == "job_script_data_as_string"} for d in response]
+            del response['job_script_data_as_string']
 
         return response
 
