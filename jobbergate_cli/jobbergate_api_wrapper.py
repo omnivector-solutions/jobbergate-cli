@@ -131,7 +131,7 @@ class JobbergateApi:
         return response
 
     @tabulate_decorator
-    def create_job_script(self, job_script_name, application_id, param_file):
+    def create_job_script(self, job_script_name, application_id, param_file, debug):
         data = self.job_script_config
         data['job_script_name'] = job_script_name
         data['application'] = application_id
@@ -245,6 +245,10 @@ class JobbergateApi:
                 job_script_data_as_string += value
 
             response['job_script_data_as_string'] = job_script_data_as_string
+
+        if debug == False:
+            print("no debug.. dropping job_script_data_as_string")
+            response = [{k: v for k, v in d.items() if k == "job_script_data_as_string"} for d in response]
 
         return response
 
@@ -412,7 +416,8 @@ class JobbergateApi:
             files=files
         )
 
-        response = [{k: v for k, v in d.items() if k not in self.application_suppress} for d in response]
+        for key in self.application_suppress:
+            response.pop(key, None)
         os.remove(tar_name)
         return response
 

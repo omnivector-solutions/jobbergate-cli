@@ -200,9 +200,12 @@ def list_job_scripts(ctx):
               "-p",
               "param_file",
               type=click.Path(),)
+@click.option("--debug",
+              "debug",
+              default=False)
 @click.pass_obj
-def create_job_script(ctx, create_job_script_name, create_job_script_application_id, param_file=None):
-    resp = ctx.api.create_job_script(create_job_script_name, create_job_script_application_id, param_file)
+def create_job_script(ctx, create_job_script_name, create_job_script_application_id, debug, param_file=None):
+    resp = ctx.api.create_job_script(create_job_script_name, create_job_script_application_id, param_file, debug)
     sys.stdout.write(str(resp))
     sys.exit(0)
 
