@@ -11,7 +11,8 @@ import tarfile
 
 from tabulate import tabulate
 
-from jobbergate_cli.jobbergate_common import MODULE_PATH, CONFIG_PATH
+from jobbergate_cli.jobbergate_common import MODULE_PATH, CONFIG_PATH, \
+    APPLICATION_FILENAME, CONFIG_FILENAME
 
 
 class JobbergateApi:
@@ -64,21 +65,35 @@ class JobbergateApi:
                            data=None,
                            files=None):
         if method == "GET":
-            response = requests.get(
-                endpoint,
-                headers={'Authorization': 'JWT ' + self.token},
-                verify=False).json()
+            try:
+                response = requests.get(
+                    endpoint,
+                    headers={'Authorization': 'JWT ' + self.token},
+                    verify=False).json()
+            except Exception as e:
+                response = f"GET request failed with data: {data}"
+                return response
         if method == "PUT":
-            response = requests.put(
-                endpoint,
-                data=data,
-                headers={'Authorization': 'JWT ' + self.token},
-                verify=False).json()
+            try:
+                response = requests.put(
+                    endpoint,
+                    data=data,
+                    headers={'Authorization': 'JWT ' + self.token},
+                    verify=False).json()
+            except Exception as e:
+                response = f"POST request failed with data: {data}"
+                return response
+
         if method == "DELETE":
-            response = requests.delete(
-                endpoint,
-                headers={'Authorization': 'JWT ' + self.token},
-                verify=False).text
+            try:
+                response = requests.delete(
+                    endpoint,
+                    headers={'Authorization': 'JWT ' + self.token},
+                    verify=False).text
+            except Exception as e:
+                response = f"DELETE request failed with data: {data}"
+                return response
+
         if method == "POST":
             try:
                 response = requests.post(
@@ -88,7 +103,8 @@ class JobbergateApi:
                     headers={'Authorization': 'JWT ' + self.token},
                     verify=False).json()
             except Exception as e:
-                print(e)
+                response = f"POST request failed with data: {data}"
+                return response
         return response
 
     def jobbergate_run(self, *argv):
@@ -120,6 +136,9 @@ class JobbergateApi:
                 tabulate_response = tabulate(
                     response.items()
                 )
+            # error response
+            elif type(response) == str:
+                tabulate_response = response
 
             return tabulate_response
         return wrapper
@@ -448,6 +467,40 @@ class JobbergateApi:
         '''
         create an application based on path provided by the user
         '''
+
+        #check for required files
+        is_dir = os.path.isdir(application_path)
+        is_app_file = os.path.isfile(f"{application_path}/{APPLICATION_FILENAME}")
+        is_config_file = os.path.isfile(f"{application_path}/{CONFIG_FILENAME}")
+
+        error_check = []
+        if is_dir is False:
+            error_check.append(
+                {
+                    "error": "invalid application path supplied",
+                    "solution": f"{application_path} is invalid, please review and try again"
+
+                }
+            )
+        if is_app_file is False:
+            error_check.append(
+                {
+                    "error": f"Could not find {APPLICATION_FILENAME} in {application_path}",
+                    "solution": f"Please ensure {APPLICATION_FILENAME} is in application path provided"
+                }
+            )
+        if is_config_file is False:
+            error_check.append(
+                {
+                    "error": f"Could not find {CONFIG_FILENAME} in {application_path}",
+                    "solution": f"Please ensure {CONFIG_FILENAME} is in application path provided"
+                }
+            )
+
+        if len(error_check) > 0:
+            response = error_check
+            return response
+
 
         data = self.application_config
         data['application_name'] = application_name

@@ -40,7 +40,9 @@ def init_token(username, password):
         JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT,
         data={"username": username, "password": password}
     )
+
     JOBBERGATE_API_JWT_PATH.write_text(resp.json()['token'])
+
 
 
 def is_token_valid():
@@ -134,7 +136,13 @@ def main(ctx,
             username, password = interactive_get_username_password()
             ctx.obj['username'] = username
             ctx.obj['password'] = password
-        init_token(username, password)
+        try:
+            init_token(username, password)
+        except KeyError:
+            print(
+                f"Auth Failed for username: {username}, Please Try again"
+            )
+            sys.exit(0)
     ctx.obj['token'] = decode_token_to_dict(
         JOBBERGATE_API_JWT_PATH.read_text())
 
