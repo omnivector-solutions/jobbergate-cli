@@ -192,9 +192,7 @@ def get_application(ctx,
 @click.pass_obj
 def update_application(ctx,
                        update_application_id):
-    resp = ctx.api.update_application(update_application_id)
-    sys.stdout.write(str(resp))
-    sys.exit(0)
+    print(ctx.api.update_application(update_application_id))
 
 
 @main.command('delete-application')
@@ -204,9 +202,7 @@ def update_application(ctx,
 @click.pass_obj
 def delete_application(ctx,
                        delete_application_id):
-    resp = ctx.api.delete_application(delete_application_id)
-    sys.stdout.write(str(resp))
-    sys.exit(0)
+    print(ctx.api.delete_application(delete_application_id))
 
 
 @main.command('list-job-scripts')
@@ -215,9 +211,7 @@ def delete_application(ctx,
               is_flag=True)
 @click.pass_obj
 def list_job_scripts(ctx, all=False):
-    resp = ctx.api.list_job_scripts(all)
-    sys.stdout.write(str(resp))
-    sys.exit(0)
+    print(ctx.api.list_job_scripts(all))
 
 
 @main.command('create-job-script')
@@ -240,13 +234,11 @@ def create_job_script(ctx,
                       create_job_script_application_id,
                       debug=False,
                       param_file=None):
-    resp = ctx.api.create_job_script(
+    print(ctx.api.create_job_script(
         create_job_script_name,
         create_job_script_application_id,
         param_file,
-        debug)
-    sys.stdout.write(str(resp))
-    sys.exit(0)
+        debug))
 
 
 @main.command('get-job-script')
@@ -260,9 +252,7 @@ def create_job_script(ctx,
 def get_job_script(ctx,
                    get_job_script_id,
                    as_str):
-    resp = ctx.api.get_job_script(get_job_script_id, as_str)
-    sys.stdout.write(str(resp))
-    sys.exit(0)
+    print(ctx.api.get_job_script(get_job_script_id, as_str))
 
 
 @main.command('update-job-script')
@@ -272,9 +262,7 @@ def get_job_script(ctx,
 @click.pass_obj
 def update_job_script(ctx,
                       update_job_script_id):
-    resp = ctx.api.update_job_script(update_job_script_id)
-    sys.stdout.write(str(resp))
-    sys.exit(0)
+    print(ctx.api.update_job_script(update_job_script_id))
 
 
 @main.command('delete-job-script')
@@ -284,9 +272,7 @@ def update_job_script(ctx,
 @click.pass_obj
 def delete_job_script(ctx,
                       delete_job_script_id):
-    resp = ctx.api.delete_job_script(delete_job_script_id)
-    sys.stdout.write(str(resp))
-    sys.exit(0)
+    print(ctx.api.delete_job_script(delete_job_script_id))
 
 
 @main.command('list-job-submissions')
@@ -296,9 +282,6 @@ def delete_job_script(ctx,
 @click.pass_obj
 def list_job_submissions(ctx, all=False):
     print(ctx.api.list_job_submissions(all))
-    # resp = ctx.api.list_job_submissions(all)
-    # sys.stdout.write(str(resp))
-    # sys.exit(0)
 
 
 @main.command('create-job-submission')
@@ -315,12 +298,10 @@ def create_job_submission(ctx,
                           create_job_submission_name,
                           create_job_submission_job_script_id,
                           render_only=None):
-    resp = ctx.api.create_job_submission(
+    print(ctx.api.create_job_submission(
         create_job_submission_name,
         create_job_submission_job_script_id,
-        render_only)
-    sys.stdout.write(str(resp))
-    sys.exit(0)
+        render_only))
 
 
 @main.command('get-job-submission')
@@ -330,9 +311,7 @@ def create_job_submission(ctx,
 @click.pass_obj
 def get_job_submission(ctx,
                        get_job_submission_id):
-    resp = ctx.api.get_job_submission(get_job_submission_id)
-    sys.stdout.write(str(resp))
-    sys.exit(0)
+    print(ctx.api.get_job_submission(get_job_submission_id))
 
 
 @main.command('update-job-submission')
@@ -342,9 +321,7 @@ def get_job_submission(ctx,
 @click.pass_obj
 def update_job_submission(ctx,
                           update_job_submission_id):
-    resp = ctx.api.update_job_submission(update_job_submission_id)
-    sys.stdout.write(str(resp))
-    sys.exit(0)
+    print(ctx.api.update_job_submission(update_job_submission_id))
 
 
 @main.command('delete-job-submission')
@@ -354,9 +331,7 @@ def update_job_submission(ctx,
 @click.pass_obj
 def delete_job_submission(ctx,
                           delete_job_submission_id):
-    resp = ctx.api.delete_job_submission(delete_job_submission_id)
-    sys.stdout.write(str(resp))
-    sys.exit(0)
+    print(ctx.api.delete_job_submission(delete_job_submission_id))
 
 
 if __name__ == "__main__":
