@@ -495,6 +495,7 @@ class JobbergateApi:
                 solution="Please try again with --id specified"
             )
             return response
+
         try:
             response = self.jobbergate_request(
                 method="GET",
@@ -585,7 +586,6 @@ class JobbergateApi:
         '''
         create an application based on path provided by the user
         '''
-
         parameter_check = []
         if application_name is None:
             response = self.error_handle(
