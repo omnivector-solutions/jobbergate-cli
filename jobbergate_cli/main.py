@@ -38,10 +38,8 @@ def init_token(username, password):
     """
     resp = requests.post(
         JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT,
-        data={"username": username, "password": password}
+        data={"email": username, "password": password}
     )
-    print(resp.content)
-
     JOBBERGATE_API_JWT_PATH.write_text(resp.json()['token'])
 
 
@@ -156,9 +154,7 @@ def main(ctx,
               is_flag=True)
 @click.pass_obj
 def list_applications(ctx, all=False):
-    resp = ctx.api.list_applications(all)
-    sys.stdout.write(str(resp))
-    sys.exit(0)
+    print(ctx.api.list_applications(all))
 
 
 @main.command('create-application')
@@ -172,12 +168,10 @@ def list_applications(ctx, all=False):
 def create_application(ctx,
                        create_application_name,
                        create_application_path):
-    resp = ctx.api.create_application(
+    print(ctx.api.create_application(
         application_name=create_application_name,
         application_path=create_application_path,
-        base_path=JOBBERGATE_APPLICATION_BASE_PATH)
-    sys.stdout.write(str(resp))
-    sys.exit(0)
+        base_path=JOBBERGATE_APPLICATION_BASE_PATH))
 
 
 @main.command('get-application')
@@ -187,9 +181,8 @@ def create_application(ctx,
 @click.pass_obj
 def get_application(ctx,
                     get_application_id):
-    resp = ctx.api.get_application(get_application_id)
-    sys.stdout.write(str(resp))
-    sys.exit(0)
+    print(ctx.api.get_application(
+        get_application_id=get_application_id))
 
 
 @main.command('update-application')
@@ -302,9 +295,10 @@ def delete_job_script(ctx,
               is_flag=True)
 @click.pass_obj
 def list_job_submissions(ctx, all=False):
-    resp = ctx.api.list_job_submissions(all)
-    sys.stdout.write(str(resp))
-    sys.exit(0)
+    print(ctx.api.list_job_submissions(all))
+    # resp = ctx.api.list_job_submissions(all)
+    # sys.stdout.write(str(resp))
+    # sys.exit(0)
 
 
 @main.command('create-job-submission')
