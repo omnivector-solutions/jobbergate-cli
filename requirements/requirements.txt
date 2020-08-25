@@ -5,3 +5,4 @@ tabulate
 jinja2
 pyyaml
 inquirer
+wheel
