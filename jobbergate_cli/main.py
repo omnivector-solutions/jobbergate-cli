@@ -40,6 +40,7 @@ def init_token(username, password):
         JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT,
         data={"username": username, "password": password}
     )
+    print(resp.content)
 
     JOBBERGATE_API_JWT_PATH.write_text(resp.json()['token'])
 
@@ -230,7 +231,7 @@ def list_job_scripts(ctx, all=False):
 @click.option("--name",
               "-n",
               "create_job_script_name")
-@click.option("--id",
+@click.option("--application-id",
               "-i",
               "create_job_script_application_id")
 @click.option("--param-file",
@@ -310,7 +311,7 @@ def list_job_submissions(ctx, all=False):
 @click.option("--name",
               "-n",
               "create_job_submission_name")
-@click.option("--id",
+@click.option("--job-script-id",
               "-i",
               "create_job_submission_job_script_id")
 @click.option("--dry-run",
