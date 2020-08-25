@@ -544,13 +544,9 @@ class JobbergateApi:
         )
         if response.status_code == 404:
             response = self.error_handle(
-                error="",
-                solution=""
+                error=f"Failed to DELETE job submission id: {job_submission_id}",
+                solution="Please try again with a valid job submission id"
             )
-            response = {
-                "error": f"Failed to DELETE job submission id: {job_submission_id}",
-                "solution": f"Please try again with a valid job submission id"
-            }
             return response
         return response
 
