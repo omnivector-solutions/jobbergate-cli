@@ -69,7 +69,7 @@ class JobbergateApi:
             response = requests.get(
                 endpoint,
                 headers={'Authorization': 'JWT ' + self.token},
-                verify=False).json()
+                verify=False)
         if method == "PUT":
             try:
                 response = requests.put(
@@ -352,6 +352,12 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/job-script/{job_script_id}"
         )
+        if response.status_code == 404:
+            response = self.error_handle(
+                error=f"Could not find job script with id: {job_script_id}",
+                solution="Please confirm the is for the job script and try again"
+            )
+            return response
 
         rendered_dict = json.loads(response['job_script_data_as_string'])
         if as_str:
@@ -496,13 +502,16 @@ class JobbergateApi:
             )
             return response
 
-        try:
-            response = self.jobbergate_request(
-                method="GET",
-                endpoint=f"{self.api_endpoint}/job-submission/{job_submission_id}"
+        response = self.jobbergate_request(
+            method="GET",
+            endpoint=f"{self.api_endpoint}/job-submission/{job_submission_id}"
+        )
+        if response.status_code == 404:
+            response = self.error_handle(
+                error=f"Could not find job submission with id: {job_submission_id}",
+                solution="Please confirm the is for the job submission and try again"
             )
-        except:
-            response = f"Failed to get job submission id: {job_submission_id}"
+            return response
 
         return response
 
@@ -637,7 +646,7 @@ class JobbergateApi:
         tar_name = "application.tar.gz"
         s3_key = f"{base_path}/{str(self.user_id)}/{application_name}/application_id/{tar_name}"
         data['application_location'] = s3_key
-        data['application_description'] = application_path
+        # data['application_description'] =
 
         self.tardir(application_path, tar_name)
 
@@ -664,13 +673,16 @@ class JobbergateApi:
     @tabulate_decorator
     def get_application(self,
                         application_id):
-        try:
-            response = self.jobbergate_request(
-                method="GET",
-                endpoint=f"{self.api_endpoint}/application/{application_id}"
+        response = self.jobbergate_request(
+            method="GET",
+            endpoint=f"{self.api_endpoint}/application/{application_id}"
+        )
+        if response.status_code == 404:
+            response = self.error_handle(
+                error=f"Could not find application with id: {application_id}",
+                solution="Please confirm the is for the application and try again"
             )
-        except:
-            response = f"Failed to get application id: {application_id}"
+            return response
 
         return response
 
