@@ -316,22 +316,25 @@ class JobbergateApi:
 
     @tabulate_decorator
     def get_job_script(self,
-                       job_script_id):
+                       job_script_id,
+                       as_str):
         response = self.jobbergate_request(
             method="GET",
             endpoint=f"{self.api_endpoint}/job-script/{job_script_id}"
         )
 
         rendered_dict = json.loads(response['job_script_data_as_string'])
+        if as_str:
+            return rendered_dict["application.sh"]
+        else:
+            job_script_data_as_string = ""
+            for key, value in rendered_dict.items():
+                job_script_data_as_string += "\nNEW_FILE\n"
+                job_script_data_as_string += value
 
-        job_script_data_as_string = ""
-        for key, value in rendered_dict.items():
-            job_script_data_as_string += "\nNEW_FILE\n"
-            job_script_data_as_string += value
+            response['job_script_data_as_string'] = job_script_data_as_string
 
-        response['job_script_data_as_string'] = job_script_data_as_string
-
-        return response
+            return response
 
     @tabulate_decorator
     def update_job_script(self,

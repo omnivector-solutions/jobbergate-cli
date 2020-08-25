@@ -259,10 +259,14 @@ def create_job_script(ctx,
 @click.option("--id",
               "-i",
               "get_job_script_id")
+@click.option("--as-string",
+              "as_str",
+              is_flag=True)
 @click.pass_obj
 def get_job_script(ctx,
-                   get_job_script_id):
-    resp = ctx.api.get_job_script(get_job_script_id)
+                   get_job_script_id,
+                   as_str):
+    resp = ctx.api.get_job_script(get_job_script_id, as_str)
     sys.stdout.write(str(resp))
     sys.exit(0)
 
