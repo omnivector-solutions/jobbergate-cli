@@ -11,7 +11,8 @@ import tarfile
 
 from tabulate import tabulate
 
-from jobbergate_cli.jobbergate_common import MODULE_PATH, CONFIG_PATH
+from jobbergate_cli.jobbergate_common import MODULE_PATH, CONFIG_PATH, \
+    APPLICATION_FILENAME, CONFIG_FILENAME
 
 
 class JobbergateApi:
@@ -45,6 +46,7 @@ class JobbergateApi:
             'updated_at',
             'job_script_data_as_string'
         ]
+        self.job_submission_suppress = ['created_at', 'updated_at']
 
     def tardir(self,
                path,
@@ -69,16 +71,22 @@ class JobbergateApi:
                 headers={'Authorization': 'JWT ' + self.token},
                 verify=False).json()
         if method == "PUT":
-            response = requests.put(
-                endpoint,
-                data=data,
-                headers={'Authorization': 'JWT ' + self.token},
-                verify=False).json()
+            try:
+                response = requests.put(
+                    endpoint,
+                    data=data,
+                    headers={'Authorization': 'JWT ' + self.token},
+                    verify=False).json()
+            except Exception as e:
+                response = f"POST request failed with data: {json.dumps(data, indent=4, sort_keys=True)}"
+                return response
+
         if method == "DELETE":
             response = requests.delete(
                 endpoint,
                 headers={'Authorization': 'JWT ' + self.token},
                 verify=False).text
+
         if method == "POST":
             try:
                 response = requests.post(
@@ -88,7 +96,8 @@ class JobbergateApi:
                     headers={'Authorization': 'JWT ' + self.token},
                     verify=False).json()
             except Exception as e:
-                print(e)
+                response = f"POST request failed with data: {json.dumps(data, indent=4, sort_keys=True)}"
+                return response
         return response
 
     def jobbergate_run(self, *argv):
@@ -120,6 +129,9 @@ class JobbergateApi:
                 tabulate_response = tabulate(
                     response.items()
                 )
+            # error response
+            elif type(response) == str:
+                tabulate_response = response
 
             return tabulate_response
         return wrapper
@@ -160,18 +172,25 @@ class JobbergateApi:
 
     # Job Scripts
     @tabulate_decorator
-    def list_job_scripts(self):
+    def list_job_scripts(self, all):
         response = self.jobbergate_request(
             method="GET",
             endpoint=f"{self.api_endpoint}/job-script/"
         )
-
-        response = [
-            {k: v for k, v in d.items() if k not in self.job_script_suppress}
-            for d in response
+        try:
+            response = [
+                {k: v for k, v in d.items() if k not in self.job_script_suppress}
+                for d in response
         ]
+        except:
+            #TODO: see note on list-application
+            response = "list-job-script failed to retrieve list"
 
-        return response
+        if all:
+            return response
+        else:
+            response = [d for d in response if d['job_script_owner'] == self.user_id]
+            return response
 
     @tabulate_decorator
     def create_job_script(self,
@@ -185,6 +204,13 @@ class JobbergateApi:
         data['job_script_owner'] = self.user_id
 
         if param_file:
+            is_param_file = os.path.isfile(param_file)
+            if is_param_file is False:
+                response = {
+                    "error": f"invalid --parameter-file supplied, could not find: {param_file}",
+                    "solution": f"Please provide the full path to a valid parameter file"
+                }
+                return response
 
             files = {'upload_file': open(param_file, 'rb')}
 
@@ -195,7 +221,10 @@ class JobbergateApi:
                 files=files
             )
 
-            rendered_dict = json.loads(response['job_script_data_as_string'])
+            try:
+                rendered_dict = json.loads(response['job_script_data_as_string'])
+            except:
+                return response
 
             job_script_data_as_string = ""
             for key, value in rendered_dict.items():
@@ -287,22 +316,25 @@ class JobbergateApi:
 
     @tabulate_decorator
     def get_job_script(self,
-                       job_script_id):
+                       job_script_id,
+                       as_str):
         response = self.jobbergate_request(
             method="GET",
             endpoint=f"{self.api_endpoint}/job-script/{job_script_id}"
         )
 
         rendered_dict = json.loads(response['job_script_data_as_string'])
+        if as_str:
+            return rendered_dict["application.sh"]
+        else:
+            job_script_data_as_string = ""
+            for key, value in rendered_dict.items():
+                job_script_data_as_string += "\nNEW_FILE\n"
+                job_script_data_as_string += value
 
-        job_script_data_as_string = ""
-        for key, value in rendered_dict.items():
-            job_script_data_as_string += "\nNEW_FILE\n"
-            job_script_data_as_string += value
+            response['job_script_data_as_string'] = job_script_data_as_string
 
-        response['job_script_data_as_string'] = job_script_data_as_string
-
-        return response
+            return response
 
     @tabulate_decorator
     def update_job_script(self,
@@ -330,17 +362,25 @@ class JobbergateApi:
 
     # Job Submissions
     @tabulate_decorator
-    def list_job_submissions(self):
+    def list_job_submissions(self, all):
         response = self.jobbergate_request(
             method="GET",
             endpoint=f"{self.api_endpoint}/job-submission/"
         )
-        suppress = ['created_at', 'updated_at']
-        response = [
-            {k: v for k, v in d.items() if k not in suppress}
-            for d in response
-        ]
-        return response
+        try:
+            response = [
+                {k: v for k, v in d.items() if k not in self.job_submission_suppress}
+                for d in response
+            ]
+        except:
+            #TODO: see note on list-application
+            response = "list-job-submission failed to retrieve list"
+
+        if all:
+            return response
+        else:
+            response = [d for d in response if d['job_submission_owner'] == self.user_id]
+            return response
 
     @tabulate_decorator
     def create_job_submission(self,
@@ -397,10 +437,13 @@ class JobbergateApi:
     @tabulate_decorator
     def get_job_submission(self,
                            job_submission_id):
-        response = self.jobbergate_request(
-            method="GET",
-            endpoint=f"{self.api_endpoint}/job-submission/{job_submission_id}"
-        )
+        try:
+            response = self.jobbergate_request(
+                method="GET",
+                endpoint=f"{self.api_endpoint}/job-submission/{job_submission_id}"
+            )
+        except:
+            response = f"Failed to get job submission id: {job_submission_id}"
 
         return response
 
@@ -421,24 +464,37 @@ class JobbergateApi:
 
     def delete_job_submission(self,
                               job_submission_id):
-        response = self.jobbergate_request(
-            method="DELETE",
-            endpoint=f"{self.api_endpoint}/job-submission/{job_submission_id}"
-        )
+        try:
+            response = self.jobbergate_request(
+                method="DELETE",
+                endpoint=f"{self.api_endpoint}/job-submission/{job_submission_id}"
+            )
+        except:
+            response = f"Failed to DELETE job submission id: {job_submission_id}"
         return response
 
     # Applications
     @tabulate_decorator
-    def list_applications(self):
+    def list_applications(self, all):
         response = self.jobbergate_request(
             method="GET",
             endpoint=f"{self.api_endpoint}/application/"
         )
-        response = [
-            {k: v for k, v in d.items() if k not in self.application_suppress}
-            for d in response
-        ]
-        return response
+        try:
+            response = [
+                {k: v for k, v in d.items() if k not in self.application_suppress}
+                for d in response
+            ]
+        except:
+            # TODO:I think this would only error on an auth issue handled elsewhere - should think through more
+            response = "list-applications failed to retrieve list"
+
+        if all:
+            return response
+        else:
+            response = [d for d in response if d['application_owner'] == self.user_id]
+            return response
+
 
     @tabulate_decorator
     def create_application(self,
@@ -448,6 +504,40 @@ class JobbergateApi:
         '''
         create an application based on path provided by the user
         '''
+
+        #check for required files
+        is_dir = os.path.isdir(application_path)
+        is_app_file = os.path.isfile(f"{application_path}/{APPLICATION_FILENAME}")
+        is_config_file = os.path.isfile(f"{application_path}/{CONFIG_FILENAME}")
+
+        error_check = []
+        if is_dir is False:
+            error_check.append(
+                {
+                    "error": "invalid application path supplied",
+                    "solution": f"{application_path} is invalid, please review and try again"
+
+                }
+            )
+        if is_app_file is False:
+            error_check.append(
+                {
+                    "error": f"Could not find {APPLICATION_FILENAME} in {application_path}",
+                    "solution": f"Please ensure {APPLICATION_FILENAME} is in application path provided"
+                }
+            )
+        if is_config_file is False:
+            error_check.append(
+                {
+                    "error": f"Could not find {CONFIG_FILENAME} in {application_path}",
+                    "solution": f"Please ensure {CONFIG_FILENAME} is in application path provided"
+                }
+            )
+
+        if len(error_check) > 0:
+            response = error_check
+            return response
+
 
         data = self.application_config
         data['application_name'] = application_name
@@ -469,18 +559,27 @@ class JobbergateApi:
             files=files
         )
 
-        for key in self.application_suppress:
-            response.pop(key, None)
-        os.remove(tar_name)
+        try:
+            for key in self.application_suppress:
+                response.pop(key, None)
+
+            os.remove(tar_name)
+        except AttributeError:
+            # response is str of error message
+            return response
+
         return response
 
     @tabulate_decorator
     def get_application(self,
                         application_id):
-        response = self.jobbergate_request(
-            method="GET",
-            endpoint=f"{self.api_endpoint}/application/{application_id}"
-        )
+        try:
+            response = self.jobbergate_request(
+                method="GET",
+                endpoint=f"{self.api_endpoint}/application/{application_id}"
+            )
+        except:
+            response = f"Failed to get application id: {application_id}"
 
         return response
 
@@ -505,9 +604,12 @@ class JobbergateApi:
 
     def delete_application(self,
                            application_id):
-        response = self.jobbergate_request(
-            method="DELETE",
-            endpoint=f"{self.api_endpoint}/application/{application_id}"
-        )
+        try:
+            response = self.jobbergate_request(
+                method="DELETE",
+                endpoint=f"{self.api_endpoint}/application/{application_id}"
+            )
+        except:
+            response = f"Failed to DELETE application id: {application_id}"
 
         return response

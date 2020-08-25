@@ -10,7 +10,7 @@ JOBBERGATE_API_JWT_PATH = Path(f"{JOBBERGATE_USER_TOKEN_DIR}/jobbergate.token")
 JOBBERGATE_API_ENDPOINT = "https://jobbergate-api-production.omnivector.solutions"
 # JOBBERGATE_API_ENDPOINT = "http://0.0.0.0:8000"
 
-JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT = f"{JOBBERGATE_API_ENDPOINT}/api-token-auth/"
+JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT = f"{JOBBERGATE_API_ENDPOINT}/token/access"
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -42,8 +42,12 @@ JOB_SUBMISSION_CONFIG = {
     "job_script": ""
 }
 
-MODULE_PATH = "/tmp/application.py"
+APPLICATION_FILENAME = "jobbergate.py"
 
-CONFIG_PATH = "/tmp/jobbergate.yaml"
+CONFIG_FILENAME = "jobbergate.yaml"
+
+MODULE_PATH = f"/tmp/{APPLICATION_FILENAME}"
+
+CONFIG_PATH = f"/tmp/{CONFIG_FILENAME }"
 
 MODULE_NAME = ""

@@ -40,7 +40,10 @@ def init_token(username, password):
         JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT,
         data={"email": username, "password": password}
     )
+    print(resp.content)
+
     JOBBERGATE_API_JWT_PATH.write_text(resp.json()['token'])
+
 
 
 def is_token_valid():
@@ -134,7 +137,13 @@ def main(ctx,
             username, password = interactive_get_username_password()
             ctx.obj['username'] = username
             ctx.obj['password'] = password
-        init_token(username, password)
+        try:
+            init_token(username, password)
+        except KeyError:
+            print(
+                f"Auth Failed for username: {username}, Please Try again"
+            )
+            sys.exit(0)
     ctx.obj['token'] = decode_token_to_dict(
         JOBBERGATE_API_JWT_PATH.read_text())
 
@@ -142,9 +151,12 @@ def main(ctx,
 
 
 @main.command('list-applications')
+@click.option("--all",
+              "all",
+              is_flag=True)
 @click.pass_obj
-def list_applications(ctx):
-    resp = ctx.api.list_applications()
+def list_applications(ctx, all=False):
+    resp = ctx.api.list_applications(all)
     sys.stdout.write(str(resp))
     sys.exit(0)
 
@@ -205,9 +217,12 @@ def delete_application(ctx,
 
 
 @main.command('list-job-scripts')
+@click.option("--all",
+              "all",
+              is_flag=True)
 @click.pass_obj
-def list_job_scripts(ctx):
-    resp = ctx.api.list_job_scripts()
+def list_job_scripts(ctx, all=False):
+    resp = ctx.api.list_job_scripts(all)
     sys.stdout.write(str(resp))
     sys.exit(0)
 
@@ -216,7 +231,7 @@ def list_job_scripts(ctx):
 @click.option("--name",
               "-n",
               "create_job_script_name")
-@click.option("--id",
+@click.option("--application-id",
               "-i",
               "create_job_script_application_id")
 @click.option("--param-file",
@@ -225,12 +240,12 @@ def list_job_scripts(ctx):
               type=click.Path(),)
 @click.option("--debug",
               "debug",
-              default=False)
+              is_flag=True)
 @click.pass_obj
 def create_job_script(ctx,
                       create_job_script_name,
                       create_job_script_application_id,
-                      debug,
+                      debug=False,
                       param_file=None):
     resp = ctx.api.create_job_script(
         create_job_script_name,
@@ -245,10 +260,14 @@ def create_job_script(ctx,
 @click.option("--id",
               "-i",
               "get_job_script_id")
+@click.option("--as-string",
+              "as_str",
+              is_flag=True)
 @click.pass_obj
 def get_job_script(ctx,
-                   get_job_script_id):
-    resp = ctx.api.get_job_script(get_job_script_id)
+                   get_job_script_id,
+                   as_str):
+    resp = ctx.api.get_job_script(get_job_script_id, as_str)
     sys.stdout.write(str(resp))
     sys.exit(0)
 
@@ -278,9 +297,12 @@ def delete_job_script(ctx,
 
 
 @main.command('list-job-submissions')
+@click.option("--all",
+              "all",
+              is_flag=True)
 @click.pass_obj
-def list_job_submissions(ctx):
-    resp = ctx.api.list_job_submissions()
+def list_job_submissions(ctx, all=False):
+    resp = ctx.api.list_job_submissions(all)
     sys.stdout.write(str(resp))
     sys.exit(0)
 
@@ -289,7 +311,7 @@ def list_job_submissions(ctx):
 @click.option("--name",
               "-n",
               "create_job_submission_name")
-@click.option("--id",
+@click.option("--job-script-id",
               "-i",
               "create_job_submission_job_script_id")
 @click.option("--dry-run",
