@@ -40,8 +40,6 @@ def init_token(username, password):
         JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT,
         data={"email": username, "password": password}
     )
-    print(resp.content)
-
     JOBBERGATE_API_JWT_PATH.write_text(resp.json()['token'])
 
 
