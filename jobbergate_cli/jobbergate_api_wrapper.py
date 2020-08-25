@@ -172,7 +172,7 @@ class JobbergateApi:
 
     # Job Scripts
     @tabulate_decorator
-    def list_job_scripts(self):
+    def list_job_scripts(self, all):
         response = self.jobbergate_request(
             method="GET",
             endpoint=f"{self.api_endpoint}/job-script/"
@@ -186,7 +186,11 @@ class JobbergateApi:
             #TODO: see note on list-application
             response = "list-job-script failed to retrieve list"
 
-        return response
+        if all:
+            return response
+        else:
+            response = [d for d in response if d['job_script_owner'] == self.user_id]
+            return response
 
     @tabulate_decorator
     def create_job_script(self,
@@ -355,7 +359,7 @@ class JobbergateApi:
 
     # Job Submissions
     @tabulate_decorator
-    def list_job_submissions(self):
+    def list_job_submissions(self, all):
         response = self.jobbergate_request(
             method="GET",
             endpoint=f"{self.api_endpoint}/job-submission/"
@@ -368,7 +372,12 @@ class JobbergateApi:
         except:
             #TODO: see note on list-application
             response = "list-job-submission failed to retrieve list"
-        return response
+
+        if all:
+            return response
+        else:
+            response = [d for d in response if d['job_submission_owner'] == self.user_id]
+            return response
 
     @tabulate_decorator
     def create_job_submission(self,
@@ -463,7 +472,7 @@ class JobbergateApi:
 
     # Applications
     @tabulate_decorator
-    def list_applications(self):
+    def list_applications(self, all):
         response = self.jobbergate_request(
             method="GET",
             endpoint=f"{self.api_endpoint}/application/"
@@ -476,7 +485,13 @@ class JobbergateApi:
         except:
             # TODO:I think this would only error on an auth issue handled elsewhere - should think through more
             response = "list-applications failed to retrieve list"
-        return response
+
+        if all:
+            return response
+        else:
+            response = [d for d in response if d['application_owner'] == self.user_id]
+            return response
+
 
     @tabulate_decorator
     def create_application(self,

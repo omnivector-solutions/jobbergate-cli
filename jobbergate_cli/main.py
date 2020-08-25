@@ -150,9 +150,12 @@ def main(ctx,
 
 
 @main.command('list-applications')
+@click.option("--all",
+              "all",
+              is_flag=True)
 @click.pass_obj
-def list_applications(ctx):
-    resp = ctx.api.list_applications()
+def list_applications(ctx, all=False):
+    resp = ctx.api.list_applications(all)
     sys.stdout.write(str(resp))
     sys.exit(0)
 
@@ -213,9 +216,12 @@ def delete_application(ctx,
 
 
 @main.command('list-job-scripts')
+@click.option("--all",
+              "all",
+              is_flag=True)
 @click.pass_obj
-def list_job_scripts(ctx):
-    resp = ctx.api.list_job_scripts()
+def list_job_scripts(ctx, all=False):
+    resp = ctx.api.list_job_scripts(all)
     sys.stdout.write(str(resp))
     sys.exit(0)
 
@@ -233,12 +239,12 @@ def list_job_scripts(ctx):
               type=click.Path(),)
 @click.option("--debug",
               "debug",
-              default=False)
+              is_flag=True)
 @click.pass_obj
 def create_job_script(ctx,
                       create_job_script_name,
                       create_job_script_application_id,
-                      debug,
+                      debug=False,
                       param_file=None):
     resp = ctx.api.create_job_script(
         create_job_script_name,
@@ -286,9 +292,12 @@ def delete_job_script(ctx,
 
 
 @main.command('list-job-submissions')
+@click.option("--all",
+              "all",
+              is_flag=True)
 @click.pass_obj
-def list_job_submissions(ctx):
-    resp = ctx.api.list_job_submissions()
+def list_job_submissions(ctx, all=False):
+    resp = ctx.api.list_job_submissions(all)
     sys.stdout.write(str(resp))
     sys.exit(0)
 
