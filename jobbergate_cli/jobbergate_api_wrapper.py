@@ -46,6 +46,7 @@ class JobbergateApi:
             'updated_at',
             'job_script_data_as_string'
         ]
+        self.job_submission_suppress = ['created_at', 'updated_at']
 
     def tardir(self,
                path,
@@ -65,14 +66,10 @@ class JobbergateApi:
                            data=None,
                            files=None):
         if method == "GET":
-            try:
-                response = requests.get(
-                    endpoint,
-                    headers={'Authorization': 'JWT ' + self.token},
-                    verify=False).json()
-            except Exception as e:
-                response = f"GET request failed with data: {data}"
-                return response
+            response = requests.get(
+                endpoint,
+                headers={'Authorization': 'JWT ' + self.token},
+                verify=False).json()
         if method == "PUT":
             try:
                 response = requests.put(
@@ -81,18 +78,14 @@ class JobbergateApi:
                     headers={'Authorization': 'JWT ' + self.token},
                     verify=False).json()
             except Exception as e:
-                response = f"POST request failed with data: {data}"
+                response = f"POST request failed with data: {json.dumps(data, indent=4, sort_keys=True)}"
                 return response
 
         if method == "DELETE":
-            try:
-                response = requests.delete(
-                    endpoint,
-                    headers={'Authorization': 'JWT ' + self.token},
-                    verify=False).text
-            except Exception as e:
-                response = f"DELETE request failed with data: {data}"
-                return response
+            response = requests.delete(
+                endpoint,
+                headers={'Authorization': 'JWT ' + self.token},
+                verify=False).text
 
         if method == "POST":
             try:
@@ -103,7 +96,7 @@ class JobbergateApi:
                     headers={'Authorization': 'JWT ' + self.token},
                     verify=False).json()
             except Exception as e:
-                response = f"POST request failed with data: {data}"
+                response = f"POST request failed with data: {json.dumps(data, indent=4, sort_keys=True)}"
                 return response
         return response
 
@@ -184,11 +177,14 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/job-script/"
         )
-
-        response = [
-            {k: v for k, v in d.items() if k not in self.job_script_suppress}
-            for d in response
+        try:
+            response = [
+                {k: v for k, v in d.items() if k not in self.job_script_suppress}
+                for d in response
         ]
+        except:
+            #TODO: see note on list-application
+            response = "list-job-script failed to retrieve list"
 
         return response
 
@@ -204,6 +200,13 @@ class JobbergateApi:
         data['job_script_owner'] = self.user_id
 
         if param_file:
+            is_param_file = os.path.isfile(param_file)
+            if is_param_file is False:
+                response = {
+                    "error": f"invalid --parameter-file supplied, could not find: {param_file}",
+                    "solution": f"Please provide the full path to a valid parameter file"
+                }
+                return response
 
             files = {'upload_file': open(param_file, 'rb')}
 
@@ -214,7 +217,10 @@ class JobbergateApi:
                 files=files
             )
 
-            rendered_dict = json.loads(response['job_script_data_as_string'])
+            try:
+                rendered_dict = json.loads(response['job_script_data_as_string'])
+            except:
+                return response
 
             job_script_data_as_string = ""
             for key, value in rendered_dict.items():
@@ -354,11 +360,14 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/job-submission/"
         )
-        suppress = ['created_at', 'updated_at']
-        response = [
-            {k: v for k, v in d.items() if k not in suppress}
-            for d in response
-        ]
+        try:
+            response = [
+                {k: v for k, v in d.items() if k not in self.job_submission_suppress}
+                for d in response
+            ]
+        except:
+            #TODO: see note on list-application
+            response = "list-job-submission failed to retrieve list"
         return response
 
     @tabulate_decorator
@@ -416,10 +425,13 @@ class JobbergateApi:
     @tabulate_decorator
     def get_job_submission(self,
                            job_submission_id):
-        response = self.jobbergate_request(
-            method="GET",
-            endpoint=f"{self.api_endpoint}/job-submission/{job_submission_id}"
-        )
+        try:
+            response = self.jobbergate_request(
+                method="GET",
+                endpoint=f"{self.api_endpoint}/job-submission/{job_submission_id}"
+            )
+        except:
+            response = f"Failed to get job submission id: {job_submission_id}"
 
         return response
 
@@ -440,10 +452,13 @@ class JobbergateApi:
 
     def delete_job_submission(self,
                               job_submission_id):
-        response = self.jobbergate_request(
-            method="DELETE",
-            endpoint=f"{self.api_endpoint}/job-submission/{job_submission_id}"
-        )
+        try:
+            response = self.jobbergate_request(
+                method="DELETE",
+                endpoint=f"{self.api_endpoint}/job-submission/{job_submission_id}"
+            )
+        except:
+            response = f"Failed to DELETE job submission id: {job_submission_id}"
         return response
 
     # Applications
@@ -453,10 +468,14 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/application/"
         )
-        response = [
-            {k: v for k, v in d.items() if k not in self.application_suppress}
-            for d in response
-        ]
+        try:
+            response = [
+                {k: v for k, v in d.items() if k not in self.application_suppress}
+                for d in response
+            ]
+        except:
+            # TODO:I think this would only error on an auth issue handled elsewhere - should think through more
+            response = "list-applications failed to retrieve list"
         return response
 
     @tabulate_decorator
@@ -522,18 +541,27 @@ class JobbergateApi:
             files=files
         )
 
-        for key in self.application_suppress:
-            response.pop(key, None)
-        os.remove(tar_name)
+        try:
+            for key in self.application_suppress:
+                response.pop(key, None)
+
+            os.remove(tar_name)
+        except AttributeError:
+            # response is str of error message
+            return response
+
         return response
 
     @tabulate_decorator
     def get_application(self,
                         application_id):
-        response = self.jobbergate_request(
-            method="GET",
-            endpoint=f"{self.api_endpoint}/application/{application_id}"
-        )
+        try:
+            response = self.jobbergate_request(
+                method="GET",
+                endpoint=f"{self.api_endpoint}/application/{application_id}"
+            )
+        except:
+            response = f"Failed to get application id: {application_id}"
 
         return response
 
@@ -558,9 +586,12 @@ class JobbergateApi:
 
     def delete_application(self,
                            application_id):
-        response = self.jobbergate_request(
-            method="DELETE",
-            endpoint=f"{self.api_endpoint}/application/{application_id}"
-        )
+        try:
+            response = self.jobbergate_request(
+                method="DELETE",
+                endpoint=f"{self.api_endpoint}/application/{application_id}"
+            )
+        except:
+            response = f"Failed to DELETE application id: {application_id}"
 
         return response
