@@ -587,7 +587,8 @@ class JobbergateApi:
     def create_application(self,
                            application_name,
                            application_path,
-                           base_path):
+                           base_path,
+                           application_desc):
         '''
         create an application based on path provided by the user
         '''
@@ -646,7 +647,9 @@ class JobbergateApi:
         tar_name = "application.tar.gz"
         s3_key = f"{base_path}/{str(self.user_id)}/{application_name}/application_id/{tar_name}"
         data['application_location'] = s3_key
-        # data['application_description'] =
+
+        if application_desc:
+            data['application_description'] = application_desc
 
         self.tardir(application_path, tar_name)
 

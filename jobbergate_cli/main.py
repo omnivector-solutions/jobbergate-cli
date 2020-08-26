@@ -40,6 +40,8 @@ def init_token(username, password):
         JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT,
         data={"email": username, "password": password}
     )
+    # if resp.status_code == 502:
+    #
     JOBBERGATE_API_JWT_PATH.write_text(resp.json()['token'])
 
 
@@ -164,14 +166,19 @@ def list_applications(ctx, all=False):
 @click.option("--application-path",
               "-a",
               "create_application_path")
+@click.option("--application-desc",
+              "application_desc",
+              default="")
 @click.pass_obj
 def create_application(ctx,
                        create_application_name,
-                       create_application_path):
+                       create_application_path,
+                       application_desc):
     print(ctx.api.create_application(
         application_name=create_application_name,
         application_path=create_application_path,
-        base_path=JOBBERGATE_APPLICATION_BASE_PATH))
+        base_path=JOBBERGATE_APPLICATION_BASE_PATH,
+        application_desc=application_desc))
 
 
 @main.command('get-application')
