@@ -20,9 +20,9 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 APPLICATION_CONFIG = {
     "application_name": "",
-    "application_description": "TEST_DESC",
+    "application_description": "",
     "application_location": "TEST_LOC",
-    "application_dir_listing": "TEST_DIR_LISTING",
+    "application_dir_listing": "",
     "application_dir_listing_acquired": True,
     "application_owner": ""
 }

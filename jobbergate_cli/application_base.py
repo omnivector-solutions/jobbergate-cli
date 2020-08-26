@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import os
 """ApplicationBase."""
 
 
@@ -15,3 +16,9 @@ class JobbergateApplicationBase:
     def mainflow(self):
         """Implements the main question asking workflow."""
         raise Exception("Inheriting class must override this method.")
+
+    def get_template_files(self):
+        templates = [template for root, directory, template in os.walk("./templates")]
+        print(f"templates are: {templates}")
+        print(os.getcwd())
+        return templates[0]
