@@ -162,6 +162,11 @@ class JobbergateApi:
                     name=questions[i].variablename,
                     message=questions[i].message,
                     choices=questions[i].choices, )
+            elif questions[i].__class__.__name__ == 'Checkbox':
+                question = inquirer.Checkbox(
+                    name=questions[i].variablename,
+                    message=questions[i].message,
+                    choices=questions[i].choices, )
             else:
                 question = inquirer.Text(
                     name=questions[i].variablename,
@@ -185,6 +190,14 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/job-script/"
         )
+        if response.status_code == 200:
+            response = response.json()
+        else:
+            response = self.error_handle(
+                error=f"Failed to retrieve job script list",
+                solution="Please check credentials or report server error"
+            )
+            return response
         try:
             response = [
                 {k: v for k, v in d.items() if k not in self.job_script_suppress}
@@ -261,6 +274,15 @@ class JobbergateApi:
                 method="GET",
                 endpoint=f"{self.api_endpoint}/application/{application_id}"
             )
+            if app_data.status_code != 200:
+                response = self.error_handle(
+                    error=f"invalid --application-id provided, could not find: {application_id}",
+                    solution=f"Please confirm application id {application_id} exists and try again"
+                )
+                return response
+            else:
+                app_data = app_data.json()
+
             question_list = []
 
             # MODULE_PATH.write_text(app_data['application_file'])
@@ -358,6 +380,8 @@ class JobbergateApi:
                 solution="Please confirm the is for the job script and try again"
             )
             return response
+        else:
+            response = response.json()
 
         rendered_dict = json.loads(response['job_script_data_as_string'])
         if as_str:
@@ -386,6 +410,14 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/job-script/{job_script_id}"
         )
+        if data.status_code == 200:
+            data = data.json()
+        else:
+            response = self.error_handle(
+                error=f"Failed to retrieve job script {job_script_id}",
+                solution="Please confirm job submission exists and try again"
+            )
+            return response
         data['job_script_name'] = "TEST_NEW_JOBSCRIPT_NAME_CLI"
         response = self.jobbergate_request(
             method="PUT",
@@ -409,6 +441,15 @@ class JobbergateApi:
             method="DELETE",
             endpoint=f"{self.api_endpoint}/job-script/{job_script_id}"
         )
+        if response.status_code == 404:
+            response = self.error_handle(
+                error=f"Failed to DELETE job script id: {job_script_id}",
+                solution="Please try again with a valid job script id"
+            )
+            return response
+        else:
+            response = response.text
+
         return response
 
     # Job Submissions
@@ -418,6 +459,14 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/job-submission/"
         )
+        if response.status_code == 200:
+            response = response.json()
+        else:
+            response = self.error_handle(
+                error=f"Failed to retrieve job submission list",
+                solution="Please check credentials or report server error"
+            )
+            return response
         try:
             response = [
                 {k: v for k, v in d.items() if k not in self.job_submission_suppress}
@@ -454,6 +503,14 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/job-script/{job_script_id}"
         )
+        if job_script.status_code == 200:
+            job_script = job_script.json()
+        else:
+            response = self.error_handle(
+                error=f"Failed to retrieve job script id={job_script_id}",
+                solution="Please confirm job script exists and try job submission again"
+            )
+            return response
 
         application_id = job_script['application']
 
@@ -461,6 +518,14 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/application/{application_id}"
         )
+        if application.status_code == 200:
+            application = application.json()
+        else:
+            response = self.error_handle(
+                error=f"Failed to retrieve the application id={application_id}linked to job script id={job_script_id}",
+                solution="Please confirm application exists and try job submission again"
+            )
+            return response
 
         application_name = application['application_name']
 
@@ -512,6 +577,8 @@ class JobbergateApi:
                 solution="Please confirm the is for the job submission and try again"
             )
             return response
+        else:
+            response = response.json()
 
         return response
 
@@ -529,6 +596,14 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/job-submission/{job_submission_id}"
         )
+        if data.status_code == 200:
+            data = data.json()
+        else:
+            response = self.error_handle(
+                error=f"Failed to retrieve job submission {job_submission_id}",
+                solution="Please confirm job submission exists and try again"
+            )
+            return response
         # TODO how to collect data that will updated for the job-submission
         data['job_submission_name'] = "TEST_JOB_SUB_CLI"
         response = self.jobbergate_request(
@@ -558,6 +633,9 @@ class JobbergateApi:
                 solution="Please try again with a valid job submission id"
             )
             return response
+        else:
+            response = response.text
+
         return response
 
     # Applications
@@ -567,6 +645,15 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/application/"
         )
+        if response.status_code == 200:
+            response = response.json()
+        else:
+            response = self.error_handle(
+                error=f"Failed retrieve application list",
+                solution="Please try credentials again or server error"
+            )
+            return response
+
         try:
             response = [
                 {k: v for k, v in d.items() if k not in self.application_suppress}
@@ -680,12 +767,15 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/application/{application_id}"
         )
+
         if response.status_code == 404:
             response = self.error_handle(
                 error=f"Could not find application with id: {application_id}",
                 solution="Please confirm the is for the application and try again"
             )
             return response
+        else:
+            response = response.json()
 
         return response
 
@@ -696,6 +786,14 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/application/{application_id}"
         )
+        if data.status_code == 200:
+            data = data.json()
+        else:
+            response = self.error_handle(
+                error=f"Failed to retrieve job submission list",
+                solution="Please check credentials or report server error"
+            )
+            return response
 
         data['application_name'] = "TEST_NEW_APP_NAME10"
         del data['id']
@@ -721,5 +819,7 @@ class JobbergateApi:
                 solution="Please try again with a valid job submission id"
             )
             return response
+        else:
+            response = response.text
 
         return response

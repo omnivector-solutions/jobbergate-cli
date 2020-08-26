@@ -18,6 +18,7 @@ class JobbergateApplicationBase:
         raise Exception("Inheriting class must override this method.")
 
     def get_template_files(self):
-        return [
-            template for root, directory, template in os.walk("./templates")
-        ]
+        templates = [template for root, directory, template in os.walk("./templates")]
+        print(f"templates are: {templates}")
+        print(os.getcwd())
+        return templates[0]
