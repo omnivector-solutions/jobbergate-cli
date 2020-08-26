@@ -184,12 +184,12 @@ def create_application(ctx,
 @main.command('get-application')
 @click.option("--id",
               "-i",
-              "get_application_id")
+              "application_id")
 @click.pass_obj
 def get_application(ctx,
-                    get_application_id):
+                    application_id):
     print(ctx.api.get_application(
-        get_application_id=get_application_id))
+        application_id=application_id))
 
 
 @main.command('update-application')
