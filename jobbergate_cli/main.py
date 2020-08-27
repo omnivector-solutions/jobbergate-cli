@@ -11,12 +11,11 @@ from datetime import datetime
 
 from jobbergate_cli.jobbergate_api_wrapper import JobbergateApi
 from jobbergate_cli.jobbergate_common import (
-    JOB_SCRIPT_CONFIG,
-    JOB_SUBMISSION_CONFIG,
+    JOBBERGATE_JOB_SCRIPT_CONFIG,
+    JOBBERGATE_JOB_SUBMISSION_CONFIG,
     JOBBERGATE_API_JWT_PATH,
     JOBBERGATE_API_ENDPOINT,
     JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT,
-    JOBBERGATE_APPLICATION_BASE_PATH,
     JOBBERGATE_APPLICATION_CONFIG,
     JOBBERGATE_USER_TOKEN_DIR,
 )
@@ -26,8 +25,8 @@ class Api(object):
     def __init__(self, user_id=None):
         self.api = JobbergateApi(
             token=JOBBERGATE_API_JWT_PATH.read_text(),
-            job_script_config=JOB_SCRIPT_CONFIG,
-            job_submission_config=JOB_SUBMISSION_CONFIG,
+            job_script_config=JOBBERGATE_JOB_SCRIPT_CONFIG,
+            job_submission_config=JOBBERGATE_JOB_SUBMISSION_CONFIG,
             application_config=JOBBERGATE_APPLICATION_CONFIG,
             api_endpoint=JOBBERGATE_API_ENDPOINT,
             user_id=user_id)
@@ -314,9 +313,9 @@ def create_job_submission(ctx,
                           create_job_submission_job_script_id,
                           render_only=None):
     print(ctx.api.create_job_submission(
-        create_job_submission_name,
-        create_job_submission_job_script_id,
-        render_only))
+        job_script_id=create_job_submission_job_script_id,
+        job_submission_name=create_job_submission_name,
+        render_only=render_only))
 
 
 @main.command('get-job-submission')
