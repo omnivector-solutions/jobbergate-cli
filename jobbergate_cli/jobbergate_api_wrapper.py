@@ -748,7 +748,6 @@ class JobbergateApi:
             data['application_description'] = application_desc
 
         tar_list = [application_path, os.path.join(application_path, "templates")]
-        print(tar_list)
         self.tardir(application_path, tar_name, tar_list)
 
         files = {'upload_file': open(tar_name, 'rb')}
