@@ -46,8 +46,10 @@ APPLICATION_FILENAME = "jobbergate.py"
 
 CONFIG_FILENAME = "jobbergate.yaml"
 
-MODULE_PATH = f"/tmp/{APPLICATION_FILENAME}"
+LOCAL_DIR = f"/{os.path.join(os.path.expanduser('~'), '.jobbergate')}"
 
-CONFIG_PATH = f"/tmp/{CONFIG_FILENAME }"
+MODULE_PATH = f"/{LOCAL_DIR}/{APPLICATION_FILENAME}"
+
+CONFIG_PATH = f"/{LOCAL_DIR}/{CONFIG_FILENAME }"
 
 MODULE_NAME = ""

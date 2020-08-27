@@ -12,7 +12,7 @@ import tarfile
 from tabulate import tabulate
 
 from jobbergate_cli.jobbergate_common import MODULE_PATH, CONFIG_PATH, \
-    APPLICATION_FILENAME, CONFIG_FILENAME
+    APPLICATION_FILENAME, CONFIG_FILENAME, LOCAL_DIR
 
 
 class JobbergateApi:
@@ -50,14 +50,16 @@ class JobbergateApi:
 
     def tardir(self,
                path,
-               tar_name):
+               tar_name,
+               tar_list):
         archive = tarfile.open(tar_name, "w|gz")
         for root, dirs, files in os.walk(path):
-            for file in files:
-                archive.add(
-                    os.path.join(root, file),
-                    arcname=file
-                    )
+            if root in tar_list:
+                for file in files:
+                    archive.add(
+                        os.path.join(root, file),
+                        arcname=file
+                        )
         archive.close()
 
     def jobbergate_request(self,
@@ -330,7 +332,7 @@ class JobbergateApi:
 
                 shared_answers = inquirer.prompt(questions_shared)
                 param_dict['jobbergate_config'].update(shared_answers)
-            param_filename = '/tmp/param_dict.json'
+            param_filename = f"/{LOCAL_DIR}/param_dict.json"
             param_file = open(param_filename, 'w')
             json.dump(param_dict, param_file)
             param_file.close()
@@ -738,7 +740,9 @@ class JobbergateApi:
         if application_desc:
             data['application_description'] = application_desc
 
-        self.tardir(application_path, tar_name)
+        tar_list = [application_path, os.path.join(application_path, "templates")]
+        print(tar_list)
+        self.tardir(application_path, tar_name, tar_list)
 
         files = {'upload_file': open(tar_name, 'rb')}
 
