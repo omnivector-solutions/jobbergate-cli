@@ -184,7 +184,6 @@ def create_application(ctx,
     out = ctx.api.create_application(
             application_name=create_application_name,
             application_path=create_application_path,
-            base_path=JOBBERGATE_APPLICATION_BASE_PATH,
             application_desc=application_desc,
     )
     print(out)

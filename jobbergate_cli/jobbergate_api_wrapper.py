@@ -18,7 +18,6 @@ from jobbergate_cli.jobbergate_common import (
     JOBBERGATE_APPLICATION_CONFIG_PATH,
     JOBBERGATE_APPLICATION_MODULE_FILE_NAME,
     JOBBERGATE_APPLICATION_CONFIG_FILE_NAME,
-    JOBBERGATE_CACHE_DIR,
 )
 
 
@@ -678,7 +677,6 @@ class JobbergateApi:
     def create_application(self,
                            application_name,
                            application_path,
-                           base_path,
                            application_desc):
         '''
         create an application based on path provided by the user
@@ -740,15 +738,10 @@ class JobbergateApi:
         data['application_name'] = application_name
         data['application_owner'] = self.user_id
 
-        tar_name = "application.tar.gz"
-        s3_key = f"{base_path}/{str(self.user_id)}/{application_name}/application_id/{tar_name}"
-        data['application_location'] = s3_key
-
         if application_desc:
             data['application_description'] = application_desc
 
         tar_list = [application_path, os.path.join(application_path, "templates")]
-        print(tar_list)
         self.tardir(application_path, tar_name, tar_list)
 
         files = {'upload_file': open(tar_name, 'rb')}
