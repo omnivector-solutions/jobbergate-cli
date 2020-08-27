@@ -2,21 +2,22 @@ import os
 import urllib3
 from pathlib import Path
 
-JOBBERGATE_USER_TOKEN_DIR = f"{str(Path.home())}/.local/cache/jobbergate-cli"
 
-JOBBERGATE_API_JWT_PATH = Path(f"{JOBBERGATE_USER_TOKEN_DIR}/jobbergate.token")
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+
+JOBBERGATE_CACHE_DIR = Path.home() / ".jobbergate"
+
+JOBBERGATE_USER_TOKEN_DIR = JOBBERGATE_CACHE_DIR / "token"
+
+JOBBERGATE_API_JWT_PATH = JOBBERGATE_USER_TOKEN_DIR / "jobbergate.token"
 
 JOBBERGATE_API_ENDPOINT = "https://jobbergate-api-production.omnivector.solutions"
-# JOBBERGATE_API_ENDPOINT = "http://0.0.0.0:8000"
 
 JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT = f"{JOBBERGATE_API_ENDPOINT}/api-token-auth/"
 
-dir_path = os.path.dirname(os.path.realpath(__file__))
+JOBBERGATE_APPLICATION_S3_BASE_PATH = "jobbergate-resources"
 
-JOBBERGATE_APPLICATION_BASE_PATH = "jobbergate-resources"
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 APPLICATION_CONFIG = {
     "application_name": "",
@@ -42,12 +43,12 @@ JOB_SUBMISSION_CONFIG = {
     "job_script": ""
 }
 
-APPLICATION_FILENAME = "jobbergate.py"
+JOBBERGATE_APPLICATION_MODULE_FILE_NAME = "jobbergate.py"
 
-CONFIG_FILENAME = "jobbergate.yaml"
+JOBBERGATE_APPLICATION_CONFIG_FILE_NAME = "jobbergate.yaml"
 
-MODULE_PATH = f"/tmp/{APPLICATION_FILENAME}"
+JOBBERGATE_APPLICATION_MODULE_PATH = \
+    JOBBERGATE_CACHE_DIR / JOBBERGATE_APPLICATION_MODULE_FILE_NAME
 
-CONFIG_PATH = f"/tmp/{CONFIG_FILENAME }"
-
-MODULE_NAME = ""
+JOBBERGATE_APPLICATION_CONFIG_PATH = \
+    JOBBERGATE_CACHE_DIR / JOBBERGATE_APPLICATION_CONFIG_FILE_NAME

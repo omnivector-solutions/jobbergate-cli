@@ -10,10 +10,16 @@ import click
 from datetime import datetime
 
 from jobbergate_cli.jobbergate_api_wrapper import JobbergateApi
-from jobbergate_cli.jobbergate_common import JOBBERGATE_API_JWT_PATH, \
-    JOBBERGATE_API_ENDPOINT, JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT, \
-    JOBBERGATE_APPLICATION_BASE_PATH, APPLICATION_CONFIG, JOB_SCRIPT_CONFIG, \
-    JOB_SUBMISSION_CONFIG, JOBBERGATE_USER_TOKEN_DIR
+from jobbergate_cli.jobbergate_common import (
+    JOB_SCRIPT_CONFIG,
+    JOB_SUBMISSION_CONFIG,
+    JOBBERGATE_API_JWT_PATH,
+    JOBBERGATE_API_ENDPOINT,
+    JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT,
+    JOBBERGATE_APPLICATION_BASE_PATH,
+    JOBBERGATE_APPLICATION_CONFIG,
+    JOBBERGATE_USER_TOKEN_DIR,
+)
 
 
 class Api(object):
@@ -22,7 +28,7 @@ class Api(object):
             token=JOBBERGATE_API_JWT_PATH.read_text(),
             job_script_config=JOB_SCRIPT_CONFIG,
             job_submission_config=JOB_SUBMISSION_CONFIG,
-            application_config=APPLICATION_CONFIG,
+            application_config=JOBBERGATE_APPLICATION_CONFIG,
             api_endpoint=JOBBERGATE_API_ENDPOINT,
             user_id=user_id)
 
@@ -78,7 +84,7 @@ def init_api(user_id):
         token=JOBBERGATE_API_JWT_PATH.read_text(),
         job_script_config=JOB_SCRIPT_CONFIG,
         job_submission_config=JOB_SUBMISSION_CONFIG,
-        application_config=APPLICATION_CONFIG,
+        application_config=JOBBERGATE_APPLICATION_CONFIG,
         api_endpoint=JOBBERGATE_API_ENDPOINT,
         user_id=user_id)
     return api
@@ -174,11 +180,13 @@ def create_application(ctx,
                        create_application_name,
                        create_application_path,
                        application_desc):
-    print(ctx.api.create_application(
-        application_name=create_application_name,
-        application_path=create_application_path,
-        base_path=JOBBERGATE_APPLICATION_BASE_PATH,
-        application_desc=application_desc))
+    """Creates a jobbergate application."""
+    out = ctx.api.create_application(
+            application_name=create_application_name,
+            application_path=create_application_path,
+            application_desc=application_desc,
+    )
+    print(out)
 
 
 @main.command('get-application')

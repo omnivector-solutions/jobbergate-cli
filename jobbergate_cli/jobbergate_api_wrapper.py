@@ -2,17 +2,23 @@
 import os
 import json
 import importlib
+import pathlib
 import yaml
 import inquirer
-
 from subprocess import Popen, PIPE
+
+
 import requests
 import tarfile
 
 from tabulate import tabulate
 
-from jobbergate_cli.jobbergate_common import MODULE_PATH, CONFIG_PATH, \
-    APPLICATION_FILENAME, CONFIG_FILENAME
+from jobbergate_cli.jobbergate_common import (
+    JOBBERGATE_APPLICATION_MODULE_PATH,
+    JOBBERGATE_APPLICATION_CONFIG_PATH,
+    JOBBERGATE_APPLICATION_MODULE_FILE_NAME,
+    JOBBERGATE_APPLICATION_CONFIG_FILE_NAME,
+)
 
 
 class JobbergateApi:
@@ -50,14 +56,16 @@ class JobbergateApi:
 
     def tardir(self,
                path,
-               tar_name):
+               tar_name,
+               tar_list):
         archive = tarfile.open(tar_name, "w|gz")
         for root, dirs, files in os.walk(path):
-            for file in files:
-                archive.add(
-                    os.path.join(root, file),
-                    arcname=file
-                    )
+            if root in tar_list:
+                for file in files:
+                    archive.add(
+                        os.path.join(root, file),
+                        arcname=file
+                        )
         archive.close()
 
     def jobbergate_request(self,
@@ -136,11 +144,11 @@ class JobbergateApi:
             return tabulate_response
         return wrapper
 
-    def import_questions_into_jobbergate_cli(self,
-                                             module_path):
+    def import_jobbergate_application_module_into_jobbergate_cli(self):
         spec = importlib.util.spec_from_file_location(
             "JobbergateApplication",
-            module_path)
+            module_path
+        )
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         return module
@@ -283,37 +291,32 @@ class JobbergateApi:
             else:
                 app_data = app_data.json()
 
-            question_list = []
+            # Get the jobbergate application python module
+            JOBBERGATE_APPLICATION_MODULE_PATH.write_text(
+                app_data['application_file']
+            )
+            # Get the jobbergate application yaml config
+            JOBBERGATE_APPLICATION_CONFIG_PATH.write_text(
+                app_data['application_config']
+            )
 
-            # MODULE_PATH.write_text(app_data['application_file'])
-            # application_file.write_text(app_data['application_file'])
-            application_file = open(MODULE_PATH, "w")
-            w = application_file.write(app_data['application_file'])
-            application_file.close()
-
-            # CONFIG_PATH.write_text(app_data['application_config'])
-            # application_config.write(app_data['application_file'])
-            application_config = open(CONFIG_PATH, "w")
-            w = application_config.write(app_data['application_config'])
-            application_config.close()
-
-            jobbergate_yaml_file = open(CONFIG_PATH)
+            # Load the jobbergate yaml
             param_dict = yaml.load(
-                jobbergate_yaml_file,
-                Loader=yaml.FullLoader)
+                JOBBERGATE_APPLICATION_CONFIG_PATH,
+                Loader=yaml.FullLoader
+            )
 
-            module = self.import_questions_into_jobbergate_cli(
-                module_path=MODULE_PATH)
-
+            # Exec the jobbergate application python module
+            module = self.import_jobbergate_application_module_into_jobbergate_cli()
             application = module.JobbergateApplication(param_dict)
 
+            # Begin question assembly
+            question_list = []
             question_list = self.assemble_questions(
                 questions=application._questions,
                 question_list=question_list
             )
-
             answers = inquirer.prompt(question_list)
-
             param_dict['jobbergate_config'].update(answers)
 
             if hasattr(application, "shared"):
@@ -330,7 +333,7 @@ class JobbergateApi:
 
                 shared_answers = inquirer.prompt(questions_shared)
                 param_dict['jobbergate_config'].update(shared_answers)
-            param_filename = '/tmp/param_dict.json'
+            param_filename = f"/{LOCAL_DIR}/param_dict.json"
             param_file = open(param_filename, 'w')
             json.dump(param_dict, param_file)
             param_file.close()
@@ -674,7 +677,6 @@ class JobbergateApi:
     def create_application(self,
                            application_name,
                            application_path,
-                           base_path,
                            application_desc):
         '''
         create an application based on path provided by the user
@@ -697,25 +699,30 @@ class JobbergateApi:
             response = parameter_check
             return response
 
-        #check for required files
         error_check = []
-        is_dir = os.path.isdir(application_path)
-        is_app_file = os.path.isfile(f"{application_path}/{APPLICATION_FILENAME}")
-        is_config_file = os.path.isfile(f"{application_path}/{CONFIG_FILENAME}")
 
-        if is_dir is False:
+        #check for required files
+        local_jobbergate_application_dir = pathlib.Path(application_path)
+        local_jobbergate_application_module = \
+            local_jobbergate_application_dir / \
+                JOBBERGATE_APPLICATION_MODULE_FILE_NAME
+        local_jobbergate_application_config = \
+            local_jobbergate_application_dir / \
+                JOBBERGATE_APPLICATION_CONFIG_FILE_NAME
+
+        if not local_jobbergate_application_dir.exitst():
             check = self.error_handle(
                 error="invalid application path supplied",
                 solution=f"{application_path} is invalid, please review and try again"
             )
             error_check.append(check)
-        if is_app_file is False:
+        if not local_jobbergate_application_module.exists():
             check = self.error_handle(
                 error=f"Could not find {APPLICATION_FILENAME} in {application_path}",
                 solution=f"Please ensure {APPLICATION_FILENAME} is in application path provided"
             )
             error_check.append(check)
-        if is_config_file is False:
+        if not local_jobbergate_application_config.exists():
             check = self.error_handle(
                 error=f"Could not find {CONFIG_FILENAME} in {application_path}",
                 solution=f"Please ensure {CONFIG_FILENAME} is in application path provided"
@@ -731,14 +738,11 @@ class JobbergateApi:
         data['application_name'] = application_name
         data['application_owner'] = self.user_id
 
-        tar_name = "application.tar.gz"
-        s3_key = f"{base_path}/{str(self.user_id)}/{application_name}/application_id/{tar_name}"
-        data['application_location'] = s3_key
-
         if application_desc:
             data['application_description'] = application_desc
 
-        self.tardir(application_path, tar_name)
+        tar_list = [application_path, os.path.join(application_path, "templates")]
+        self.tardir(application_path, tar_name, tar_list)
 
         files = {'upload_file': open(tar_name, 'rb')}
 
