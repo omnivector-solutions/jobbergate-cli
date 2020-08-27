@@ -18,6 +18,8 @@ from jobbergate_cli.jobbergate_common import (
     JOBBERGATE_APPLICATION_CONFIG_PATH,
     JOBBERGATE_APPLICATION_MODULE_FILE_NAME,
     JOBBERGATE_APPLICATION_CONFIG_FILE_NAME,
+    JOBBERGATE_CACHE_DIR,
+    TAR_NAME
 )
 
 
@@ -147,7 +149,7 @@ class JobbergateApi:
     def import_jobbergate_application_module_into_jobbergate_cli(self):
         spec = importlib.util.spec_from_file_location(
             "JobbergateApplication",
-            module_path
+            JOBBERGATE_APPLICATION_MODULE_PATH
         )
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
@@ -301,10 +303,11 @@ class JobbergateApi:
             )
 
             # Load the jobbergate yaml
-            param_dict = yaml.load(
-                JOBBERGATE_APPLICATION_CONFIG_PATH,
-                Loader=yaml.FullLoader
-            )
+            with open(JOBBERGATE_APPLICATION_CONFIG_PATH) as file:
+                param_dict = yaml.load(
+                    file,
+                    Loader=yaml.FullLoader
+                )
 
             # Exec the jobbergate application python module
             module = self.import_jobbergate_application_module_into_jobbergate_cli()
@@ -333,7 +336,7 @@ class JobbergateApi:
 
                 shared_answers = inquirer.prompt(questions_shared)
                 param_dict['jobbergate_config'].update(shared_answers)
-            param_filename = f"/{LOCAL_DIR}/param_dict.json"
+            param_filename = f"/{JOBBERGATE_CACHE_DIR}/param_dict.json"
             param_file = open(param_filename, 'w')
             json.dump(param_dict, param_file)
             param_file.close()
@@ -548,7 +551,14 @@ class JobbergateApi:
                 data=data
             )
         else:
-            output, err, rc = self.jobbergate_run(application_name)
+            try:
+                output, err, rc = self.jobbergate_run(application_name)
+            except FileNotFoundError:
+                response = self.error_handle(
+                    error=f"Failed to execute submission - could not use slurm.sbatch",
+                    solution="Please confirm slurm.sbatch is installed and available"
+                )
+                return response
 
             print(f"output: {output}")
             print(f"err: {err}")
@@ -710,7 +720,7 @@ class JobbergateApi:
             local_jobbergate_application_dir / \
                 JOBBERGATE_APPLICATION_CONFIG_FILE_NAME
 
-        if not local_jobbergate_application_dir.exitst():
+        if not local_jobbergate_application_dir.exists():
             check = self.error_handle(
                 error="invalid application path supplied",
                 solution=f"{application_path} is invalid, please review and try again"
@@ -742,9 +752,9 @@ class JobbergateApi:
             data['application_description'] = application_desc
 
         tar_list = [application_path, os.path.join(application_path, "templates")]
-        self.tardir(application_path, tar_name, tar_list)
+        self.tardir(application_path, TAR_NAME, tar_list)
 
-        files = {'upload_file': open(tar_name, 'rb')}
+        files = {'upload_file': open(TAR_NAME, 'rb')}
 
         response = self.jobbergate_request(
             method="POST",
@@ -757,7 +767,7 @@ class JobbergateApi:
             for key in self.application_suppress:
                 response.pop(key, None)
 
-            os.remove(tar_name)
+            os.remove(TAR_NAME)
         except AttributeError:
             # response is str of error message
             return response
