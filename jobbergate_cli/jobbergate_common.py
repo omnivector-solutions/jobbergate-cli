@@ -6,9 +6,9 @@ from pathlib import Path
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-JOBBERGATE_USER_TOKEN_DIR = f"{str(Path.home())}/.local/cache/jobbergate-cli"
+JOBBERGATE_USER_TOKEN_DIR = Path.home() / ".local" / "cache" / "jobbergate"
 
-JOBBERGATE_API_JWT_PATH = Path(f"{JOBBERGATE_USER_TOKEN_DIR}/jobbergate.token")
+JOBBERGATE_API_JWT_PATH = JOBBERGATE_USER_TOKEN_DIR / "jobbergate.token"
 
 JOBBERGATE_API_ENDPOINT = "https://jobbergate-api-production.omnivector.solutions"
 
@@ -45,7 +45,7 @@ JOBBERGATE_APPLICATION_MODULE_FILE_NAME = "jobbergate.py"
 
 JOBBERGATE_APPLICATION_CONFIG_FILE_NAME = "jobbergate.yaml"
 
-JOBBERGATE_CACHE_DIR = Path.home() / '.jobbergate'
+JOBBERGATE_CACHE_DIR = Path.home() / ".jobbergate"
 
 JOBBERGATE_APPLICATION_MODULE_PATH = \
     JOBBERGATE_CACHE_DIR / JOBBERGATE_APPLICATION_MODULE_FILE_NAME
