@@ -78,19 +78,6 @@ class List(QuestionBase):
         self.choices = choices
 
 
-class Directory(QuestionBase):
-    """Asks for a directory name. If `exists` is `True` it checks if path exists and is a directory.
-
-    :param variablename: The variable name to set
-    :param message: Message to show
-    :param default: Default value
-    :param exists: Checks if given directory exists"""
-
-    def __init__(self, variablename, message, default=None, exists=None):
-        super().__init__(variablename, message, default)
-        self.exists = exists
-
-
 class File(QuestionBase):
     """Asks for a file name. If `exists` is `True` it checks if path exists and is a directory.
 
@@ -152,49 +139,3 @@ class BooleanList(QuestionBase):
         self.ignore = lambda a: a[self.variablename]
         self.noignore = lambda a: not a[self.variablename]
 
-
-class Const(QuestionBase):
-    """Sets the variable to the `default` value. Doesn't show anything.
-
-    :param variablename: The variable name to set
-    :param message: Message to show
-    :param default: Value that variable is set to
-    """
-
-    def __init__(self, variablename, default):
-        super().__init__(variablename, None, default)
-
-
-def workflow(func=None, *, name=None):
-    """A decorator for workflows. Adds an workflow question and all questions
-    added in the decorated question is asked after selecting workflow.
-
-    :param name: (optional) Descriptional name that is shown when choosing workflow
-
-    Add a workflow named debug:
-
-    .. code-block:: python
-
-        @workflow
-        def debug(data):
-            return [appform.File("debugfile", "Name of debug file")]
-
-    Add a workflow with longer name:
-
-    .. code-block:: python
-
-        @workflow(name="Secondary Eigen step")
-        def 2ndstep(data):
-            return [appform.Text("eigendata", "Definition of eigendata")]
-    """
-
-    if func is None:
-        return partial(workflow, name=name)
-
-    @wraps(func)
-    def wrapper(*args, **kvargs):
-        return func(*args, **kvargs)
-
-    workflows[name or func.__name__] = func
-
-    return wrapper
