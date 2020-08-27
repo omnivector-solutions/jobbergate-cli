@@ -150,6 +150,7 @@ class JobbergateApi:
         spec = importlib.util.spec_from_file_location(
             "JobbergateApplication",
             JOBBERGATE_APPLICATION_MODULE_PATH
+
         )
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
