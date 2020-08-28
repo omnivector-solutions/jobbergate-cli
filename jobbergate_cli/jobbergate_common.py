@@ -19,8 +19,6 @@ JOBBERGATE_USER_TOKEN_DIR = JOBBERGATE_CACHE_DIR / "token"
 
 JOBBERGATE_API_JWT_PATH = JOBBERGATE_USER_TOKEN_DIR / "jobbergate.token"
 
-JOBBERGATE_API_ENDPOINT = "https://jobbergate-api-production.omnivector.solutions"
-
 JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT = f"{JOBBERGATE_API_ENDPOINT}/api-token-auth/"
 
 JOBBERGATE_APPLICATION_S3_BASE_PATH = "jobbergate-resources"
