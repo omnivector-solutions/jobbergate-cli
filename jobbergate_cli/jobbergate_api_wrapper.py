@@ -193,6 +193,39 @@ class JobbergateApi:
         }
         return response
 
+    def application_error_check(self, application_path):
+        error_check = []
+
+        # check for required files
+        local_jobbergate_application_dir = pathlib.Path(application_path)
+        local_jobbergate_application_module = \
+            local_jobbergate_application_dir / \
+            JOBBERGATE_APPLICATION_MODULE_FILE_NAME
+        local_jobbergate_application_config = \
+            local_jobbergate_application_dir / \
+            JOBBERGATE_APPLICATION_CONFIG_FILE_NAME
+
+        if not local_jobbergate_application_dir.exists():
+            check = self.error_handle(
+                error="invalid application path supplied",
+                solution=f"{application_path} is invalid, please review and try again"
+            )
+            error_check.append(check)
+        if not local_jobbergate_application_module.exists():
+            check = self.error_handle(
+                error=f"Could not find {JOBBERGATE_APPLICATION_MODULE_FILE_NAME} in {application_path}",
+                solution=f"Please ensure {JOBBERGATE_APPLICATION_MODULE_FILE_NAME} is in application path provided"
+            )
+            error_check.append(check)
+        if not local_jobbergate_application_config.exists():
+            check = self.error_handle(
+                error=f"Could not find {JOBBERGATE_APPLICATION_CONFIG_FILE_NAME} in {application_path}",
+                solution=f"Please ensure {JOBBERGATE_APPLICATION_CONFIG_FILE_NAME} is in application path provided"
+            )
+            error_check.append(check)
+
+        return error_check
+
 
     # Job Scripts
     @tabulate_decorator
@@ -710,35 +743,7 @@ class JobbergateApi:
             response = parameter_check
             return response
 
-        error_check = []
-
-        #check for required files
-        local_jobbergate_application_dir = pathlib.Path(application_path)
-        local_jobbergate_application_module = \
-            local_jobbergate_application_dir / \
-                JOBBERGATE_APPLICATION_MODULE_FILE_NAME
-        local_jobbergate_application_config = \
-            local_jobbergate_application_dir / \
-                JOBBERGATE_APPLICATION_CONFIG_FILE_NAME
-
-        if not local_jobbergate_application_dir.exists():
-            check = self.error_handle(
-                error="invalid application path supplied",
-                solution=f"{application_path} is invalid, please review and try again"
-            )
-            error_check.append(check)
-        if not local_jobbergate_application_module.exists():
-            check = self.error_handle(
-                error=f"Could not find {APPLICATION_FILENAME} in {application_path}",
-                solution=f"Please ensure {APPLICATION_FILENAME} is in application path provided"
-            )
-            error_check.append(check)
-        if not local_jobbergate_application_config.exists():
-            check = self.error_handle(
-                error=f"Could not find {CONFIG_FILENAME} in {application_path}",
-                solution=f"Please ensure {CONFIG_FILENAME} is in application path provided"
-            )
-            error_check.append(check)
+        error_check = self.application_error_check(application_path)
 
         if len(error_check) > 0:
             response = error_check
@@ -796,7 +801,23 @@ class JobbergateApi:
 
     @tabulate_decorator
     def update_application(self,
-                           application_id):
+                           application_id,
+                           application_path,
+                           application_desc
+                           ):
+        if application_path is None:
+            response = self.error_handle(
+                error="--application-path not defined",
+                solution="Please try again with --application-path specified"
+            )
+            return response
+
+        error_check = self.application_error_check(application_path)
+
+        if len(error_check) > 0:
+            response = error_check
+            return response
+
         data = self.jobbergate_request(
             method="GET",
             endpoint=f"{self.api_endpoint}/application/{application_id}"
@@ -805,20 +826,35 @@ class JobbergateApi:
             data = data.json()
         else:
             response = self.error_handle(
-                error=f"Failed to retrieve job submission list",
-                solution="Please check credentials or report server error"
+                error=f"Application id {application_id} does not exist",
+                solution="Please confirm the application id"
             )
             return response
 
-        data['application_name'] = "TEST_NEW_APP_NAME10"
         del data['id']
         del data['created_at']
         del data['updated_at']
+
+        tar_list = [application_path, os.path.join(application_path, "templates")]
+        self.tardir(application_path, TAR_NAME, tar_list)
+
+        files = {'upload_file': open(TAR_NAME, 'rb')}
+
         response = self.jobbergate_request(
             method="PUT",
-            endpoint=f"{self.api_endpoint}/application/{application_id}/",
-            data=data
+            endpoint=f"{self.api_endpoint}/application/",
+            data=data,
+            files=files
         )
+
+        try:
+            for key in self.application_suppress:
+                response.pop(key, None)
+
+            os.remove(TAR_NAME)
+        except AttributeError:
+            # response is str of error message
+            return response
         return response
 
     @tabulate_decorator

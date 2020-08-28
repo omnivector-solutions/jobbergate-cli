@@ -203,10 +203,22 @@ def get_application(ctx,
 @click.option("--id",
               "-i",
               "update_application_id")
+@click.option("--application-path",
+              "-a",
+              "application_path")
+@click.option("--application-desc",
+              "application_desc",
+              default="")
 @click.pass_obj
 def update_application(ctx,
-                       update_application_id):
-    print(ctx.api.update_application(update_application_id))
+                       update_application_id,
+                       application_path,
+                       application_desc):
+    print(ctx.api.update_application(
+        update_application_id,
+        application_path,
+        application_desc
+    ))
 
 
 @main.command('delete-application')
