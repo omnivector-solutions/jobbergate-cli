@@ -842,7 +842,7 @@ class JobbergateApi:
 
         response = self.jobbergate_request(
             method="PUT",
-            endpoint=f"{self.api_endpoint}/application/",
+            endpoint=f"{self.api_endpoint}/application/{application_id}/",
             data=data,
             files=files
         )
