@@ -85,10 +85,11 @@ class JobbergateApi:
                 response = requests.put(
                     endpoint,
                     data=data,
+                    files=files,
                     headers={'Authorization': 'JWT ' + self.token},
                     verify=False).json()
             except Exception as e:
-                response = f"POST request failed with data: {json.dumps(data, indent=4, sort_keys=True)}"
+                response = "PUT request failed"
                 return response
 
         if method == "DELETE":
@@ -106,7 +107,7 @@ class JobbergateApi:
                     headers={'Authorization': 'JWT ' + self.token},
                     verify=False).json()
             except Exception as e:
-                response = f"POST request failed with data: {json.dumps(data, indent=4, sort_keys=True)}"
+                response = "POST request failed"
                 return response
         return response
 
@@ -834,6 +835,8 @@ class JobbergateApi:
         del data['id']
         del data['created_at']
         del data['updated_at']
+        if application_desc:
+            data['application_description'] = application_desc
 
         tar_list = [application_path, os.path.join(application_path, "templates")]
         self.tardir(application_path, TAR_NAME, tar_list)
