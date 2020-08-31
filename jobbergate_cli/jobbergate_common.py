@@ -13,7 +13,7 @@ JOBBERGATE_API_JWT_PATH = JOBBERGATE_USER_TOKEN_DIR / "jobbergate.token"
 
 JOBBERGATE_CACHE_DIR = Path.home() / ".jobbergate"
 
-JOBBERGATE_API_ENDPOINT = "https://jobbergate-api-staging.omnivector.solutions"
+JOBBERGATE_API_ENDPOINT = "https://jobbergate-api-production.omnivector.solutions"
 
 JOBBERGATE_USER_TOKEN_DIR = JOBBERGATE_CACHE_DIR / "token"
 
