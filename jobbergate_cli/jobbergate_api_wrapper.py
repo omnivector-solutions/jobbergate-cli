@@ -439,11 +439,18 @@ class JobbergateApi:
 
     @tabulate_decorator
     def update_job_script(self,
-                          job_script_id):
+                          job_script_id,
+                          job_script_data_as_string):
         if job_script_id is None:
             response = self.error_handle(
                 error="--id not defined",
                 solution="Please try again with --id specified"
+            )
+            return response
+        if job_script_data_as_string is None:
+            response = self.error_handle(
+                error="--job-script not defined",
+                solution=f"Please provide job script data for updating job script ID: {job_script_id}"
             )
             return response
 
@@ -459,7 +466,8 @@ class JobbergateApi:
                 solution="Please confirm job submission exists and try again"
             )
             return response
-        data['job_script_name'] = "TEST_NEW_JOBSCRIPT_NAME_CLI"
+        data['job_script_data_as_string'] = job_script_data_as_string
+        print(data)
         response = self.jobbergate_request(
             method="PUT",
             endpoint=f"{self.api_endpoint}/job-script/{job_script_id}/",

@@ -285,10 +285,13 @@ def get_job_script(ctx,
 @click.option("--id",
               "-i",
               "update_job_script_id")
+@click.option("--job-script",
+              "job_script_data_as_string")
 @click.pass_obj
 def update_job_script(ctx,
-                      update_job_script_id):
-    print(ctx.api.update_job_script(update_job_script_id))
+                      update_job_script_id,
+                      job_script_data_as_string):
+    print(ctx.api.update_job_script(update_job_script_id, job_script_data_as_string))
 
 
 @main.command('delete-job-script')
