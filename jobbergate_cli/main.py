@@ -325,8 +325,8 @@ def list_job_submissions(ctx, all=False):
               "render_only")
 @click.pass_obj
 def create_job_submission(ctx,
-                          create_job_submission_name,
                           create_job_submission_job_script_id,
+                          create_job_submission_name="",
                           render_only=None):
     print(ctx.api.create_job_submission(
         job_script_id=create_job_submission_job_script_id,

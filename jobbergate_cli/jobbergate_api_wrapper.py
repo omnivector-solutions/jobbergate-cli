@@ -605,7 +605,6 @@ class JobbergateApi:
                 return response
 
             if rc == 0:
-
                 response = self.jobbergate_request(
                     method="POST",
                     endpoint=f"{self.api_endpoint}/job-submission/",
