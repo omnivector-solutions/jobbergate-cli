@@ -597,10 +597,17 @@ class JobbergateApi:
             try:
                 output, err, rc = self.jobbergate_run(application_name)
             except FileNotFoundError:
-                response = self.error_handle(
-                    error=f"Failed to execute submission - could not use slurm.sbatch",
-                    solution="Please confirm slurm.sbatch is installed and available"
-                )
+                if err:
+                    response = self.error_handle(
+                        error=f"Failed to execute submission with error: {err}",
+                        solution="Please confirm slurm.sbatch is installed and available"
+                    )
+                    return response
+                else:
+                    response = self.error_handle(
+                        error=f"Failed to execute submission",
+                        solution="Please confirm slurm.sbatch is installed and available"
+                    )
                 return response
 
             print(f"output: {output}")

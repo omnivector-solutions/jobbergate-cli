@@ -29,7 +29,9 @@ JOBBERGATE_APPLICATION_CONFIG = {
     "application_name": "",
     "application_description": "",
     "application_location": "TEST_LOC",
-    "application_owner": ""
+    "application_owner": "",
+    "application_file": "",
+    "application_config": ""
 }
 
 JOBBERGATE_JOB_SCRIPT_CONFIG = {
