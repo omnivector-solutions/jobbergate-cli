@@ -316,7 +316,8 @@ def list_job_submissions(ctx, all=False):
 @main.command('create-job-submission')
 @click.option("--name",
               "-n",
-              "create_job_submission_name")
+              "create_job_submission_name",
+              default="")
 @click.option("--job-script-id",
               "-i",
               "create_job_submission_job_script_id")
