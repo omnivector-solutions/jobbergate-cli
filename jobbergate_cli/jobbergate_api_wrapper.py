@@ -124,6 +124,7 @@ class JobbergateApi:
         output, err = p.communicate(b"sbatch output")
 
         rc = p.returncode
+        print(f"rc is: {rc}")
 
         return output.decode("utf-8"), err.decode("utf-8"), rc
 
