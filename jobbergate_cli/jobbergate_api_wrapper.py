@@ -113,7 +113,7 @@ class JobbergateApi:
 
     def jobbergate_run(self, *argv):
         # cmd = ["slurm.sbatch", "-p", "partition1", "application.sh"]
-        cmd = ["slurm.sbatch", "application.sh"]
+        cmd = ["slurm", "sbatch", "application.sh"]
         for arg in argv:
             cmd.append(arg)
         p = Popen(
@@ -597,17 +597,10 @@ class JobbergateApi:
             try:
                 output, err, rc = self.jobbergate_run(application_name)
             except FileNotFoundError:
-                if err:
-                    response = self.error_handle(
-                        error=f"Failed to execute submission with error: {err}",
-                        solution="Please confirm slurm.sbatch is installed and available"
-                    )
-                    return response
-                else:
-                    response = self.error_handle(
-                        error=f"Failed to execute submission",
-                        solution="Please confirm slurm.sbatch is installed and available"
-                    )
+                response = self.error_handle(
+                    error=f"Failed to execute submission",
+                    solution="Please confirm slurm sbatch is installed and available"
+                )
                 return response
 
             print(f"output: {output}")
