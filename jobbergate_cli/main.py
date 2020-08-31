@@ -81,8 +81,8 @@ def decode_token_to_dict(encoded_token):
 def init_api(user_id):
     api = JobbergateApi(
         token=JOBBERGATE_API_JWT_PATH.read_text(),
-        job_script_config=JOB_SCRIPT_CONFIG,
-        job_submission_config=JOB_SUBMISSION_CONFIG,
+        job_script_config=JOBBERGATE_JOB_SCRIPT_CONFIG,
+        job_submission_config=JOBBERGATE_JOB_SUBMISSION_CONFIG,
         application_config=JOBBERGATE_APPLICATION_CONFIG,
         api_endpoint=JOBBERGATE_API_ENDPOINT,
         user_id=user_id)
@@ -203,10 +203,22 @@ def get_application(ctx,
 @click.option("--id",
               "-i",
               "update_application_id")
+@click.option("--application-path",
+              "-a",
+              "application_path")
+@click.option("--application-desc",
+              "application_desc",
+              default="")
 @click.pass_obj
 def update_application(ctx,
-                       update_application_id):
-    print(ctx.api.update_application(update_application_id))
+                       update_application_id,
+                       application_path,
+                       application_desc):
+    print(ctx.api.update_application(
+        update_application_id,
+        application_path,
+        application_desc
+    ))
 
 
 @main.command('delete-application')
