@@ -604,14 +604,19 @@ class JobbergateApi:
                 )
                 return response
 
-            print(f"output: {output}")
-            print(f"err: {err}")
+            if rc == 0:
 
-            response = self.jobbergate_request(
-                method="POST",
-                endpoint=f"{self.api_endpoint}/job-submission/",
-                data=data
-            )
+                response = self.jobbergate_request(
+                    method="POST",
+                    endpoint=f"{self.api_endpoint}/job-submission/",
+                    data=data
+                )
+            else:
+                response = self.error_handle(
+                    error=f"Failed to execute submission with error: {err}",
+                    solution="Please resolve error or contact for assistance"
+                )
+                return response
         return response
 
     @tabulate_decorator
