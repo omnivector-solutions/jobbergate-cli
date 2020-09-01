@@ -603,9 +603,11 @@ class JobbergateApi:
                 return response
 
             if rc == 0:
+                print(output)
                 find = output.find("job") + 4
                 slurm_job_id = output[find:]
                 data['slurm_job_id'] = slurm_job_id
+                print(data)
                 response = self.jobbergate_request(
                     method="POST",
                     endpoint=f"{self.api_endpoint}/job-submission/",
