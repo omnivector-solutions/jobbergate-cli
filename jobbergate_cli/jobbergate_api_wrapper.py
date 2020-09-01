@@ -178,6 +178,12 @@ class JobbergateApi:
                     name=questions[i].variablename,
                     message=questions[i].message,
                     choices=questions[i].choices, )
+            elif questions[i].__class__.__name__ == 'Confirm':
+                question = inquirer.List(
+                    name=questions[i].variablename,
+                    message=questions[i].message,
+                    choices=["y", "N"]
+                )
             else:
                 question = inquirer.Text(
                     name=questions[i].variablename,
@@ -304,6 +310,10 @@ class JobbergateApi:
             try:
                 rendered_dict = json.loads(response['job_script_data_as_string'])
             except:
+                response = self.error_handle(
+                    error="could not load job_script_data_as_string from response",
+                    solution=f"Please review response: {response}"
+                )
                 return response
 
             job_script_data_as_string = ""
@@ -385,7 +395,10 @@ class JobbergateApi:
                 files=files
             )
 
-            rendered_dict = json.loads(response['job_script_data_as_string'])
+            try:
+                rendered_dict = json.loads(response['job_script_data_as_string'])
+            except:
+                print(response)
 
             job_script_data_as_string = ""
             for key, value in rendered_dict.items():
@@ -669,7 +682,6 @@ class JobbergateApi:
             )
             return response
         # TODO how to collect data that will updated for the job-submission
-        data['job_submission_name'] = "TEST_JOB_SUB_CLI"
         response = self.jobbergate_request(
             method="PUT",
             endpoint=f"{self.api_endpoint}/job-submission/{job_submission_id}/"
