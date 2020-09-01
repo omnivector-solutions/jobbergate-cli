@@ -112,9 +112,7 @@ class JobbergateApi:
         return response
 
     def jobbergate_run(self, *argv):
-        #TODO: troubleshoot not working on my v box
-        # cmd = ["/snap/bin/sbatch", "application.sh"]
-        cmd = ["sbatch", "application.sh"]
+        cmd = ["/snap/bin/sbatch", "application.sh"]
         for arg in argv:
             cmd.append(arg)
         p = Popen(
