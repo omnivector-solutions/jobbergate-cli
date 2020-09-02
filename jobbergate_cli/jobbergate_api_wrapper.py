@@ -64,10 +64,16 @@ class JobbergateApi:
         for root, dirs, files in os.walk(path):
             if root in tar_list:
                 for file in files:
-                    archive.add(
-                        os.path.join(root, file),
-                        arcname=file
+                    if "templates" in root:
+                        archive.add(
+                            os.path.join(root, file),
+                            arcname=f"/tenplates/{file}"
                         )
+                    else:
+                        archive.add(
+                            os.path.join(root, file),
+                            arcname=file
+                            )
         archive.close()
 
     def jobbergate_request(self,
@@ -805,11 +811,12 @@ class JobbergateApi:
         try:
             for key in self.application_suppress:
                 response.pop(key, None)
-
-            os.remove(TAR_NAME)
         except AttributeError:
             # response is str of error message
             return response
+
+        print(var_does_not_exist)
+        os.remove(TAR_NAME)
 
         return response
 
