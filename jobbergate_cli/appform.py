@@ -5,14 +5,6 @@ Appform
 Abstraction layer for questions. Each classe represents different question
 types, and QuestionBase"""
 
-from collections import deque
-from functools import partial, wraps
-
-
-questions = deque()
-workflows = {}
-
-
 class QuestionBase:
     """Baseclass for questions.
     All questions have variablename, message and an optional default.
