@@ -67,7 +67,7 @@ class JobbergateApi:
                     if "templates" in root:
                         archive.add(
                             os.path.join(root, file),
-                            arcname=f"/tenplates/{file}"
+                            arcname=f"/templates/{file}"
                         )
                     else:
                         archive.add(
@@ -490,7 +490,6 @@ class JobbergateApi:
             )
             return response
         data['job_script_data_as_string'] = job_script_data_as_string
-        print(data)
         response = self.jobbergate_request(
             method="PUT",
             endpoint=f"{self.api_endpoint}/job-script/{job_script_id}/",
@@ -815,7 +814,6 @@ class JobbergateApi:
             # response is str of error message
             return response
 
-        print(var_does_not_exist)
         os.remove(TAR_NAME)
 
         return response
