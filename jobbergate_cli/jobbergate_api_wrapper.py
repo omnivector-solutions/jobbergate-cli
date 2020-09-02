@@ -163,13 +163,12 @@ class JobbergateApi:
         this will be passed into inquirer.prompt for user to answer
         '''
         for i in range(len(questions)):
-            if questions[i].default:
-                question = inquirer.Text(
-                    name=questions[i].variablename,
-                    message=questions[i].message,
-                    default=questions[i].default
-                )
-            elif questions[i].__class__.__name__ == 'List':
+            try:
+                questions[i].default
+            except NameError:
+                questions[i].default = None
+
+            if questions[i].__class__.__name__ == 'List':
                 question = inquirer.List(
                     name=questions[i].variablename,
                     message=questions[i].message,
