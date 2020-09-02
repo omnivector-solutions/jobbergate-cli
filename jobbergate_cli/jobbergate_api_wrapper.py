@@ -167,22 +167,28 @@ class JobbergateApi:
                 question = inquirer.Text(
                     name=questions[i].variablename,
                     message=questions[i].message,
-                    default=questions[i].default)
+                    default=questions[i].default
+                )
             elif questions[i].__class__.__name__ == 'List':
                 question = inquirer.List(
                     name=questions[i].variablename,
                     message=questions[i].message,
-                    choices=questions[i].choices, )
+                    choices=questions[i].choices,
+                    default=questions[i].default
+                )
             elif questions[i].__class__.__name__ == 'Checkbox':
                 question = inquirer.Checkbox(
                     name=questions[i].variablename,
                     message=questions[i].message,
-                    choices=questions[i].choices, )
+                    choices=questions[i].choices,
+                    default=questions[i].default
+                )
             elif questions[i].__class__.__name__ == 'Confirm':
                 question = inquirer.List(
                     name=questions[i].variablename,
                     message=questions[i].message,
-                    choices=["y", "N"]
+                    choices=["y", "N"],
+                    default=questions[i].default
                 )
             else:
                 question = inquirer.Text(
