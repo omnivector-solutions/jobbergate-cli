@@ -162,6 +162,13 @@ class JobbergateApi:
         spec.loader.exec_module(module)
         return module
 
+    def integer_validation(self, answers, current):
+        if not isinstance(current, int):
+            raise inquirer.errors.ValidationError('', reason='This question requires a valid integer')
+
+        return True
+
+
     def assemble_questions(self, questions, question_list):
         '''
         questions: passed in from application.py
@@ -192,9 +199,30 @@ class JobbergateApi:
                 question = inquirer.List(
                     name=questions[i].variablename,
                     message=questions[i].message,
-                    choices=["y", "N"],
+                    choices=[("y", True), ("N", False)],
                     default=questions[i].default
                 )
+            elif questions[i].__class__.__name__ == 'Integer':
+                question = inquirer.Checkbox(
+                    name=questions[i].variablename,
+                    message=questions[i].message,
+                    choices=questions[i].choices,
+                    default=questions[i].default,
+                    validate=self.integer_validation
+                )
+            elif questions[i].__class__.__name__ == 'File':
+                question = inquirer.Path(
+                    name='file',
+                    path_type=inquirer.Path.FILE,
+                    message=questions[i].message
+                )
+            # elif questions[i].__class__.__name__ == 'BooleanList':
+            #     question = inquirer.Checkbox(
+            #         name=questions[i].variablename,
+            #         message=questions[i].message,
+            #         choices=questions[i].choices,
+            #         default=questions[i].default
+            #     )
             else:
                 question = inquirer.Text(
                     name=questions[i].variablename,
@@ -391,7 +419,9 @@ class JobbergateApi:
 
                 shared_answers = inquirer.prompt(questions_shared)
                 param_dict['jobbergate_config'].update(shared_answers)
-            param_filename = f"/{JOBBERGATE_CACHE_DIR}/param_dict.json"
+            print(type(param_dict))
+            print(param_dict)
+            param_filename = f"{JOBBERGATE_CACHE_DIR}/param_dict.json"
             param_file = open(param_filename, 'w')
             json.dump(param_dict, param_file)
             param_file.close()
@@ -405,6 +435,8 @@ class JobbergateApi:
                 data=data,
                 files=files
             )
+            print(type(response))
+            print(response)
 
             try:
                 rendered_dict = json.loads(response['job_script_data_as_string'])

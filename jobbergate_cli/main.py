@@ -149,6 +149,12 @@ def main(ctx,
                 f"Auth Failed for username: {username}, Please Try again"
             )
             sys.exit(0)
+        except requests.exceptions.ConnectionError:
+            print(
+                f"Auth failed to establish connection with API, Please Try again"
+            )
+            sys.exit(0)
+
     ctx.obj['token'] = decode_token_to_dict(
         JOBBERGATE_API_JWT_PATH.read_text())
 
