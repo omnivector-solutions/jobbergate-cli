@@ -216,7 +216,7 @@ class JobbergateApi:
                 )
             elif questions[i].__class__.__name__ == 'File':
                 question = inquirer.Path(
-                    name='file',
+                    name=questions[i].variablename,
                     path_type=inquirer.Path.FILE,
                     message=questions[i].message
                 )
