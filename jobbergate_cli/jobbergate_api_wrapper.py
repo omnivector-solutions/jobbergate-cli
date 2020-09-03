@@ -163,8 +163,13 @@ class JobbergateApi:
         return module
 
     def integer_validation(self, answers, current):
-        if not isinstance(current, int):
-            raise inquirer.errors.ValidationError('', reason='This question requires a valid integer')
+        # inquirer only sends str so this ensures the value can be converted to int
+        # Example int(2) passes and int(two) does not
+        if not isinstance(int(current), int):
+            raise inquirer.errors.ValidationError(
+                '',
+                reason='This question requires a valid integer'
+            )
 
         return True
 
@@ -203,10 +208,9 @@ class JobbergateApi:
                     default=questions[i].default
                 )
             elif questions[i].__class__.__name__ == 'Integer':
-                question = inquirer.Checkbox(
+                question = inquirer.Text(
                     name=questions[i].variablename,
                     message=questions[i].message,
-                    choices=questions[i].choices,
                     default=questions[i].default,
                     validate=self.integer_validation
                 )
@@ -419,8 +423,6 @@ class JobbergateApi:
 
                 shared_answers = inquirer.prompt(questions_shared)
                 param_dict['jobbergate_config'].update(shared_answers)
-            print(type(param_dict))
-            print(param_dict)
             param_filename = f"{JOBBERGATE_CACHE_DIR}/param_dict.json"
             param_file = open(param_filename, 'w')
             json.dump(param_dict, param_file)
@@ -435,8 +437,6 @@ class JobbergateApi:
                 data=data,
                 files=files
             )
-            print(type(response))
-            print(response)
 
             try:
                 rendered_dict = json.loads(response['job_script_data_as_string'])
