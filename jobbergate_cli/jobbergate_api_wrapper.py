@@ -377,8 +377,10 @@ class JobbergateApi:
             answers = inquirer.prompt(question_list)
             param_dict['jobbergate_config'].update(answers)
 
-            if hasattr(application, "shared"):
-                shared_questions = application.shared(
+            while "nextworkflow" in param_dict['jobbergate_config']:
+                method_to_call = getattr(application, param_dict['jobbergate_config'].pop("nextworkflow")) # Use and remove from the dict
+
+                shared_questions = method_to_call(
                     data=param_dict['jobbergate_config']
                 )
 
