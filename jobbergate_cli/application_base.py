@@ -8,12 +8,12 @@ class JobbergateApplicationBase:
 
     def __init__(self, jobbergate_yaml):
         """Initialize class attributes."""
-        self._questions = []
+        # self._questions = []
         self.jobbergate_config = jobbergate_yaml['jobbergate_config']
         self.application_config = jobbergate_yaml['application_config']
-        self.mainflow()
+        # self.mainflow()
 
-    def mainflow(self):
+    def mainflow(self, data):
         """Implements the main question asking workflow."""
         raise Exception("Inheriting class must override this method.")
 

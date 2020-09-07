@@ -368,14 +368,8 @@ class JobbergateApi:
             module = self.import_jobbergate_application_module_into_jobbergate_cli()
             application = module.JobbergateApplication(param_dict)
 
-            # Begin question assembly
-            question_list = []
-            question_list = self.assemble_questions(
-                questions=application._questions,
-                question_list=question_list
-            )
-            answers = inquirer.prompt(question_list)
-            param_dict['jobbergate_config'].update(answers)
+            # Begin question assembly, starting in "mainflow" method
+            param_dict['jobbergate_config']['nextworkflow'] = "mainflow"
 
             while "nextworkflow" in param_dict['jobbergate_config']:
                 method_to_call = getattr(application, param_dict['jobbergate_config'].pop("nextworkflow")) # Use and remove from the dict
