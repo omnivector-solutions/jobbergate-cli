@@ -421,6 +421,11 @@ class JobbergateApi:
         if debug is False:
             del response['job_script_data_as_string']
 
+        # Check if user wants to submit immediately
+        submit = inquirer.prompt([inquirer.Confirm('sub', message='Would you like to submit this immediately?', default=True)])['sub']
+        if submit:
+            response["submission_result"] = self.create_job_submission(response['id'], False, response['job_script_name'])
+
         return response
 
     @tabulate_decorator
