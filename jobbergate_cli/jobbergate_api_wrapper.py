@@ -234,13 +234,6 @@ class JobbergateApi:
                 )
                 question_list.append(question)
             elif questions[i].__class__.__name__ == 'Integer':
-                validation_add = {
-                    questions[i].variablename: {
-                        "minval": questions[i].minval,
-                        "maxval": questions[i].maxval
-                    }
-                }
-                self.validation_check.update(validation_add.copy())
                 int_questions.append(questions[i])
             elif questions[i].__class__.__name__ == 'File':
                 question = inquirer.Path(
@@ -448,7 +441,6 @@ class JobbergateApi:
             )
             for i in int_questions:
                 int_question = self.assemble_int_questions(i)
-                print(f"Appending {int_question.name}")
                 question_list.append(int_question)
 
             answers = inquirer.prompt(question_list)
