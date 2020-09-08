@@ -376,6 +376,10 @@ class JobbergateApi:
             # TODO: Put below in function after testing - DRY
             files = {'upload_file': open(param_filename, 'rb')}
 
+            # Possibly overwrite script name
+            if 'job_script_name' in param_dict['jobbergate_config']:
+                data['job_script_name'] = param_dict['jobbergate_config']['job_script_name']
+
         response = self.jobbergate_request(
             method="POST",
             endpoint=f"{self.api_endpoint}/job-script/",
