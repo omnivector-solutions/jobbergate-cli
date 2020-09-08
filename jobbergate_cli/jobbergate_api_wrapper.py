@@ -82,10 +82,17 @@ class JobbergateApi:
                            data=None,
                            files=None):
         if method == "GET":
-            response = requests.get(
-                endpoint,
-                headers={'Authorization': 'JWT ' + self.token},
-                verify=False)
+            try:
+                response = requests.get(
+                    endpoint,
+                    headers={'Authorization': 'JWT ' + self.token},
+                    verify=False)
+            except requests.exceptions.ConnectionError:
+                response = self.error_handle(
+                    error="Failed to establish connection with API",
+                    solution=f"Please try submitting again"
+                )
+                return response
         if method == "PUT":
             try:
                 response = requests.put(
@@ -165,10 +172,24 @@ class JobbergateApi:
     def integer_validation(self, answers, current):
         # inquirer only sends str so this ensures the value can be converted to int
         # Example int(2) passes and int(two) does not
+        #TODO: NOT BEING USED - DELETE IF NOT NEEDED
+
+        answers_keys = list(answers.keys())
         if not isinstance(int(current), int):
+            reason = f"{current} is not a valid integer"
+            print(reason)
             raise inquirer.errors.ValidationError(
                 '',
-                reason='This question requires a valid integer'
+                reason=reason
+            )
+        value_check = minval <= int(current) <= maxval
+        if not value_check:
+            print(f"current is {current}")
+            reason = f"This question requires a valid integer greater than {minval} and less than {maxval}"
+            print(reason)
+            raise inquirer.errors.ValidationError(
+                '',
+                reason=reason
             )
 
         return True
@@ -180,6 +201,8 @@ class JobbergateApi:
         questions_list is list of questions assembled,
         this will be passed into inquirer.prompt for user to answer
         '''
+
+        int_questions = []
         for i in range(len(questions)):
             try:
                 questions[i].default
@@ -193,6 +216,7 @@ class JobbergateApi:
                     choices=questions[i].choices,
                     default=questions[i].default
                 )
+                question_list.append(question)
             elif questions[i].__class__.__name__ == 'Checkbox':
                 question = inquirer.Checkbox(
                     name=questions[i].variablename,
@@ -200,6 +224,7 @@ class JobbergateApi:
                     choices=questions[i].choices,
                     default=questions[i].default
                 )
+                question_list.append(question)
             elif questions[i].__class__.__name__ == 'Confirm':
                 question = inquirer.List(
                     name=questions[i].variablename,
@@ -207,19 +232,23 @@ class JobbergateApi:
                     choices=[("y", True), ("N", False)],
                     default=questions[i].default
                 )
+                question_list.append(question)
             elif questions[i].__class__.__name__ == 'Integer':
-                question = inquirer.Text(
-                    name=questions[i].variablename,
-                    message=questions[i].message,
-                    default=questions[i].default,
-                    validate=self.integer_validation
-                )
+                validation_add = {
+                    questions[i].variablename: {
+                        "minval": questions[i].minval,
+                        "maxval": questions[i].maxval
+                    }
+                }
+                self.validation_check.update(validation_add.copy())
+                int_questions.append(questions[i])
             elif questions[i].__class__.__name__ == 'File':
                 question = inquirer.Path(
                     name=questions[i].variablename,
                     path_type=inquirer.Path.FILE,
                     message=questions[i].message
                 )
+                question_list.append(question)
             # elif questions[i].__class__.__name__ == 'BooleanList':
             #     question = inquirer.Checkbox(
             #         name=questions[i].variablename,
@@ -231,9 +260,19 @@ class JobbergateApi:
                 question = inquirer.Text(
                     name=questions[i].variablename,
                     message=questions[i].message, )
-            question_list.append(question)
+                question_list.append(question)
 
-        return question_list
+        return question_list, int_questions
+
+    def assemble_int_questions(self, question):
+        int_question = inquirer.Text(
+            name=question.variablename,
+            message=question.message,
+            default=question.default,
+            validate=lambda _, x: question.minval <= int(x) <= question.maxval
+        )
+        return int_question
+
 
     def error_handle(self, error, solution):
         response = {
@@ -327,6 +366,7 @@ class JobbergateApi:
             )
             return response
 
+        self.validation_check = {}
         data = self.job_script_config
         data['job_script_name'] = job_script_name
         data['application'] = application_id
@@ -402,12 +442,25 @@ class JobbergateApi:
 
             # Begin question assembly
             question_list = []
-            question_list = self.assemble_questions(
+            question_list, int_questions = self.assemble_questions(
                 questions=application._questions,
                 question_list=question_list
             )
+            for i in int_questions:
+                int_question = self.assemble_int_questions(i)
+                print(f"Appending {int_question.name}")
+                question_list.append(int_question)
+
             answers = inquirer.prompt(question_list)
-            param_dict['jobbergate_config'].update(answers)
+            try:
+                param_dict['jobbergate_config'].update(answers)
+            except TypeError:
+                response = self.error_handle(
+                    error=f"Question asking Process was exited before completion",
+                    solution=f"Please execute create-job-script command again and complete questions"
+                )
+                return response
+
 
             if hasattr(application, "shared"):
                 shared_questions = application.shared(

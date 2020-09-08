@@ -254,7 +254,6 @@ def list_job_scripts(ctx, all=False):
               "-i",
               "create_job_script_application_id")
 @click.option("--param-file",
-              "-p",
               "param_file",
               type=click.Path(),)
 @click.option("--debug",
