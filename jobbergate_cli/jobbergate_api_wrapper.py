@@ -411,6 +411,13 @@ class JobbergateApi:
             except:
                 print(response)
 
+            # Write local copy of script
+            if 'job_script_data_as_string' in response:
+                filename = f'{data["job_script_name"]}.job'
+                print(f'Creating job script file: {filename}')
+                with open(filename, 'w') as fh:
+                    fh.write(response['job_script_data_as_string'])
+
             job_script_data_as_string = ""
             for key, value in rendered_dict.items():
                 job_script_data_as_string += "\n\nNEW_FILE\n\n"
@@ -424,7 +431,7 @@ class JobbergateApi:
         # Check if user wants to submit immediately
         submit = inquirer.prompt([inquirer.Confirm('sub', message='Would you like to submit this immediately?', default=True)])['sub']
         if submit:
-            response["submission_result"] = self.create_job_submission(response['id'], False, response['job_script_name'])
+            response['submission_result'] = self.create_job_submission(response['id'], False, response['job_script_name'])
 
         return response
 
