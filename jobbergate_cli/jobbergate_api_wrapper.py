@@ -13,6 +13,7 @@ import tarfile
 
 from tabulate import tabulate
 
+from jobbergate_cli import appform
 from jobbergate_cli.jobbergate_common import (
     JOBBERGATE_APPLICATION_MODULE_PATH,
     JOBBERGATE_APPLICATION_CONFIG_PATH,
@@ -169,77 +170,101 @@ class JobbergateApi:
         spec.loader.exec_module(module)
         return module
 
-    def assemble_questions(self, questions, question_list):
+    def assemble_questions(self, question, ignore=None):
         '''
         questions: passed in from application.py
         questions_list is list of questions assembled,
         this will be passed into inquirer.prompt for user to answer
         '''
 
-        int_questions = []
-        for i in range(len(questions)):
-            try:
-                questions[i].default
-            except NameError:
-                questions[i].default = None
+        if isinstance(question, appform.Text):
+            return inquirer.Text(
+                question.variablename,
+                message=question.message,
+                default=question.default,
+                ignore=ignore,
+            )
 
-            if questions[i].__class__.__name__ == 'List':
-                question = inquirer.List(
-                    name=questions[i].variablename,
-                    message=questions[i].message,
-                    choices=questions[i].choices,
-                    default=questions[i].default
-                )
-                question_list.append(question)
-            elif questions[i].__class__.__name__ == 'Checkbox':
-                question = inquirer.Checkbox(
-                    name=questions[i].variablename,
-                    message=questions[i].message,
-                    choices=questions[i].choices,
-                    default=questions[i].default
-                )
-                question_list.append(question)
-            elif questions[i].__class__.__name__ == 'Confirm':
-                question = inquirer.List(
-                    name=questions[i].variablename,
-                    message=questions[i].message,
-                    choices=[("y", True), ("N", False)],
-                    default=questions[i].default
-                )
-                question_list.append(question)
-            elif questions[i].__class__.__name__ == 'Integer':
-                int_questions.append(questions[i])
-            elif questions[i].__class__.__name__ == 'File':
-                question = inquirer.Path(
-                    name=questions[i].variablename,
-                    path_type=inquirer.Path.FILE,
-                    message=questions[i].message
-                )
-                question_list.append(question)
-            # elif questions[i].__class__.__name__ == 'BooleanList':
-            #     question = inquirer.Checkbox(
-            #         name=questions[i].variablename,
-            #         message=questions[i].message,
-            #         choices=questions[i].choices,
-            #         default=questions[i].default
-            #     )
-            else:
-                question = inquirer.Text(
-                    name=questions[i].variablename,
-                    message=questions[i].message, )
-                question_list.append(question)
+        if isinstance(question, appform.Integer):
+            return inquirer.Text(
+                question.variablename,
+                message=question.message,
+                default=question.default,
+                validate=question.validate,
+                ignore=ignore,
+            )
 
-        return question_list, int_questions
+        if isinstance(question, appform.List):
+            return inquirer.List(
+                question.variablename,
+                message=question.message,
+                choices=question.choices,
+                default=question.default,
+                ignore=ignore,
+            )
 
-    def assemble_int_questions(self, question):
-        int_question = inquirer.Text(
-            name=question.variablename,
-            message=question.message,
-            default=question.default,
-            validate=lambda _, x: question.minval <= int(x) <= question.maxval
-        )
-        return int_question
+        if isinstance(question, appform.Directory):
+            return inquirer.Path(
+                question.variablename,
+                message=question.message,
+                path_type=inquirer.Path.DIRECTORY,
+                default=question.default,
+                exists=question.exists,
+                ignore=ignore,
+            )
 
+        if isinstance(question, appform.File):
+            return inquirer.Path(
+                question.variablename,
+                message=question.message,
+                path_type=inquirer.Path.FILE,
+                default=question.default,
+                exists=question.exists,
+                ignore=ignore,
+            )
+
+        if isinstance(question, appform.Checkbox):
+            return inquirer.Checkbox(
+                question.variablename,
+                message=question.message,
+                choices=question.choices,
+                default=question.default,
+                ignore=ignore,
+            )
+
+        if isinstance(question, appform.Confirm):
+            return inquirer.Confirm(
+                question.variablename,
+                message=question.message,
+                default=question.default,
+                ignore=ignore,
+            )
+
+        if isinstance(question, appform.BooleanList):
+            retval = [
+                inquirer.Confirm(
+                    question.variablename,
+                    message=question.message,
+                    default=question.default,
+                    ignore=ignore,
+                )
+            ]
+
+            if question.whenfalse:
+                retval.extend(
+                    [self.assemble_questions(wf, ignore=question.ignore) for wf in question.whenfalse]
+                )
+            if question.whentrue:
+                retval.extend(
+                    [self.assemble_questions(wt, ignore=question.noignore) for wt in question.whentrue]
+                )
+
+            return retval
+
+        if isinstance(question, appform.Const):
+            return inquirer.Text(
+                question.variablename, message="", default=question.default, ignore=True,
+            )
 
     def error_handle(self, error, solution):
         response = {
@@ -397,52 +422,35 @@ class JobbergateApi:
             )
 
             # Load the jobbergate yaml
-            with open(JOBBERGATE_APPLICATION_CONFIG_PATH) as file:
-                param_dict = yaml.load(
-                    file,
-                    Loader=yaml.FullLoader
-                )
+            config = JOBBERGATE_APPLICATION_CONFIG_PATH.read_text()
+            param_dict = yaml.load(config, Loader=yaml.FullLoader)
 
             # Exec the jobbergate application python module
             module = self.import_jobbergate_application_module_into_jobbergate_cli()
             application = module.JobbergateApplication(param_dict)
+            # Begin question assembly, starting in "mainflow" method
+            param_dict['jobbergate_config']['nextworkflow'] = "mainflow"
 
-            # Begin question assembly
-            question_list = []
-            question_list, int_questions = self.assemble_questions(
-                questions=application._questions,
-                question_list=question_list
-            )
-            for i in int_questions:
-                int_question = self.assemble_int_questions(i)
-                question_list.append(int_question)
+            while "nextworkflow" in param_dict['jobbergate_config']:
+                method_to_call = getattr(application, param_dict['jobbergate_config'].pop(
+                    "nextworkflow"))  # Use and remove from the dict
 
-            answers = inquirer.prompt(question_list)
-            try:
-                param_dict['jobbergate_config'].update(answers)
-            except TypeError:
-                response = self.error_handle(
-                    error=f"Question asking Process was exited before completion",
-                    solution=f"Please execute create-job-script command again and complete questions"
-                )
-                return response
-
-
-            if hasattr(application, "shared"):
-                shared_questions = application.shared(
+                workflow_questions = method_to_call(
                     data=param_dict['jobbergate_config']
                 )
 
-                questions_2 = []
+                questions = []
 
-                questions_shared = self.assemble_questions(
-                    questions=shared_questions,
-                    question_list=questions_2
-                )
+                while workflow_questions:
+                    field = workflow_questions.pop(0)
+                    question = self.assemble_questions(field)
+                    questions.append(question)
 
-                shared_answers = inquirer.prompt(questions_shared)
-                param_dict['jobbergate_config'].update(shared_answers)
+                workflow_answers = inquirer.prompt(questions)
+                param_dict['jobbergate_config'].update(workflow_answers)
+
             param_filename = f"{JOBBERGATE_CACHE_DIR}/param_dict.json"
+
             param_file = open(param_filename, 'w')
             json.dump(param_dict, param_file)
             param_file.close()
