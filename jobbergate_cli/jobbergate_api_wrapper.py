@@ -13,6 +13,7 @@ import tarfile
 
 from tabulate import tabulate
 
+from jobbergate_cli import appform
 from jobbergate_cli.jobbergate_common import (
     JOBBERGATE_APPLICATION_MODULE_PATH,
     JOBBERGATE_APPLICATION_CONFIG_PATH,
@@ -82,10 +83,17 @@ class JobbergateApi:
                            data=None,
                            files=None):
         if method == "GET":
-            response = requests.get(
-                endpoint,
-                headers={'Authorization': 'JWT ' + self.token},
-                verify=False)
+            try:
+                response = requests.get(
+                    endpoint,
+                    headers={'Authorization': 'JWT ' + self.token},
+                    verify=False)
+            except requests.exceptions.ConnectionError:
+                response = self.error_handle(
+                    error="Failed to establish connection with API",
+                    solution="Please try submitting again"
+                )
+                return response
         if method == "PUT":
             try:
                 response = requests.put(
@@ -152,7 +160,7 @@ class JobbergateApi:
             return tabulate_response
         return wrapper
 
-    def import_jobbergate_application_module_into_jobbergate_cli(self):
+    def import_jobbergate_application_module(self):
         spec = importlib.util.spec_from_file_location(
             "JobbergateApplication",
             JOBBERGATE_APPLICATION_MODULE_PATH
@@ -162,46 +170,101 @@ class JobbergateApi:
         spec.loader.exec_module(module)
         return module
 
-    def assemble_questions(self, questions, question_list):
+    def assemble_questions(self, question, ignore=None):
         '''
         questions: passed in from application.py
         questions_list is list of questions assembled,
         this will be passed into inquirer.prompt for user to answer
         '''
-        for i in range(len(questions)):
-            try:
-                questions[i].default
-            except NameError:
-                questions[i].default = None
 
-            if questions[i].__class__.__name__ == 'List':
-                question = inquirer.List(
-                    name=questions[i].variablename,
-                    message=questions[i].message,
-                    choices=questions[i].choices,
-                    default=questions[i].default
-                )
-            elif questions[i].__class__.__name__ == 'Checkbox':
-                question = inquirer.Checkbox(
-                    name=questions[i].variablename,
-                    message=questions[i].message,
-                    choices=questions[i].choices,
-                    default=questions[i].default
-                )
-            elif questions[i].__class__.__name__ == 'Confirm':
-                question = inquirer.List(
-                    name=questions[i].variablename,
-                    message=questions[i].message,
-                    choices=["y", "N"],
-                    default=questions[i].default
-                )
-            else:
-                question = inquirer.Text(
-                    name=questions[i].variablename,
-                    message=questions[i].message, )
-            question_list.append(question)
+        if isinstance(question, appform.Text):
+            return inquirer.Text(
+                question.variablename,
+                message=question.message,
+                default=question.default,
+                ignore=ignore,
+            )
 
-        return question_list
+        if isinstance(question, appform.Integer):
+            return inquirer.Text(
+                question.variablename,
+                message=question.message,
+                default=question.default,
+                validate=question.validate,
+                ignore=ignore,
+            )
+
+        if isinstance(question, appform.List):
+            return inquirer.List(
+                question.variablename,
+                message=question.message,
+                choices=question.choices,
+                default=question.default,
+                ignore=ignore,
+            )
+
+        if isinstance(question, appform.Directory):
+            return inquirer.Path(
+                question.variablename,
+                message=question.message,
+                path_type=inquirer.Path.DIRECTORY,
+                default=question.default,
+                exists=question.exists,
+                ignore=ignore,
+            )
+
+        if isinstance(question, appform.File):
+            return inquirer.Path(
+                question.variablename,
+                message=question.message,
+                path_type=inquirer.Path.FILE,
+                default=question.default,
+                exists=question.exists,
+                ignore=ignore,
+            )
+
+        if isinstance(question, appform.Checkbox):
+            return inquirer.Checkbox(
+                question.variablename,
+                message=question.message,
+                choices=question.choices,
+                default=question.default,
+                ignore=ignore,
+            )
+
+        if isinstance(question, appform.Confirm):
+            return inquirer.Confirm(
+                question.variablename,
+                message=question.message,
+                default=question.default,
+                ignore=ignore,
+            )
+
+        if isinstance(question, appform.BooleanList):
+            retval = [
+                inquirer.Confirm(
+                    question.variablename,
+                    message=question.message,
+                    default=question.default,
+                    ignore=ignore,
+                )
+            ]
+
+            if question.whenfalse:
+                retval.extend(
+                    [self.assemble_questions(wf, ignore=question.ignore) for wf in question.whenfalse]
+                )
+            if question.whentrue:
+                retval.extend(
+                    [self.assemble_questions(wt, ignore=question.noignore) for wt in question.whentrue]
+                )
+
+            return retval
+
+        if isinstance(question, appform.Const):
+            return inquirer.Text(
+                question.variablename, message="", default=question.default, ignore=True,
+            )
 
     def error_handle(self, error, solution):
         response = {
@@ -243,8 +306,6 @@ class JobbergateApi:
 
         return error_check
 
-
-    # Job Scripts
     @tabulate_decorator
     def list_job_scripts(self, all):
         response = self.jobbergate_request(
@@ -255,7 +316,7 @@ class JobbergateApi:
             response = response.json()
         else:
             response = self.error_handle(
-                error=f"Failed to retrieve job script list",
+                error="Failed to retrieve job script list",
                 solution="Please check credentials or report server error"
             )
             return response
@@ -265,7 +326,6 @@ class JobbergateApi:
                 for d in response
         ]
         except:
-            #TODO: see note on list-application
             response = "list-job-script failed to retrieve list"
 
         if all:
@@ -295,6 +355,7 @@ class JobbergateApi:
             )
             return response
 
+        self.validation_check = {}
         data = self.job_script_config
         data['job_script_name'] = job_script_name
         data['application'] = application_id
@@ -304,8 +365,8 @@ class JobbergateApi:
             is_param_file = os.path.isfile(param_file)
             if is_param_file is False:
                 response = self.error_handle(
-                    error=f"invalid --parameter-file supplied, could not find: {param_file}",
-                    solution="Please provide the full path to a valid parameter file"
+                    error=f"invalid --parameter-file supplied: {param_file}",
+                    solution="Provide the full path to a valid parameter file"
                 )
                 return response
 
@@ -322,7 +383,7 @@ class JobbergateApi:
                 rendered_dict = json.loads(response['job_script_data_as_string'])
             except:
                 response = self.error_handle(
-                    error="could not load job_script_data_as_string from response",
+                    error="could not load job_script_data_as_string",
                     solution=f"Please review response: {response}"
                 )
                 return response
@@ -341,8 +402,8 @@ class JobbergateApi:
             )
             if app_data.status_code != 200:
                 response = self.error_handle(
-                    error=f"invalid --application-id provided, could not find: {application_id}",
-                    solution=f"Please confirm application id {application_id} exists and try again"
+                    error=f"invalid --application-id provided: {application_id}",
+                    solution=f"Please confirm id {application_id} exists and try again"
                 )
                 return response
             else:
@@ -358,40 +419,37 @@ class JobbergateApi:
             )
 
             # Load the jobbergate yaml
-            with open(JOBBERGATE_APPLICATION_CONFIG_PATH) as file:
-                param_dict = yaml.load(
-                    file,
-                    Loader=yaml.FullLoader
-                )
+            config = JOBBERGATE_APPLICATION_CONFIG_PATH.read_text()
+            param_dict = yaml.load(config, Loader=yaml.FullLoader)
 
             # Exec the jobbergate application python module
-            module = self.import_jobbergate_application_module_into_jobbergate_cli()
+            module = self.import_jobbergate_application_module()
             application = module.JobbergateApplication(param_dict)
+            # Begin question assembly, starting in "mainflow" method
+            param_dict['jobbergate_config']['nextworkflow'] = "mainflow"
 
-            # Begin question assembly
-            question_list = []
-            question_list = self.assemble_questions(
-                questions=application._questions,
-                question_list=question_list
-            )
-            answers = inquirer.prompt(question_list)
-            param_dict['jobbergate_config'].update(answers)
+            while "nextworkflow" in param_dict['jobbergate_config']:
+                method_to_call = getattr(
+                    application,
+                    param_dict['jobbergate_config'].pop("nextworkflow")
+                )  # Use and remove from the dict
 
-            if hasattr(application, "shared"):
-                shared_questions = application.shared(
+                workflow_questions = method_to_call(
                     data=param_dict['jobbergate_config']
                 )
 
-                questions_2 = []
+                questions = []
 
-                questions_shared = self.assemble_questions(
-                    questions=shared_questions,
-                    question_list=questions_2
-                )
+                while workflow_questions:
+                    field = workflow_questions.pop(0)
+                    question = self.assemble_questions(field)
+                    questions.append(question)
 
-                shared_answers = inquirer.prompt(questions_shared)
-                param_dict['jobbergate_config'].update(shared_answers)
-            param_filename = f"/{JOBBERGATE_CACHE_DIR}/param_dict.json"
+                workflow_answers = inquirer.prompt(questions)
+                param_dict['jobbergate_config'].update(workflow_answers)
+
+            param_filename = f"{JOBBERGATE_CACHE_DIR}/param_dict.json"
+
             param_file = open(param_filename, 'w')
             json.dump(param_dict, param_file)
             param_file.close()
@@ -441,7 +499,7 @@ class JobbergateApi:
         if response.status_code == 404:
             response = self.error_handle(
                 error=f"Could not find job script with id: {job_script_id}",
-                solution="Please confirm the is for the job script and try again"
+                solution="Please confirm the id and try again"
             )
             return response
         else:
@@ -473,7 +531,7 @@ class JobbergateApi:
         if job_script_data_as_string is None:
             response = self.error_handle(
                 error="--job-script not defined",
-                solution=f"Please provide job script data for updating job script ID: {job_script_id}"
+                solution=f"Please provide data for updating ID: {job_script_id}"
             )
             return response
 
@@ -534,7 +592,7 @@ class JobbergateApi:
             response = response.json()
         else:
             response = self.error_handle(
-                error=f"Failed to retrieve job submission list",
+                error="Failed to retrieve job submission list",
                 solution="Please check credentials or report server error"
             )
             return response
@@ -544,7 +602,6 @@ class JobbergateApi:
                 for d in response
             ]
         except:
-            #TODO: see note on list-application
             response = "list-job-submission failed to retrieve list"
 
         if all:
@@ -620,8 +677,8 @@ class JobbergateApi:
                 output, err, rc = self.jobbergate_run(application_name)
             except FileNotFoundError:
                 response = self.error_handle(
-                    error=f"Failed to execute submission",
-                    solution="Please confirm slurm sbatch is installed and available"
+                    error="Failed to execute submission",
+                    solution="Please confirm slurm sbatch is available"
                 )
                 return response
 
@@ -659,8 +716,8 @@ class JobbergateApi:
         )
         if response.status_code == 404:
             response = self.error_handle(
-                error=f"Could not find job submission with id: {job_submission_id}",
-                solution="Please confirm the is for the job submission and try again"
+                error=f"Could not find job submission id: {job_submission_id}",
+                solution="Please confirm the id and try again"
             )
             return response
         else:
@@ -707,14 +764,13 @@ class JobbergateApi:
             )
             return response
 
-
         response = self.jobbergate_request(
             method="DELETE",
             endpoint=f"{self.api_endpoint}/job-submission/{job_submission_id}"
         )
         if response.status_code == 404:
             response = self.error_handle(
-                error=f"Failed to DELETE job submission id: {job_submission_id}",
+                error=f"Failed to DELETE id:{job_submission_id}",
                 solution="Please try again with a valid job submission id"
             )
             return response
@@ -734,7 +790,7 @@ class JobbergateApi:
             response = response.json()
         else:
             response = self.error_handle(
-                error=f"Failed retrieve application list",
+                error="Failed retrieve application list",
                 solution="Please try credentials again or server error"
             )
             return response
@@ -745,7 +801,6 @@ class JobbergateApi:
                 for d in response
             ]
         except:
-            # TODO:I think this would only error on an auth issue handled elsewhere - should think through more
             response = "list-applications failed to retrieve list"
 
         if all:
@@ -753,7 +808,6 @@ class JobbergateApi:
         else:
             response = [d for d in response if d['application_owner'] == self.user_id]
             return response
-
 
     @tabulate_decorator
     def create_application(self,
@@ -767,14 +821,14 @@ class JobbergateApi:
         if application_name is None:
             response = self.error_handle(
                 error="--name not defined",
-                solution="Please try again with --name specified for the application"
+                solution="Please try again with --name specified"
             )
             parameter_check.append(response)
 
         if application_path is None:
             response = self.error_handle(
                 error="--application-path not defined",
-                solution="Please try again with --application-path specified for the application"
+                solution="Please try again with --application-path specified"
             )
             parameter_check.append(response)
         if len(parameter_check) > 0:
@@ -787,7 +841,6 @@ class JobbergateApi:
             response = error_check
             return response
 
-
         data = self.application_config
         data['application_name'] = application_name
         data['application_owner'] = self.user_id
@@ -795,7 +848,10 @@ class JobbergateApi:
         if application_desc:
             data['application_description'] = application_desc
 
-        tar_list = [application_path, os.path.join(application_path, "templates")]
+        tar_list = [
+            application_path,
+            os.path.join(application_path, "templates")
+        ]
         self.tardir(application_path, TAR_NAME, tar_list)
 
         files = {'upload_file': open(TAR_NAME, 'rb')}
@@ -829,7 +885,7 @@ class JobbergateApi:
         if response.status_code == 404:
             response = self.error_handle(
                 error=f"Could not find application with id: {application_id}",
-                solution="Please confirm the is for the application and try again"
+                solution="Please confirm the id and try again"
             )
             return response
         else:
@@ -875,7 +931,10 @@ class JobbergateApi:
         if application_desc:
             data['application_description'] = application_desc
 
-        tar_list = [application_path, os.path.join(application_path, "templates")]
+        tar_list = [
+            application_path,
+            os.path.join(application_path, "templates")
+        ]
         self.tardir(application_path, TAR_NAME, tar_list)
 
         files = {'upload_file': open(TAR_NAME, 'rb')}
