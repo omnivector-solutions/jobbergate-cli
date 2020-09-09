@@ -91,7 +91,7 @@ class JobbergateApi:
             except requests.exceptions.ConnectionError:
                 response = self.error_handle(
                     error="Failed to establish connection with API",
-                    solution=f"Please try submitting again"
+                    solution="Please try submitting again"
                 )
                 return response
         if method == "PUT":
@@ -160,7 +160,7 @@ class JobbergateApi:
             return tabulate_response
         return wrapper
 
-    def import_jobbergate_application_module_into_jobbergate_cli(self):
+    def import_jobbergate_application_module(self):
         spec = importlib.util.spec_from_file_location(
             "JobbergateApplication",
             JOBBERGATE_APPLICATION_MODULE_PATH
@@ -306,8 +306,6 @@ class JobbergateApi:
 
         return error_check
 
-
-    # Job Scripts
     @tabulate_decorator
     def list_job_scripts(self, all):
         response = self.jobbergate_request(
@@ -318,7 +316,7 @@ class JobbergateApi:
             response = response.json()
         else:
             response = self.error_handle(
-                error=f"Failed to retrieve job script list",
+                error="Failed to retrieve job script list",
                 solution="Please check credentials or report server error"
             )
             return response
@@ -328,7 +326,6 @@ class JobbergateApi:
                 for d in response
         ]
         except:
-            #TODO: see note on list-application
             response = "list-job-script failed to retrieve list"
 
         if all:
@@ -368,8 +365,8 @@ class JobbergateApi:
             is_param_file = os.path.isfile(param_file)
             if is_param_file is False:
                 response = self.error_handle(
-                    error=f"invalid --parameter-file supplied, could not find: {param_file}",
-                    solution="Please provide the full path to a valid parameter file"
+                    error=f"invalid --parameter-file supplied: {param_file}",
+                    solution="Provide the full path to a valid parameter file"
                 )
                 return response
 
@@ -386,7 +383,7 @@ class JobbergateApi:
                 rendered_dict = json.loads(response['job_script_data_as_string'])
             except:
                 response = self.error_handle(
-                    error="could not load job_script_data_as_string from response",
+                    error="could not load job_script_data_as_string",
                     solution=f"Please review response: {response}"
                 )
                 return response
@@ -405,8 +402,8 @@ class JobbergateApi:
             )
             if app_data.status_code != 200:
                 response = self.error_handle(
-                    error=f"invalid --application-id provided, could not find: {application_id}",
-                    solution=f"Please confirm application id {application_id} exists and try again"
+                    error=f"invalid --application-id provided: {application_id}",
+                    solution=f"Please confirm id {application_id} exists and try again"
                 )
                 return response
             else:
@@ -426,14 +423,16 @@ class JobbergateApi:
             param_dict = yaml.load(config, Loader=yaml.FullLoader)
 
             # Exec the jobbergate application python module
-            module = self.import_jobbergate_application_module_into_jobbergate_cli()
+            module = self.import_jobbergate_application_module()
             application = module.JobbergateApplication(param_dict)
             # Begin question assembly, starting in "mainflow" method
             param_dict['jobbergate_config']['nextworkflow'] = "mainflow"
 
             while "nextworkflow" in param_dict['jobbergate_config']:
-                method_to_call = getattr(application, param_dict['jobbergate_config'].pop(
-                    "nextworkflow"))  # Use and remove from the dict
+                method_to_call = getattr(
+                    application,
+                    param_dict['jobbergate_config'].pop("nextworkflow")
+                )  # Use and remove from the dict
 
                 workflow_questions = method_to_call(
                     data=param_dict['jobbergate_config']
@@ -500,7 +499,7 @@ class JobbergateApi:
         if response.status_code == 404:
             response = self.error_handle(
                 error=f"Could not find job script with id: {job_script_id}",
-                solution="Please confirm the is for the job script and try again"
+                solution="Please confirm the id and try again"
             )
             return response
         else:
@@ -532,7 +531,7 @@ class JobbergateApi:
         if job_script_data_as_string is None:
             response = self.error_handle(
                 error="--job-script not defined",
-                solution=f"Please provide job script data for updating job script ID: {job_script_id}"
+                solution=f"Please provide data for updating ID: {job_script_id}"
             )
             return response
 
@@ -593,7 +592,7 @@ class JobbergateApi:
             response = response.json()
         else:
             response = self.error_handle(
-                error=f"Failed to retrieve job submission list",
+                error="Failed to retrieve job submission list",
                 solution="Please check credentials or report server error"
             )
             return response
@@ -603,7 +602,6 @@ class JobbergateApi:
                 for d in response
             ]
         except:
-            #TODO: see note on list-application
             response = "list-job-submission failed to retrieve list"
 
         if all:
@@ -679,8 +677,8 @@ class JobbergateApi:
                 output, err, rc = self.jobbergate_run(application_name)
             except FileNotFoundError:
                 response = self.error_handle(
-                    error=f"Failed to execute submission",
-                    solution="Please confirm slurm sbatch is installed and available"
+                    error="Failed to execute submission",
+                    solution="Please confirm slurm sbatch is available"
                 )
                 return response
 
@@ -718,8 +716,8 @@ class JobbergateApi:
         )
         if response.status_code == 404:
             response = self.error_handle(
-                error=f"Could not find job submission with id: {job_submission_id}",
-                solution="Please confirm the is for the job submission and try again"
+                error=f"Could not find job submission id: {job_submission_id}",
+                solution="Please confirm the id and try again"
             )
             return response
         else:
@@ -766,14 +764,13 @@ class JobbergateApi:
             )
             return response
 
-
         response = self.jobbergate_request(
             method="DELETE",
             endpoint=f"{self.api_endpoint}/job-submission/{job_submission_id}"
         )
         if response.status_code == 404:
             response = self.error_handle(
-                error=f"Failed to DELETE job submission id: {job_submission_id}",
+                error=f"Failed to DELETE id:{job_submission_id}",
                 solution="Please try again with a valid job submission id"
             )
             return response
@@ -793,7 +790,7 @@ class JobbergateApi:
             response = response.json()
         else:
             response = self.error_handle(
-                error=f"Failed retrieve application list",
+                error="Failed retrieve application list",
                 solution="Please try credentials again or server error"
             )
             return response
@@ -804,7 +801,6 @@ class JobbergateApi:
                 for d in response
             ]
         except:
-            # TODO:I think this would only error on an auth issue handled elsewhere - should think through more
             response = "list-applications failed to retrieve list"
 
         if all:
@@ -812,7 +808,6 @@ class JobbergateApi:
         else:
             response = [d for d in response if d['application_owner'] == self.user_id]
             return response
-
 
     @tabulate_decorator
     def create_application(self,
@@ -826,14 +821,14 @@ class JobbergateApi:
         if application_name is None:
             response = self.error_handle(
                 error="--name not defined",
-                solution="Please try again with --name specified for the application"
+                solution="Please try again with --name specified"
             )
             parameter_check.append(response)
 
         if application_path is None:
             response = self.error_handle(
                 error="--application-path not defined",
-                solution="Please try again with --application-path specified for the application"
+                solution="Please try again with --application-path specified"
             )
             parameter_check.append(response)
         if len(parameter_check) > 0:
@@ -846,7 +841,6 @@ class JobbergateApi:
             response = error_check
             return response
 
-
         data = self.application_config
         data['application_name'] = application_name
         data['application_owner'] = self.user_id
@@ -854,7 +848,10 @@ class JobbergateApi:
         if application_desc:
             data['application_description'] = application_desc
 
-        tar_list = [application_path, os.path.join(application_path, "templates")]
+        tar_list = [
+            application_path,
+            os.path.join(application_path, "templates")
+        ]
         self.tardir(application_path, TAR_NAME, tar_list)
 
         files = {'upload_file': open(TAR_NAME, 'rb')}
@@ -888,7 +885,7 @@ class JobbergateApi:
         if response.status_code == 404:
             response = self.error_handle(
                 error=f"Could not find application with id: {application_id}",
-                solution="Please confirm the is for the application and try again"
+                solution="Please confirm the id and try again"
             )
             return response
         else:
@@ -934,7 +931,10 @@ class JobbergateApi:
         if application_desc:
             data['application_description'] = application_desc
 
-        tar_list = [application_path, os.path.join(application_path, "templates")]
+        tar_list = [
+            application_path,
+            os.path.join(application_path, "templates")
+        ]
         self.tardir(application_path, TAR_NAME, tar_list)
 
         files = {'upload_file': open(TAR_NAME, 'rb')}
