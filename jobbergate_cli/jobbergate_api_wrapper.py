@@ -169,32 +169,6 @@ class JobbergateApi:
         spec.loader.exec_module(module)
         return module
 
-    def integer_validation(self, answers, current):
-        # inquirer only sends str so this ensures the value can be converted to int
-        # Example int(2) passes and int(two) does not
-        #TODO: NOT BEING USED - DELETE IF NOT NEEDED
-
-        answers_keys = list(answers.keys())
-        if not isinstance(int(current), int):
-            reason = f"{current} is not a valid integer"
-            print(reason)
-            raise inquirer.errors.ValidationError(
-                '',
-                reason=reason
-            )
-        value_check = minval <= int(current) <= maxval
-        if not value_check:
-            print(f"current is {current}")
-            reason = f"This question requires a valid integer greater than {minval} and less than {maxval}"
-            print(reason)
-            raise inquirer.errors.ValidationError(
-                '',
-                reason=reason
-            )
-
-        return True
-
-
     def assemble_questions(self, questions, question_list):
         '''
         questions: passed in from application.py
