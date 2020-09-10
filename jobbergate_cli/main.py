@@ -50,7 +50,6 @@ def init_token(username, password):
     JOBBERGATE_API_JWT_PATH.write_text(resp.json()['token'])
 
 
-
 def is_token_valid():
     """Return true/false depending on whether the token is valid or not.
     """
@@ -149,6 +148,12 @@ def main(ctx,
                 f"Auth Failed for username: {username}, Please Try again"
             )
             sys.exit(0)
+        except requests.exceptions.ConnectionError:
+            print(
+                "Auth failed to establish connection with API,Please Try again"
+            )
+            sys.exit(0)
+
     ctx.obj['token'] = decode_token_to_dict(
         JOBBERGATE_API_JWT_PATH.read_text())
 
@@ -249,7 +254,6 @@ def list_job_scripts(ctx, all=False):
               "-i",
               "create_job_script_application_id")
 @click.option("--param-file",
-              "-p",
               "param_file",
               type=click.Path(),)
 @click.option("--debug",
@@ -292,7 +296,10 @@ def get_job_script(ctx,
 def update_job_script(ctx,
                       update_job_script_id,
                       job_script_data_as_string):
-    print(ctx.api.update_job_script(update_job_script_id, job_script_data_as_string))
+    print(ctx.api.update_job_script(
+        update_job_script_id,
+        job_script_data_as_string)
+    )
 
 
 @main.command('delete-job-script')
