@@ -82,9 +82,7 @@ def decode_token_to_dict(encoded_token):
 
 
 def init_api(user_id):
-    """
-    Initialize the API for the user's session
-    """
+    """Initialize the API for the user's session."""
     api = JobbergateApi(
         token=JOBBERGATE_API_JWT_PATH.read_text(),
         job_script_config=JOBBERGATE_JOB_SCRIPT_CONFIG,
@@ -93,10 +91,6 @@ def init_api(user_id):
         api_endpoint=JOBBERGATE_API_ENDPOINT,
         user_id=user_id)
     return api
-
-
-def load_config():
-    pass
 
 # Get the cli input arguments
 # args = get_parsed_args(argv)
@@ -131,6 +125,8 @@ def main(ctx,
          username,
          password):
     """
+    Controls flow.
+
     ctx --> context
     @click.pass_context makes username, password,
     token and user_id available to the other cmd
@@ -174,7 +170,8 @@ def main(ctx,
 @click.pass_obj
 def list_applications(ctx, all=False):
     """
-    LIST available applications
+    LIST available applications.
+
     Keyword Arguments:
         all  -- optional parameter that will return all applications
                 if NOT specified then only the user's applications
@@ -199,11 +196,11 @@ def create_application(ctx,
                        create_application_path,
                        application_desc):
     """
-    CREATE an application
+    CREATE an application.
+
     Keyword Arguments:
         name             -- Name of the application
         application-path -- path to dir where application files are
-
     """
     out = ctx.api.create_application(
             application_name=create_application_name,
@@ -221,7 +218,8 @@ def create_application(ctx,
 def get_application(ctx,
                     application_id):
     """
-    GET an Application
+    GET an Application.
+
     Keyword Arguments:
         id -- id of application to be returned
     """
@@ -245,7 +243,8 @@ def update_application(ctx,
                        application_path,
                        application_desc):
     """
-    UPDATE an Application
+    UPDATE an Application.
+
     Keyword Arguments:
         id                -- id application to update
         application-path  --  path to dir for updated application files
@@ -266,7 +265,8 @@ def update_application(ctx,
 def delete_application(ctx,
                        delete_application_id):
     """
-    DELETE an Application
+    DELETE an Application.
+
     Keyword Arguments:
         id -- id of application to delete
     """
@@ -280,7 +280,8 @@ def delete_application(ctx,
 @click.pass_obj
 def list_job_scripts(ctx, all=False):
     """
-    LIST Job Scripts
+    LIST Job Scripts.
+
     Keyword Arguments:
         all  -- optional parameter that will return all job scripts
                 if NOT specified then only the user's job scripts
@@ -309,7 +310,8 @@ def create_job_script(ctx,
                       debug=False,
                       param_file=None):
     """
-    CREATE a Job Script
+    CREATE a Job Script.
+
     Keyword Arguments:
         name            --  Name for job script
         application-id  --  id of the application for the job script
@@ -337,7 +339,8 @@ def get_job_script(ctx,
                    get_job_script_id,
                    as_str):
     """
-    GET a Job Script
+    GET a Job Script.
+
     Keyword Arguments:
         id -- id of job script to be returned
     """
@@ -355,9 +358,11 @@ def update_job_script(ctx,
                       update_job_script_id,
                       job_script_data_as_string):
     """
-    UPDATE a Job Script
+    UPDATE a Job Script.
+
     Keyword Arguments:
-        id -- id of job script to update
+        id          -- id of job script to update
+        job-script  -- data to update job scrip with
     """
     print(ctx.api.update_job_script(
         update_job_script_id,
@@ -373,7 +378,8 @@ def update_job_script(ctx,
 def delete_job_script(ctx,
                       delete_job_script_id):
     """
-    DELETE a Job Script
+    DELETE a Job Script.
+
     Keyword Arguments:
         id -- id of job script to delete
     """
@@ -387,7 +393,8 @@ def delete_job_script(ctx,
 @click.pass_obj
 def list_job_submissions(ctx, all=False):
     """
-    LIST Job Submissions
+    LIST Job Submissions.
+
     Keyword Arguments:
         all  -- optional parameter that will return all job submissions
                 if NOT specified then only the user's job submissions
@@ -410,7 +417,8 @@ def create_job_submission(ctx,
                           create_job_submission_name="",
                           render_only=None):
     """
-    CREATE Job Submission
+    CREATE Job Submission.
+
     Keyword Arguments:
         job-script-id -- id of job script to submit
         name          -- name for job submission
@@ -431,7 +439,8 @@ def create_job_submission(ctx,
 def get_job_submission(ctx,
                        get_job_submission_id):
     """
-    GET a Job Submission
+    GET a Job Submission.
+
     Keyword Arguments:
         id -- id of endpoint to action
     """
@@ -446,7 +455,8 @@ def get_job_submission(ctx,
 def update_job_submission(ctx,
                           update_job_submission_id):
     """
-    UPDATE a Job Submission
+    UPDATE a Job Submission.
+
     Keyword Arguments:
         id -- id of job submission to update
     """
@@ -461,7 +471,8 @@ def update_job_submission(ctx,
 def delete_job_submission(ctx,
                           delete_job_submission_id):
     """
-    Delete a Job Submission
+    Delete a Job Submission.
+
     Keyword Arguments:
         id -- id of job submission to delete
     """

@@ -61,6 +61,16 @@ class JobbergateApi:
                path,
                tar_name,
                tar_list):
+        """
+        Compress application files to a tar file.
+
+        Keyword Arguments:
+            path      -- Path provided by user to dir
+            tar_name  -- name of tar file
+            tar_list  -- list of values for root to be added to tar file
+                         this is to avoid including extraneous files in tar
+
+        """
         archive = tarfile.open(tar_name, "w|gz")
         for root, dirs, files in os.walk(path):
             if root in tar_list:
@@ -82,6 +92,16 @@ class JobbergateApi:
                            endpoint,
                            data=None,
                            files=None):
+        """
+        Submit HTTP requests.
+
+        Keyword Arguments:
+            method    -- HTTP request method
+            endpoint  -- API End point: application, job-script, job-submission
+            data      -- data to be submitted on POST/PUT requests
+            files     -- file(s) to be sent with request where applicable
+
+        """
         if method == "GET":
             try:
                 response = requests.get(
@@ -154,6 +174,7 @@ class JobbergateApi:
         return response
 
     def jobbergate_run(self, *argv):
+        """Execute Job Submission."""
         cmd = ["/snap/bin/sbatch", "application.sh"]
         for arg in argv:
             cmd.append(arg)
@@ -169,6 +190,7 @@ class JobbergateApi:
         return output.decode("utf-8"), err.decode("utf-8"), rc
 
     def tabulate_decorator(func):
+        """Decorator to tabulate each response."""
         def wrapper(*args, **kwargs):
             # getting the returned value
             response = func(*args, **kwargs)
@@ -189,6 +211,7 @@ class JobbergateApi:
         return wrapper
 
     def import_jobbergate_application_module(self):
+        """Import jobbergate.py for generating questions"""
         spec = importlib.util.spec_from_file_location(
             "JobbergateApplication",
             JOBBERGATE_APPLICATION_MODULE_PATH
@@ -199,11 +222,11 @@ class JobbergateApi:
         return module
 
     def assemble_questions(self, question, ignore=None):
-        '''
+        """
         questions: passed in from application.py
         questions_list is list of questions assembled,
         this will be passed into inquirer.prompt for user to answer
-        '''
+        """
 
         if isinstance(question, appform.Text):
             return inquirer.Text(
@@ -295,6 +318,13 @@ class JobbergateApi:
             )
 
     def error_handle(self, error, solution):
+        """
+        Standardized error handling for CLI.
+
+        Keyword Arguments:
+            error     -- error generated
+            solution  -- recommended  solution specific to each error
+        """
         response = {
             "error": error,
             "solution": solution
@@ -302,6 +332,14 @@ class JobbergateApi:
         return response
 
     def application_error_check(self, application_path):
+        """
+        Check for errors on application Create and Update.
+
+        Confirms these are valid:
+            dir provided by user for application path
+            jobbergate.py in dir
+            jobbergate.yaml in dir
+        """
         error_check = []
 
         # check for required files
@@ -336,6 +374,14 @@ class JobbergateApi:
 
     @tabulate_decorator
     def list_job_scripts(self, all):
+        """
+        LIST Job Scripts.
+
+        Keyword Arguments:
+            all  -- optional parameter that will return all job scripts
+                    if NOT specified then only the user's job scripts
+                    will be returned
+        """
         response = self.jobbergate_request(
             method="GET",
             endpoint=f"{self.api_endpoint}/job-script/"
@@ -368,7 +414,17 @@ class JobbergateApi:
                           application_id,
                           param_file,
                           debug):
+        """
+        CREATE a Job Script.
 
+        Keyword Arguments:
+            name            --  Name for job script
+            application-id  --  id of the application for the job script
+            param-file      --  optional parameter file for populating templates.
+                                if this is not provided, the question askin in
+                                jobbergate.py is triggered
+            debug           --  optional parameter to view job script data in CLI output
+        """
         if application_id is None:
             response = self.error_handle(
                 error="--application-id for the job script not defined",
@@ -509,6 +565,13 @@ class JobbergateApi:
     def get_job_script(self,
                        job_script_id,
                        as_str):
+        """
+        GET a Job Script.
+
+        Keyword Arguments:
+            job_script_id -- id of job script to be returned
+            as_str        -- return job script as str in CLI output
+        """
         if job_script_id is None:
             response = self.error_handle(
                 error="--id not define",
@@ -546,6 +609,13 @@ class JobbergateApi:
     def update_job_script(self,
                           job_script_id,
                           job_script_data_as_string):
+        """
+        UPDATE a Job Script.
+
+        Keyword Arguments:
+            job_script_id              -- id of job script to update
+            job_script_data_as_string  -- data to update job scrip with
+        """
         if job_script_id is None:
             response = self.error_handle(
                 error="--id not defined",
@@ -583,6 +653,12 @@ class JobbergateApi:
     @tabulate_decorator
     def delete_job_script(self,
                           job_script_id):
+        """
+        DELETE a Job Script.
+
+        Keyword Arguments:
+            job_script_id -- id of job script to delete
+        """
         if job_script_id is None:
             response = self.error_handle(
                 error="--id not defined",
@@ -608,6 +684,14 @@ class JobbergateApi:
     # Job Submissions
     @tabulate_decorator
     def list_job_submissions(self, all):
+        """
+        LIST Job Submissions.
+
+        Keyword Arguments:
+            all  -- optional parameter that will return all job submissions
+                    if NOT specified then only the user's job submissions
+                    will be returned
+        """
         response = self.jobbergate_request(
             method="GET",
             endpoint=f"{self.api_endpoint}/job-submission/"
@@ -639,6 +723,15 @@ class JobbergateApi:
                               job_script_id,
                               render_only,
                               job_submission_name=""):
+        """
+        CREATE Job Submission.
+
+        Keyword Arguments:
+            job_script_id -- id of job script to submit
+            name          -- name for job submission
+            render_only   -- create record in API and return data to CLI
+                             but DO NOT submit job
+        """
         if job_script_id is None:
             response = self.error_handle(
                 error="--job-script-id not defined",
@@ -727,6 +820,12 @@ class JobbergateApi:
     @tabulate_decorator
     def get_job_submission(self,
                            job_submission_id):
+        """
+        GET a Job Submission.
+
+        Keyword Arguments:
+            job_submission_id -- id of endpoint to action
+        """
         if job_submission_id is None:
             response = self.error_handle(
                 error="--id not defined",
@@ -752,6 +851,12 @@ class JobbergateApi:
     @tabulate_decorator
     def update_job_submission(self,
                               job_submission_id):
+        """
+        UPDATE a Job Submission.
+
+        Keyword Arguments:
+            job_submission_id -- id of job submission to update
+        """
         if job_submission_id is None:
             response = self.error_handle(
                 error="--id not defined",
@@ -781,6 +886,12 @@ class JobbergateApi:
     @tabulate_decorator
     def delete_job_submission(self,
                               job_submission_id):
+        """
+        Delete a Job Submission.
+
+        Keyword Arguments:
+            job_submission_id -- id of job submission to delete
+        """
         if job_submission_id is None:
             response = self.error_handle(
                 error="--id not defined",
@@ -806,6 +917,14 @@ class JobbergateApi:
     # Applications
     @tabulate_decorator
     def list_applications(self, all):
+        """
+        LIST available applications.
+
+        Keyword Arguments:
+            all  -- optional parameter that will return all applications
+                    if NOT specified then only the user's applications
+                    will be returned
+        """
         response = self.jobbergate_request(
             method="GET",
             endpoint=f"{self.api_endpoint}/application/"
@@ -838,9 +957,13 @@ class JobbergateApi:
                            application_name,
                            application_path,
                            application_desc):
-        '''
-        create an application based on path provided by the user
-        '''
+        """
+        CREATE an application.
+
+        Keyword Arguments:
+            application_name -- Name of the application
+            application_path -- path to dir where application files are
+        """
         parameter_check = []
         if application_name is None:
             response = self.error_handle(
@@ -901,6 +1024,12 @@ class JobbergateApi:
     @tabulate_decorator
     def get_application(self,
                         application_id):
+        """
+        GET an Application.
+
+        Keyword Arguments:
+            application_id -- id of application to be returned
+        """
         response = self.jobbergate_request(
             method="GET",
             endpoint=f"{self.api_endpoint}/application/{application_id}"
@@ -923,6 +1052,14 @@ class JobbergateApi:
                            application_path,
                            application_desc
                            ):
+        """
+        UPDATE an Application.
+
+        Keyword Arguments:
+            application_id    -- id application to update
+            application_path  --  path to dir for updated application files
+            application_desc  --  optional new application description
+        """
         if application_path is None:
             response = self.error_handle(
                 error="--application-path not defined",
@@ -983,6 +1120,12 @@ class JobbergateApi:
     @tabulate_decorator
     def delete_application(self,
                            application_id):
+        """
+        DELETE an Application.
+
+        Keyword Arguments:
+            application_id -- id of application to delete
+        """
         response = self.jobbergate_request(
             method="DELETE",
             endpoint=f"{self.api_endpoint}/application/{application_id}"
