@@ -113,16 +113,44 @@ class JobbergateApi:
                 verify=False)
 
         if method == "POST":
-            try:
-                response = requests.post(
-                    endpoint,
-                    data=data,
-                    files=files,
-                    headers={'Authorization': 'JWT ' + self.token},
-                    verify=False).json()
-            except Exception as e:
-                response = "POST request failed"
+            full_response = requests.post(
+                endpoint,
+                data=data,
+                files=files,
+                headers={'Authorization': 'JWT ' + self.token},
+                verify=False)
+            if full_response.status_code == 400:
+                response = self.error_handle(
+                    error=f"Error with data uploaded: {full_response.text}",
+                    solution=f"Please resolve issue and re submit"
+                )
                 return response
+            elif full_response.status_code == 500:
+                error = full_response.text
+                start_point = error.find("Exception Type:")
+                # shorter error resp:
+                end_point = error.find("GET:")
+                # Longer error resp:
+                # end_point = error.find("COOKIES")
+                response = self.error_handle(
+                    error=f"Server Error generated: {error[start_point:end_point]}",
+                    solution=f"Please alert Omnivector for resolution"
+                )
+                return response
+
+            elif full_response.status_code == 200:
+                print(full_response.text)
+                response = full_response.json()
+
+            # try:
+            #     response = full_response.json()
+            # except json.decoder.JSONDecodeError:
+            #     print(type(full_response.text))
+            #     print(full_response.status_code)
+            #
+            #
+            #     response = "POST request failed"
+            #     return response
         return response
 
     def jobbergate_run(self, *argv):
@@ -382,10 +410,6 @@ class JobbergateApi:
             try:
                 rendered_dict = json.loads(response['job_script_data_as_string'])
             except:
-                response = self.error_handle(
-                    error="could not load job_script_data_as_string",
-                    solution=f"Please review response: {response}"
-                )
                 return response
 
             job_script_data_as_string = ""
