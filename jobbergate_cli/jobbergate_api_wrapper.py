@@ -7,21 +7,21 @@ import yaml
 import inquirer
 from subprocess import Popen, PIPE
 
-
 import requests
 import tarfile
 
-from tabulate import tabulate
-
 from jobbergate_cli import appform
 from jobbergate_cli.jobbergate_common import (
-    JOBBERGATE_APPLICATION_MODULE_PATH,
+    JOBBERGATE_APPLICATION_CONFIG_FILE_NAME,
     JOBBERGATE_APPLICATION_CONFIG_PATH,
     JOBBERGATE_APPLICATION_MODULE_FILE_NAME,
-    JOBBERGATE_APPLICATION_CONFIG_FILE_NAME,
+    JOBBERGATE_APPLICATION_MODULE_PATH,
     JOBBERGATE_CACHE_DIR,
     TAR_NAME
 )
+
+from tabulate import tabulate
+
 
 
 class JobbergateApi:
@@ -33,6 +33,7 @@ class JobbergateApi:
                  application_config=None,
                  api_endpoint=None,
                  user_id=None):
+        """Initialize JobbergateAPI."""
 
         self.token = token
         self.job_script_config = job_script_config
@@ -142,7 +143,7 @@ class JobbergateApi:
             if full_response.status_code == 400:
                 response = self.error_handle(
                     error=f"Error with data uploaded: {full_response.text}",
-                    solution=f"Please resolve issue and re submit"
+                    solution="Please resolve issue and re submit"
                 )
                 return response
             elif full_response.status_code == 500:
@@ -154,7 +155,7 @@ class JobbergateApi:
                 # end_point = error.find("COOKIES")
                 response = self.error_handle(
                     error=f"Server Error generated: {error[start_point:end_point]}",
-                    solution=f"Please alert Omnivector for resolution"
+                    solution="Please alert Omnivector for resolution"
                 )
                 return response
 
@@ -162,15 +163,6 @@ class JobbergateApi:
                 print(full_response.text)
                 response = full_response.json()
 
-            # try:
-            #     response = full_response.json()
-            # except json.decoder.JSONDecodeError:
-            #     print(type(full_response.text))
-            #     print(full_response.status_code)
-            #
-            #
-            #     response = "POST request failed"
-            #     return response
         return response
 
     def jobbergate_run(self, *argv):
@@ -211,7 +203,7 @@ class JobbergateApi:
         return wrapper
 
     def import_jobbergate_application_module(self):
-        """Import jobbergate.py for generating questions"""
+        """Import jobbergate.py for generating questions."""
         spec = importlib.util.spec_from_file_location(
             "JobbergateApplication",
             JOBBERGATE_APPLICATION_MODULE_PATH
@@ -223,9 +215,12 @@ class JobbergateApi:
 
     def assemble_questions(self, question, ignore=None):
         """
-        questions: passed in from application.py
-        questions_list is list of questions assembled,
-        this will be passed into inquirer.prompt for user to answer
+        Assemble questions from jobbergate.py.
+
+        Keyword Arguments:
+            question  -- question object passed in from jobbergate.py.
+                         funtion returns the appropriate question from
+                         inquirer
         """
 
         if isinstance(question, appform.Text):
@@ -303,11 +298,17 @@ class JobbergateApi:
 
             if question.whenfalse:
                 retval.extend(
-                    [self.assemble_questions(wf, ignore=question.ignore) for wf in question.whenfalse]
+                    [
+                        self.assemble_questions(wf, ignore=question.ignore)
+                        for wf in question.whenfalse
+                    ]
                 )
             if question.whentrue:
                 retval.extend(
-                    [self.assemble_questions(wt, ignore=question.noignore) for wt in question.whentrue]
+                    [
+                        self.assemble_questions(wt, ignore=question.noignore)
+                        for wt in question.whentrue
+                    ]
                 )
 
             return retval
@@ -354,19 +355,34 @@ class JobbergateApi:
         if not local_jobbergate_application_dir.exists():
             check = self.error_handle(
                 error="invalid application path supplied",
-                solution=f"{application_path} is invalid, please review and try again"
+                solution=(
+                    f"{application_path} is invalid, please "
+                    "review and try again"
+                )
             )
             error_check.append(check)
         if not local_jobbergate_application_module.exists():
             check = self.error_handle(
-                error=f"Could not find {JOBBERGATE_APPLICATION_MODULE_FILE_NAME} in {application_path}",
-                solution=f"Please ensure {JOBBERGATE_APPLICATION_MODULE_FILE_NAME} is in application path provided"
+                error=(
+                    f"Could not find {JOBBERGATE_APPLICATION_MODULE_FILE_NAME} "
+                    "in {application_path}"
+                ),
+                solution=(
+                    f"Please ensure {JOBBERGATE_APPLICATION_MODULE_FILE_NAME} "
+                    "is in application path provided"
+                )
             )
             error_check.append(check)
         if not local_jobbergate_application_config.exists():
             check = self.error_handle(
-                error=f"Could not find {JOBBERGATE_APPLICATION_CONFIG_FILE_NAME} in {application_path}",
-                solution=f"Please ensure {JOBBERGATE_APPLICATION_CONFIG_FILE_NAME} is in application path provided"
+                error=(
+                    f"Could not find {JOBBERGATE_APPLICATION_CONFIG_FILE_NAME} "
+                    "in {application_path}"
+                ),
+                solution=(
+                    f"Please ensure {JOBBERGATE_APPLICATION_CONFIG_FILE_NAME} "
+                    "is in application path provided"
+                )
             )
             error_check.append(check)
 
@@ -394,18 +410,22 @@ class JobbergateApi:
                 solution="Please check credentials or report server error"
             )
             return response
-        try:
-            response = [
-                {k: v for k, v in d.items() if k not in self.job_script_suppress}
-                for d in response
+
+        response = [
+            {
+                k: v for k, v in d.items()
+                if k not in self.job_script_suppress
+            }
+            for d in response
         ]
-        except:
-            response = "list-job-script failed to retrieve list"
 
         if all:
             return response
         else:
-            response = [d for d in response if d['job_script_owner'] == self.user_id]
+            response = [
+                d for d in response
+                if d['job_script_owner'] == self.user_id
+            ]
             return response
 
     @tabulate_decorator
@@ -423,7 +443,8 @@ class JobbergateApi:
             param-file      --  optional parameter file for populating templates.
                                 if this is not provided, the question askin in
                                 jobbergate.py is triggered
-            debug           --  optional parameter to view job script data in CLI output
+            debug           --  optional parameter to view job script data
+                                in CLI output
         """
         if application_id is None:
             response = self.error_handle(
@@ -482,8 +503,8 @@ class JobbergateApi:
             )
             if app_data.status_code != 200:
                 response = self.error_handle(
-                    error=f"invalid --application-id provided: {application_id}",
-                    solution=f"Please confirm id {application_id} exists and try again"
+                    error=f"invalid application-id provided: {application_id}",
+                    solution=f"Please review id {application_id} and try again"
                 )
                 return response
             else:
@@ -544,10 +565,9 @@ class JobbergateApi:
                 files=files
             )
 
-            try:
-                rendered_dict = json.loads(response['job_script_data_as_string'])
-            except:
-                print(response)
+            rendered_dict = json.loads(
+                response['job_script_data_as_string']
+            )
 
             job_script_data_as_string = ""
             for key, value in rendered_dict.items():
@@ -625,7 +645,7 @@ class JobbergateApi:
         if job_script_data_as_string is None:
             response = self.error_handle(
                 error="--job-script not defined",
-                solution=f"Please provide data for updating ID: {job_script_id}"
+                solution=f"Provide data to update ID: {job_script_id}"
             )
             return response
 
@@ -704,13 +724,13 @@ class JobbergateApi:
                 solution="Please check credentials or report server error"
             )
             return response
-        try:
-            response = [
-                {k: v for k, v in d.items() if k not in self.job_submission_suppress}
-                for d in response
-            ]
-        except:
-            response = "list-job-submission failed to retrieve list"
+        response = [
+            {
+                k: v for k, v in d.items()
+                if k not in self.job_submission_suppress
+            }
+            for d in response
+        ]
 
         if all:
             return response
@@ -753,7 +773,10 @@ class JobbergateApi:
         else:
             response = self.error_handle(
                 error=f"Failed to retrieve job script id={job_script_id}",
-                solution="Please confirm job script exists and try job submission again"
+                solution=(
+                    "Please confirm job script exists and "
+                    "try job submission again"
+                )
             )
             return response
 
@@ -767,8 +790,14 @@ class JobbergateApi:
             application = application.json()
         else:
             response = self.error_handle(
-                error=f"Failed to retrieve the application id={application_id}linked to job script id={job_script_id}",
-                solution="Please confirm application exists and try job submission again"
+                error=(
+                    "Failed to retrieve the application id="
+                    f"{application_id} linked to job script id={job_script_id}"
+                ),
+                solution=(
+                        "Please confirm application exists "
+                        "and try job submission again"
+                )
             )
             return response
 
@@ -938,18 +967,21 @@ class JobbergateApi:
             )
             return response
 
-        try:
-            response = [
-                {k: v for k, v in d.items() if k not in self.application_suppress}
-                for d in response
-            ]
-        except:
-            response = "list-applications failed to retrieve list"
+        response = [
+            {
+                k: v for k, v in d.items()
+                if k not in self.application_suppress
+            }
+            for d in response
+        ]
 
         if all:
             return response
         else:
-            response = [d for d in response if d['application_owner'] == self.user_id]
+            response = [
+                d for d in response
+                if d['application_owner'] == self.user_id
+            ]
             return response
 
     @tabulate_decorator
