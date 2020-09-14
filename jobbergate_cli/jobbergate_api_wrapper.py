@@ -477,25 +477,6 @@ class JobbergateApi:
 
             files = {'upload_file': open(param_file, 'rb')}
 
-            response = self.jobbergate_request(
-                method="POST",
-                endpoint=f"{self.api_endpoint}/job-script/",
-                data=data,
-                files=files
-            )
-
-            try:
-                rendered_dict = json.loads(response['job_script_data_as_string'])
-            except:
-                return response
-
-            job_script_data_as_string = ""
-            for key, value in rendered_dict.items():
-                job_script_data_as_string += "\nNEW_FILE\n"
-                job_script_data_as_string += value
-
-            response['job_script_data_as_string'] = job_script_data_as_string
-
         else:
             app_data = self.jobbergate_request(
                 method="GET",
@@ -558,26 +539,49 @@ class JobbergateApi:
             # TODO: Put below in function after testing - DRY
             files = {'upload_file': open(param_filename, 'rb')}
 
-            response = self.jobbergate_request(
-                method="POST",
-                endpoint=f"{self.api_endpoint}/job-script/",
-                data=data,
-                files=files
+            # Possibly overwrite script name
+            if 'job_script_name' in param_dict['jobbergate_config']:
+                data['job_script_name'] = param_dict['jobbergate_config']['job_script_name']
+
+        response = self.jobbergate_request(
+            method="POST",
+            endpoint=f"{self.api_endpoint}/job-script/",
+            data=data,
+            files=files
+        )
+
+        try:
+            rendered_dict = json.loads(response['job_script_data_as_string'])
+        except:
+            response = self.error_handle(
+                error="could not load job_script_data_as_string from response",
+                solution=f"Please review response: {response}"
             )
+            return response
 
-            rendered_dict = json.loads(
-                response['job_script_data_as_string']
-            )
+        # Write local copy of script
+        if 'job_script_data_as_string' in response:
+            filename = f'{data["job_script_name"]}.job'
+            print(f'Creating job script file: {filename}')
+            scriptdict = json.loads(response['job_script_data_as_string'])
+            if 'application.sh' in scriptdict.keys():
+                with open(filename, 'w') as fh:
+                    fh.write(scriptdict['application.sh'])
 
-            job_script_data_as_string = ""
-            for key, value in rendered_dict.items():
-                job_script_data_as_string += "\n\nNEW_FILE\n\n"
-                job_script_data_as_string += value
+        job_script_data_as_string = ""
+        for key, value in rendered_dict.items():
+            job_script_data_as_string += "\n\nNEW_FILE\n\n"
+            job_script_data_as_string += value
 
-            response['job_script_data_as_string'] = job_script_data_as_string
+        response['job_script_data_as_string'] = job_script_data_as_string
 
         if debug is False:
             del response['job_script_data_as_string']
+
+        # Check if user wants to submit immediately
+        submit = inquirer.prompt([inquirer.Confirm('sub', message='Would you like to submit this immediately?', default=True)])['sub']
+        if submit:
+            response['submission_result'] = self.create_job_submission(response['id'], False, response['job_script_name'])
 
         return response
 

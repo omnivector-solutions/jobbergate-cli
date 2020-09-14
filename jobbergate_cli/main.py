@@ -293,7 +293,8 @@ def list_job_scripts(ctx, all=False):
 @main.command('create-job-script')
 @click.option("--name",
               "-n",
-              "create_job_script_name")
+              "create_job_script_name",
+              default="default_script_name")
 @click.option("--application-id",
               "-i",
               "create_job_script_application_id")
