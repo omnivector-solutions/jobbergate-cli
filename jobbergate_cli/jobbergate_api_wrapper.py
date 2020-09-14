@@ -458,9 +458,10 @@ class JobbergateApi:
         if 'job_script_data_as_string' in response:
             filename = f'{data["job_script_name"]}.job'
             print(f'Creating job script file: {filename}')
-            scriptstring = json.loads(response['job_script_data_as_string'])["application.sh"]
-            with open(filename, 'w') as fh:
-                fh.write(scriptstring)
+            scriptdict = json.loads(response['job_script_data_as_string'])
+            if 'application.sh' in scriptdict.keys():
+                with open(filename, 'w') as fh:
+                    fh.write(scriptdict['application.sh'])
 
         job_script_data_as_string = ""
         for key, value in rendered_dict.items():
