@@ -160,7 +160,6 @@ class JobbergateApi:
                 return response
 
             elif full_response.status_code == 200:
-                print(full_response.text)
                 response = full_response.json()
 
         return response
@@ -562,7 +561,6 @@ class JobbergateApi:
         # Write local copy of script
         if 'job_script_data_as_string' in response:
             filename = f'{data["job_script_name"]}.job'
-            print(f'Creating job script file: {filename}')
             scriptdict = json.loads(response['job_script_data_as_string'])
             if 'application.sh' in scriptdict.keys():
                 with open(filename, 'w') as fh:
