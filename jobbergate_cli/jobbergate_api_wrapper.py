@@ -159,7 +159,7 @@ class JobbergateApi:
                 )
                 return response
 
-            elif full_response.status_code == 200:
+            elif full_response.status_code in [200, 201]:
                 response = full_response.json()
 
         return response
