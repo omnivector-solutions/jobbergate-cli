@@ -159,8 +159,14 @@ class JobbergateApi:
                 )
                 return response
 
-            elif full_response.status_code == 200:
+            elif full_response.status_code in [200, 201]:
                 response = full_response.json()
+
+            else:
+                response = self.error_handle(
+                    error=f"Unhandled response code from server: {full_response.status_code}",
+                    solution="Please alert Omnivector for resolution"
+                )
 
         return response
 
