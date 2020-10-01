@@ -577,8 +577,10 @@ class JobbergateApi:
         # Check if user wants to submit immediately
         submit = inquirer.prompt([inquirer.Confirm('sub', message='Would you like to submit this immediately?', default=True)])['sub']
         # Write local copy of script and supporting files
-        print("Creating local copy of file(s).")
-        submission_result = self.create_job_submission(response["id"], render_only=!submit, response['job_script_name'])
+        submission_result = self.create_job_submission(
+            job_script_id=response["id"],
+            render_only=submit,
+            job_submission_name=response['job_script_name'])
         if submit:
             response['submission_result'] = submission_result
 
@@ -810,11 +812,13 @@ class JobbergateApi:
             job_script['job_script_data_as_string']
         )
 
-        script_filename = job_script["job_script_name"]+".job"
+        script_filename = f'{job_script["job_script_name"]}.job'
         for key, value in rendered_dict.items():
             filename = key if key != "application.sh" else script_filename
-            with open(filename, 'w') as write_file:
-                write_file.write(value)
+            file_path = pathlib.Path.home() / filename
+            file_path.write_text(value)
+            # with open(filename, 'w') as write_file:
+            #     write_file.write(value)
 
         if render_only:
             response = self.jobbergate_request(
