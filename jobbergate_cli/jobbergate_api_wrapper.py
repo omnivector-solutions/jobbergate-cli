@@ -170,9 +170,9 @@ class JobbergateApi:
 
         return response
 
-    def jobbergate_run(self, *argv):
+    def jobbergate_run(self, filename, *argv):
         """Execute Job Submission."""
-        cmd = ["/snap/bin/sbatch", "application.sh"]
+        cmd = ["/snap/bin/sbatch", filename]
         for arg in argv:
             cmd.append(arg)
         p = Popen(
@@ -811,10 +811,11 @@ class JobbergateApi:
             job_script['job_script_data_as_string']
         )
 
+        script_filename = job_script["job_script_name"]+".job"
         for key, value in rendered_dict.items():
-            write_file = open(key, 'w')
-            write_file.write(value)
-            write_file.close()
+            filename = key if key != "application.sh" else script_filename
+            with open(filename, 'w') as write_file:
+                write_file.write(value)
 
         if render_only:
             response = self.jobbergate_request(
@@ -824,7 +825,7 @@ class JobbergateApi:
             )
         else:
             try:
-                output, err, rc = self.jobbergate_run(application_name)
+                output, err, rc = self.jobbergate_run(script_filename, application_name)
             except FileNotFoundError:
                 response = self.error_handle(
                     error="Failed to execute submission",
