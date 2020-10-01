@@ -564,13 +564,9 @@ class JobbergateApi:
             )
             return response
 
-        # Write local copy of script
-        if 'job_script_data_as_string' in response:
-            filename = f'{data["job_script_name"]}.job'
-            scriptdict = json.loads(response['job_script_data_as_string'])
-            if 'application.sh' in scriptdict.keys():
-                with open(filename, 'w') as fh:
-                    fh.write(scriptdict['application.sh'])
+        # Write local copy of script and supporting files
+        print("Creating local copy of file(s).")
+        self.create_job_submission(job_script_id=response["id"], render_only=True)
 
         job_script_data_as_string = ""
         for key, value in rendered_dict.items():
