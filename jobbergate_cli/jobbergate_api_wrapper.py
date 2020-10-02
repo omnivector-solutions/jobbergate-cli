@@ -579,8 +579,9 @@ class JobbergateApi:
         # Write local copy of script and supporting files
         submission_result = self.create_job_submission(
             job_script_id=response["id"],
-            render_only=submit,
-            job_submission_name=response['job_script_name'])
+            render_only=not submit,
+            job_submission_name=response['job_script_name']
+        )
         if submit:
             response['submission_result'] = submission_result
 
@@ -599,7 +600,7 @@ class JobbergateApi:
         """
         if job_script_id is None:
             response = self.error_handle(
-                error="--id not define",
+                error="--id not defined",
                 solution="Please try again with --id specified"
             )
             return response
@@ -639,7 +640,7 @@ class JobbergateApi:
 
         Keyword Arguments:
             job_script_id              -- id of job script to update
-            job_script_data_as_string  -- data to update job scrip with
+            job_script_data_as_string  -- data to update job script with
         """
         if job_script_id is None:
             response = self.error_handle(
@@ -815,7 +816,7 @@ class JobbergateApi:
         script_filename = f'{job_script["job_script_name"]}.job'
         for key, value in rendered_dict.items():
             filename = key if key != "application.sh" else script_filename
-            file_path = pathlib.Path.home() / filename
+            file_path = pathlib.Path.cwd() / filename
             file_path.write_text(value)
             # with open(filename, 'w') as write_file:
             #     write_file.write(value)
