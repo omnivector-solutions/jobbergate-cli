@@ -170,9 +170,9 @@ class JobbergateApi:
 
         return response
 
-    def jobbergate_run(self, *argv):
+    def jobbergate_run(self, filename, *argv):
         """Execute Job Submission."""
-        cmd = ["/snap/bin/sbatch", "application.sh"]
+        cmd = ["/snap/bin/sbatch", filename]
         for arg in argv:
             cmd.append(arg)
         p = Popen(
@@ -564,14 +564,6 @@ class JobbergateApi:
             )
             return response
 
-        # Write local copy of script
-        if 'job_script_data_as_string' in response:
-            filename = f'{data["job_script_name"]}.job'
-            scriptdict = json.loads(response['job_script_data_as_string'])
-            if 'application.sh' in scriptdict.keys():
-                with open(filename, 'w') as fh:
-                    fh.write(scriptdict['application.sh'])
-
         job_script_data_as_string = ""
         for key, value in rendered_dict.items():
             job_script_data_as_string += "\n\nNEW_FILE\n\n"
@@ -584,8 +576,14 @@ class JobbergateApi:
 
         # Check if user wants to submit immediately
         submit = inquirer.prompt([inquirer.Confirm('sub', message='Would you like to submit this immediately?', default=True)])['sub']
+        # Write local copy of script and supporting files
+        submission_result = self.create_job_submission(
+            job_script_id=response["id"],
+            render_only=not submit,
+            job_submission_name=response['job_script_name']
+        )
         if submit:
-            response['submission_result'] = self.create_job_submission(response['id'], False, response['job_script_name'])
+            response['submission_result'] = submission_result
 
         return response
 
@@ -602,7 +600,7 @@ class JobbergateApi:
         """
         if job_script_id is None:
             response = self.error_handle(
-                error="--id not define",
+                error="--id not defined",
                 solution="Please try again with --id specified"
             )
             return response
@@ -642,7 +640,7 @@ class JobbergateApi:
 
         Keyword Arguments:
             job_script_id              -- id of job script to update
-            job_script_data_as_string  -- data to update job scrip with
+            job_script_data_as_string  -- data to update job script with
         """
         if job_script_id is None:
             response = self.error_handle(
@@ -815,10 +813,13 @@ class JobbergateApi:
             job_script['job_script_data_as_string']
         )
 
+        script_filename = f'{job_script["job_script_name"]}.job'
         for key, value in rendered_dict.items():
-            write_file = open(key, 'w')
-            write_file.write(value)
-            write_file.close()
+            filename = key if key != "application.sh" else script_filename
+            file_path = pathlib.Path.cwd() / filename
+            file_path.write_text(value)
+            # with open(filename, 'w') as write_file:
+            #     write_file.write(value)
 
         if render_only:
             response = self.jobbergate_request(
@@ -828,7 +829,7 @@ class JobbergateApi:
             )
         else:
             try:
-                output, err, rc = self.jobbergate_run(application_name)
+                output, err, rc = self.jobbergate_run(script_filename, application_name)
             except FileNotFoundError:
                 response = self.error_handle(
                     error="Failed to execute submission",
