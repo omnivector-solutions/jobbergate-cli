@@ -532,7 +532,7 @@ class JobbergateApi:
                     question = self.assemble_questions(field)
                     questions.append(question)
 
-                workflow_answers = inquirer.prompt(questions)
+                workflow_answers = inquirer.prompt(questions, raise_keyboard_interrupt=True)
                 param_dict['jobbergate_config'].update(workflow_answers)
 
             param_filename = f"{JOBBERGATE_CACHE_DIR}/param_dict.json"
