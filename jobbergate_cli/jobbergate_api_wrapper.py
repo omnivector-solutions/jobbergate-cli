@@ -536,16 +536,14 @@ class JobbergateApi:
 
             questions = []
             auto_answers = {}
-            # print("pre-answered: "+str(supplied_params.keys()))
+
             while workflow_questions:
                 field = workflow_questions.pop(0)
-                print(f"name: {field.variablename}, default: {field.default}")
                 # Use pre-defined answer or ask user
                 if field.variablename in supplied_params.keys():
-                    pass
-                    print(field.variablename+" already answered: "+str(supplied_params[field.variablename]))
+                    pass # No further action needed, case kept here to visualize priority
                 elif fast and field.default != None:
-                    print(f"Default used: {field.variablename}={field.default}")
+                    print(f"Default value used: {field.variablename}={field.default}")
                     auto_answers[field.variablename] = field.default
                 else:
                     # Prepare question for user
@@ -558,8 +556,6 @@ class JobbergateApi:
 
         param_filename = f"{JOBBERGATE_CACHE_DIR}/param_dict.json"
 
-        # param_dict["jobbergate_config"].pop("inpfile")
-        print(f"dict: {param_dict}, file: {str(param_file)}, name: {param_filename}")
         param_file = open(param_filename, 'w')
         json.dump(param_dict, param_file)
         param_file.close()
