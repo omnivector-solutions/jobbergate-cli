@@ -246,7 +246,7 @@ def update_application(ctx,
     UPDATE an Application.
 
     Keyword Arguments:
-        id                -- id application to update
+        id                --  id application to update
         application-path  --  path to dir for updated application files
         application-desc  --  optional new application description
     """
@@ -301,6 +301,10 @@ def list_job_scripts(ctx, all=False):
 @click.option("--param-file",
               "param_file",
               type=click.Path(),)
+@click.option("--fast",
+              "-f",
+              "fast",
+              is_flag=True)
 @click.option("--debug",
               "debug",
               is_flag=True)
@@ -308,8 +312,9 @@ def list_job_scripts(ctx, all=False):
 def create_job_script(ctx,
                       create_job_script_name,
                       create_job_script_application_id,
-                      debug=False,
-                      param_file=None):
+                      param_file=None,
+                      fast=False,
+                      debug=False):
     """
     CREATE a Job Script.
 
@@ -317,14 +322,17 @@ def create_job_script(ctx,
         name            --  Name for job script
         application-id  --  id of the application for the job script
         param-file      --  optional parameter file for populating templates.
-                            if this is not provided, the question askin in
+                            if answers are not provided, the question asking in
                             jobbergate.py is triggered
+        fast            --  optional parameter to use default answers (when available)
+                            instead of asking user
         debug           --  optional parameter to view job script data in CLI output
     """
     print(ctx.api.create_job_script(
         create_job_script_name,
         create_job_script_application_id,
         param_file,
+        fast,
         debug))
 
 
@@ -363,7 +371,7 @@ def update_job_script(ctx,
 
     Keyword Arguments:
         id          -- id of job script to update
-        job-script  -- data to update job scrip with
+        job-script  -- data to update job script with
     """
     print(ctx.api.update_job_script(
         update_job_script_id,
