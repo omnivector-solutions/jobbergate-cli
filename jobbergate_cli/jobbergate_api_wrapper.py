@@ -224,7 +224,7 @@ class JobbergateApi:
 
         Keyword Arguments:
             question  -- question object passed in from jobbergate.py.
-                         funtion returns the appropriate question from
+                         function returns the appropriate question from
                          inquirer
         """
 
@@ -438,6 +438,7 @@ class JobbergateApi:
                           job_script_name,
                           application_id,
                           param_file,
+                          fast,
                           debug):
         """
         CREATE a Job Script.
@@ -448,6 +449,8 @@ class JobbergateApi:
             param-file      --  optional parameter file for populating templates.
                                 if this is not provided, the question askin in
                                 jobbergate.py is triggered
+            fast            --  optional parameter to use default answers (when available)
+                                instead of asking user
             debug           --  optional parameter to view job script data
                                 in CLI output
         """
@@ -480,73 +483,89 @@ class JobbergateApi:
                 )
                 return response
 
-            files = {'upload_file': open(param_file, 'rb')}
-
+            with open(param_file, 'rb') as fh:
+                supplied_params = json.loads(fh.read())
         else:
-            app_data = self.jobbergate_request(
-                method="GET",
-                endpoint=f"{self.api_endpoint}/application/{application_id}"
+            supplied_params = {}
+
+        app_data = self.jobbergate_request(
+            method="GET",
+            endpoint=f"{self.api_endpoint}/application/{application_id}"
+        )
+        if app_data.status_code != 200:
+            response = self.error_handle(
+                error=f"invalid application-id provided: {application_id}",
+                solution=f"Please review id {application_id} and try again"
             )
-            if app_data.status_code != 200:
-                response = self.error_handle(
-                    error=f"invalid application-id provided: {application_id}",
-                    solution=f"Please review id {application_id} and try again"
-                )
-                return response
-            else:
-                app_data = app_data.json()
+            return response
+        else:
+            app_data = app_data.json()
 
-            # Get the jobbergate application python module
-            JOBBERGATE_APPLICATION_MODULE_PATH.write_text(
-                app_data['application_file']
+        # Get the jobbergate application python module
+        JOBBERGATE_APPLICATION_MODULE_PATH.write_text(
+            app_data['application_file']
+        )
+        # Get the jobbergate application yaml config
+        JOBBERGATE_APPLICATION_CONFIG_PATH.write_text(
+            app_data['application_config']
+        )
+
+        # Load the jobbergate yaml
+        config = JOBBERGATE_APPLICATION_CONFIG_PATH.read_text()
+        param_dict = yaml.load(config, Loader=yaml.FullLoader)
+
+        # Exec the jobbergate application python module
+        module = self.import_jobbergate_application_module()
+        application = module.JobbergateApplication(param_dict)
+
+        # Add all parameters from parameter file
+        param_dict['jobbergate_config'].update(supplied_params)
+
+        # Begin question assembly, starting in "mainflow" method
+        param_dict['jobbergate_config']['nextworkflow'] = "mainflow"
+
+        while "nextworkflow" in param_dict['jobbergate_config']:
+            method_to_call = getattr(
+                application,
+                param_dict['jobbergate_config'].pop("nextworkflow")
+            )  # Use and remove from the dict
+
+            workflow_questions = method_to_call(
+                data=param_dict['jobbergate_config']
             )
-            # Get the jobbergate application yaml config
-            JOBBERGATE_APPLICATION_CONFIG_PATH.write_text(
-                app_data['application_config']
-            )
 
-            # Load the jobbergate yaml
-            config = JOBBERGATE_APPLICATION_CONFIG_PATH.read_text()
-            param_dict = yaml.load(config, Loader=yaml.FullLoader)
+            questions = []
+            auto_answers = {}
 
-            # Exec the jobbergate application python module
-            module = self.import_jobbergate_application_module()
-            application = module.JobbergateApplication(param_dict)
-            # Begin question assembly, starting in "mainflow" method
-            param_dict['jobbergate_config']['nextworkflow'] = "mainflow"
-
-            while "nextworkflow" in param_dict['jobbergate_config']:
-                method_to_call = getattr(
-                    application,
-                    param_dict['jobbergate_config'].pop("nextworkflow")
-                )  # Use and remove from the dict
-
-                workflow_questions = method_to_call(
-                    data=param_dict['jobbergate_config']
-                )
-
-                questions = []
-
-                while workflow_questions:
-                    field = workflow_questions.pop(0)
+            while workflow_questions:
+                field = workflow_questions.pop(0)
+                # Use pre-defined answer or ask user
+                if field.variablename in supplied_params.keys():
+                    pass # No further action needed, case kept here to visualize priority
+                elif fast and field.default != None:
+                    print(f"Default value used: {field.variablename}={field.default}")
+                    auto_answers[field.variablename] = field.default
+                else:
+                    # Prepare question for user
                     question = self.assemble_questions(field)
                     questions.append(question)
 
-                workflow_answers = inquirer.prompt(questions, raise_keyboard_interrupt=True)
-                param_dict['jobbergate_config'].update(workflow_answers)
+            workflow_answers = inquirer.prompt(questions, raise_keyboard_interrupt=True)
+            workflow_answers.update(auto_answers)
+            param_dict['jobbergate_config'].update(workflow_answers)
 
-            param_filename = f"{JOBBERGATE_CACHE_DIR}/param_dict.json"
+        param_filename = f"{JOBBERGATE_CACHE_DIR}/param_dict.json"
 
-            param_file = open(param_filename, 'w')
-            json.dump(param_dict, param_file)
-            param_file.close()
+        param_file = open(param_filename, 'w')
+        json.dump(param_dict, param_file)
+        param_file.close()
 
-            # TODO: Put below in function after testing - DRY
-            files = {'upload_file': open(param_filename, 'rb')}
+        # TODO: Put below in function after testing - DRY
+        files = {'upload_file': open(param_filename, 'rb')}
 
-            # Possibly overwrite script name
-            if 'job_script_name' in param_dict['jobbergate_config']:
-                data['job_script_name'] = param_dict['jobbergate_config']['job_script_name']
+        # Possibly overwrite script name
+        if 'job_script_name' in param_dict['jobbergate_config']:
+            data['job_script_name'] = param_dict['jobbergate_config']['job_script_name']
 
         response = self.jobbergate_request(
             method="POST",
@@ -575,7 +594,11 @@ class JobbergateApi:
             del response['job_script_data_as_string']
 
         # Check if user wants to submit immediately
-        submit = inquirer.prompt([inquirer.Confirm('sub', message='Would you like to submit this immediately?', default=True)])['sub']
+        if fast:
+            submit = True
+        else:
+            submit = inquirer.prompt([inquirer.Confirm('sub', message='Would you like to submit this immediately?', default=True)])['sub']
+
         # Write local copy of script and supporting files
         submission_result = self.create_job_submission(
             job_script_id=response["id"],
