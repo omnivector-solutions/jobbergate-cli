@@ -109,6 +109,27 @@ class JobbergateApi:
                     endpoint,
                     headers={'Authorization': 'JWT ' + self.token},
                     verify=False)
+                if response.status_code == 200:
+                    response = response.json()
+                elif response.status_code == 403:
+                    response = self.error_handle(
+                        error=f"User is not Authorized to access {endpoint}",
+                        solution="Please contact your admin for permission"
+                    )
+                    return response
+                elif response.status_code == 404:
+                    response = self.error_handle(
+                        error=f"Could not delete object at {endpoint}",
+                        solution="Please confirm the id and try again"
+                    )
+                    return response
+                else:
+                    response = self.error_handle(
+                        error=f"Failed to access {endpoint}",
+                        solution="Please check credentials or report server error"
+                    )
+                    return response
+
             except requests.exceptions.ConnectionError:
                 response = self.error_handle(
                     error="Failed to establish connection with API",
@@ -122,7 +143,15 @@ class JobbergateApi:
                     data=data,
                     files=files,
                     headers={'Authorization': 'JWT ' + self.token},
-                    verify=False).json()
+                    verify=False)#.json()
+                if response.status_code == 403:
+                    response = self.error_handle(
+                        error=f"User is not Authorized to access {endpoint}",
+                        solution="Please contact your admin for permission"
+                    )
+                    return response
+                else:
+                    response = response.json()
             except Exception as e:
                 response = "PUT request failed"
                 return response
@@ -132,6 +161,20 @@ class JobbergateApi:
                 endpoint,
                 headers={'Authorization': 'JWT ' + self.token},
                 verify=False)
+            if response.status_code == 403:
+                response = self.error_handle(
+                    error=f"User is not Authorized to access {endpoint}",
+                    solution="Please contact your admin for permission"
+                )
+                return response
+            elif response.status_code == 404:
+                response = self.error_handle(
+                    error=f"Could not delete object at {endpoint}",
+                    solution="Please confirm the id and try again"
+                )
+                return response
+            else:
+                response = response.text
 
         if method == "POST":
             full_response = requests.post(
@@ -156,6 +199,11 @@ class JobbergateApi:
                 response = self.error_handle(
                     error=f"Server Error generated: {error[start_point:end_point]}",
                     solution="Please alert Omnivector for resolution"
+                )
+            elif full_response.status_code == 403:
+                response = self.error_handle(
+                    error=f"User is not Authorized to access {endpoint}",
+                    solution="Please contact your admin for permission"
                 )
                 return response
 
@@ -407,22 +455,17 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/job-script/"
         )
-        if response.status_code == 200:
-            response = response.json()
-        else:
-            response = self.error_handle(
-                error="Failed to retrieve job script list",
-                solution="Please check credentials or report server error"
-            )
-            return response
 
-        response = [
-            {
-                k: v for k, v in d.items()
-                if k not in self.job_script_suppress
-            }
-            for d in response
-        ]
+        try:
+            response = [
+                {
+                    k: v for k, v in d.items()
+                    if k not in self.job_script_suppress
+                }
+                for d in response
+            ]
+        except:
+            return response
 
         if all:
             return response
@@ -492,14 +535,8 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/application/{application_id}"
         )
-        if app_data.status_code != 200:
-            response = self.error_handle(
-                error=f"invalid application-id provided: {application_id}",
-                solution=f"Please review id {application_id} and try again"
-            )
-            return response
-        else:
-            app_data = app_data.json()
+        if 'error' in app_data.keys():
+            return app_data
 
         # Get the jobbergate application python module
         JOBBERGATE_APPLICATION_MODULE_PATH.write_text(
@@ -573,6 +610,8 @@ class JobbergateApi:
             data=data,
             files=files
         )
+        if 'error' in response.keys():
+            return response
 
         try:
             rendered_dict = json.loads(response['job_script_data_as_string'])
@@ -632,14 +671,8 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/job-script/{job_script_id}"
         )
-        if response.status_code == 404:
-            response = self.error_handle(
-                error=f"Could not find job script with id: {job_script_id}",
-                solution="Please confirm the id and try again"
-            )
+        if 'error' in response.keys():
             return response
-        else:
-            response = response.json()
 
         rendered_dict = json.loads(response['job_script_data_as_string'])
         if as_str:
@@ -719,14 +752,6 @@ class JobbergateApi:
             method="DELETE",
             endpoint=f"{self.api_endpoint}/job-script/{job_script_id}"
         )
-        if response.status_code == 404:
-            response = self.error_handle(
-                error=f"Failed to DELETE job script id: {job_script_id}",
-                solution="Please try again with a valid job script id"
-            )
-            return response
-        else:
-            response = response.text
 
         return response
 
@@ -745,21 +770,17 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/job-submission/"
         )
-        if response.status_code == 200:
-            response = response.json()
-        else:
-            response = self.error_handle(
-                error="Failed to retrieve job submission list",
-                solution="Please check credentials or report server error"
-            )
+
+        try:
+            response = [
+                {
+                    k: v for k, v in d.items()
+                    if k not in self.job_submission_suppress
+                }
+                for d in response
+            ]
+        except:
             return response
-        response = [
-            {
-                k: v for k, v in d.items()
-                if k not in self.job_submission_suppress
-            }
-            for d in response
-        ]
 
         if all:
             return response
@@ -850,6 +871,8 @@ class JobbergateApi:
                 endpoint=f"{self.api_endpoint}/job-submission/",
                 data=data
             )
+            if 'error' in response.keys():
+                return response
         else:
             try:
                 output, err, rc = self.jobbergate_run(script_filename, application_name)
@@ -870,6 +893,8 @@ class JobbergateApi:
                     endpoint=f"{self.api_endpoint}/job-submission/",
                     data=data
                 )
+                if 'error' in response.keys():
+                    return response
             else:
                 response = self.error_handle(
                     error=f"Failed to execute submission with error: {err}",
@@ -898,14 +923,6 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/job-submission/{job_submission_id}"
         )
-        if response.status_code == 404:
-            response = self.error_handle(
-                error=f"Could not find job submission id: {job_submission_id}",
-                solution="Please confirm the id and try again"
-            )
-            return response
-        else:
-            response = response.json()
 
         return response
 
@@ -964,14 +981,6 @@ class JobbergateApi:
             method="DELETE",
             endpoint=f"{self.api_endpoint}/job-submission/{job_submission_id}"
         )
-        if response.status_code == 404:
-            response = self.error_handle(
-                error=f"Failed to DELETE id:{job_submission_id}",
-                solution="Please try again with a valid job submission id"
-            )
-            return response
-        else:
-            response = response.text
 
         return response
 
@@ -990,22 +999,16 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/application/"
         )
-        if response.status_code == 200:
-            response = response.json()
-        else:
-            response = self.error_handle(
-                error="Failed retrieve application list",
-                solution="Please try credentials again or server error"
-            )
+        try:
+            response = [
+                {
+                    k: v for k, v in d.items()
+                    if k not in self.application_suppress
+                }
+                for d in response
+            ]
+        except:
             return response
-
-        response = [
-            {
-                k: v for k, v in d.items()
-                if k not in self.application_suppress
-            }
-            for d in response
-        ]
 
         if all:
             return response
@@ -1073,6 +1076,8 @@ class JobbergateApi:
             data=data,
             files=files
         )
+        if 'error' in response.keys():
+            return response
 
         try:
             for key in self.application_suppress:
@@ -1098,15 +1103,6 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/application/{application_id}"
         )
-
-        if response.status_code == 404:
-            response = self.error_handle(
-                error=f"Could not find application with id: {application_id}",
-                solution="Please confirm the id and try again"
-            )
-            return response
-        else:
-            response = response.json()
 
         return response
 
@@ -1170,6 +1166,8 @@ class JobbergateApi:
             data=data,
             files=files
         )
+        if 'error' in response.keys():
+            return response
 
         try:
             for key in self.application_suppress:
@@ -1194,13 +1192,5 @@ class JobbergateApi:
             method="DELETE",
             endpoint=f"{self.api_endpoint}/application/{application_id}"
         )
-        if response.status_code == 404:
-            response = self.error_handle(
-                error=f"Failed to DELETE job submission id: {application_id}",
-                solution="Please try again with a valid job submission id"
-            )
-            return response
-        else:
-            response = response.text
 
         return response
