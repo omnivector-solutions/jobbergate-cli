@@ -369,9 +369,11 @@ def update_job_script(ctx,
     """
     UPDATE a Job Script.
 
-    Keyword Arguments:
-        id          -- id of job script to update
-        job-script  -- data to update job script with
+    Keyword Arguments: \n
+        id          -- id of job script to update \n
+        job-script  -- data with which to update job script \n
+                       format: string form of dictionary with main script as entry "application.sh" \n
+                       e.g. '{"application.sh":"#!/bin/bash \\n hostname"}'
     """
     print(ctx.api.update_job_script(
         update_job_script_id,

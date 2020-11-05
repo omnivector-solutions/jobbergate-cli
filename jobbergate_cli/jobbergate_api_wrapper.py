@@ -977,6 +977,9 @@ class JobbergateApi:
         except:
             return response
 
+        # Sort
+        response.sort(key=lambda app: app["id"], reverse=True)
+
         if all:
             return response
         else:
