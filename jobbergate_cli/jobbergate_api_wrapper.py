@@ -715,14 +715,8 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/job-script/{job_script_id}"
         )
-        if data.status_code == 200:
-            data = data.json()
-        else:
-            response = self.error_handle(
-                error=f"Failed to retrieve job script {job_script_id}",
-                solution="Please confirm job submission exists and try again"
-            )
-            return response
+        if 'error' in data.keys():
+            return data
         data['job_script_data_as_string'] = job_script_data_as_string
         response = self.jobbergate_request(
             method="PUT",
@@ -818,17 +812,8 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/job-script/{job_script_id}"
         )
-        if job_script.status_code == 200:
-            job_script = job_script.json()
-        else:
-            response = self.error_handle(
-                error=f"Failed to retrieve job script id={job_script_id}",
-                solution=(
-                    "Please confirm job script exists and "
-                    "try job submission again"
-                )
-            )
-            return response
+        if 'error' in job_script.keys():
+            return job_script
 
         application_id = job_script['application']
 
@@ -836,20 +821,8 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/application/{application_id}"
         )
-        if application.status_code == 200:
-            application = application.json()
-        else:
-            response = self.error_handle(
-                error=(
-                    "Failed to retrieve the application id="
-                    f"{application_id} linked to job script id={job_script_id}"
-                ),
-                solution=(
-                        "Please confirm application exists "
-                        "and try job submission again"
-                )
-            )
-            return response
+        if 'error' in application.keys():
+            return application
 
         application_name = application['application_name']
 
@@ -946,14 +919,8 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/job-submission/{job_submission_id}"
         )
-        if data.status_code == 200:
-            data = data.json()
-        else:
-            response = self.error_handle(
-                error=f"Failed to retrieve job submission {job_submission_id}",
-                solution="Please confirm job submission exists and try again"
-            )
-            return response
+        if 'error' in data.keys():
+            return data
         # TODO how to collect data that will updated for the job-submission
         response = self.jobbergate_request(
             method="PUT",
@@ -1137,14 +1104,8 @@ class JobbergateApi:
             method="GET",
             endpoint=f"{self.api_endpoint}/application/{application_id}"
         )
-        if data.status_code == 200:
-            data = data.json()
-        else:
-            response = self.error_handle(
-                error=f"Application id {application_id} does not exist",
-                solution="Please confirm the application id"
-            )
-            return response
+        if 'error' in data.keys():
+            return data
 
         del data['id']
         del data['created_at']
