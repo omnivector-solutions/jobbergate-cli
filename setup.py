@@ -1,6 +1,5 @@
 from setuptools import setup, find_packages
 
-raw_reqs = open("requirements/requirements.txt", "r").read().splitlines()
 
 setup(
     name='jobbergate-cli',
@@ -8,7 +7,24 @@ setup(
     version='0.0.1',
     license='MIT',
     long_description=open('README.md').read(),
-    install_requires=raw_reqs,
+    install_requires=[
+        'click',
+        'inquirer',
+        'pyjwt',
+        'requests',
+        'tabulate',
+        'urllib3',
+        'pyyaml',
+    ],
+    extras_require={
+        'dev': [
+            'coverage',
+            'pytest',
+            'pytest-cov',
+            'tox',
+            'wheel',
+        ],
+    },
     # data_files=[('config', ['config/*.json'])],
     entry_points = {
         'console_scripts': ['jobbergate-cli=jobbergate_cli.main:main'],
