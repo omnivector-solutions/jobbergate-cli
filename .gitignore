@@ -144,4 +144,7 @@ dmypy.json
 .git/
 
 # vs code
-*.code-workspace
+/*.code-workspace
+
+# snapcraft
+/*.snap
