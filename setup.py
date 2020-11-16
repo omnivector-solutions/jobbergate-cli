@@ -19,6 +19,7 @@ setup(
     extras_require={
         'dev': [
             'coverage',
+            'flake8',
             'pytest',
             'pytest-cov',
             'tox',
@@ -27,6 +28,6 @@ setup(
     },
     # data_files=[('config', ['config/*.json'])],
     entry_points = {
-        'console_scripts': ['jobbergate-cli=jobbergate_cli.main:main'],
+        'console_scripts': ['jobbergate=jobbergate_cli.main:main'],
     }
 )

@@ -8,7 +8,6 @@ __pycache__/
 *.job
 osu_*
 mpi-*
-test_*
 param_dict.json
 *.tar*
 *java*
