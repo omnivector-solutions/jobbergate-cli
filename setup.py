@@ -19,6 +19,8 @@ setup(
     extras_require={
         'dev': [
             'coverage',
+            'pytest',
+            'pytest-cov',
             'tox',
             'wheel',
         ],

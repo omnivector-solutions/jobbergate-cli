@@ -4,6 +4,12 @@ Workflow
 
 Work flow module that could add pre and post functions to workflows"""
 
+
+#
+# THIS FILE IS PROBABLY NOT IN USE/DEPRECATED
+# https://omnivector.slack.com/archives/D01E8JZMJJU/p1605139126039900
+#
+
 from functools import partial, wraps
 
 prefuncs = {}
