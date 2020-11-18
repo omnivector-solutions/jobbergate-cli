@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 setup(
     name='jobbergate-cli',
     packages=find_packages(include=['jobbergate_cli']),
-    version='0.0.1',
+    version='0.0.1+dev',
     license='MIT',
     long_description=open('README.md').read(),
     install_requires=[
