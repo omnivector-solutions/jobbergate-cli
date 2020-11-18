@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
+from datetime import datetime
 import getpass
+from pathlib import Path
 import requests
 import sys
-from pathlib import Path
 
 import jwt
 
 import click
-from datetime import datetime
 
 from jobbergate_cli.jobbergate_api_wrapper import JobbergateApi
 from jobbergate_cli.jobbergate_common import (
@@ -120,6 +120,7 @@ def init_api(user_id):
     help='Your Jobbergate API password',
     hide_input=True
 )
+@click.version_option()
 @click.pass_context
 def main(ctx,
          username,
