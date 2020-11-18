@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
-import os
-import json
 import importlib
+import json
+import os
 import pathlib
-import yaml
-import inquirer
-from subprocess import Popen, PIPE
-
-import requests
+from subprocess import PIPE, Popen
 import tarfile
+
+import inquirer
+import requests
+from tabulate import tabulate
+import yaml
 
 from jobbergate_cli import appform
 from jobbergate_cli.jobbergate_common import (
@@ -19,8 +20,6 @@ from jobbergate_cli.jobbergate_common import (
     JOBBERGATE_CACHE_DIR,
     TAR_NAME,
 )
-
-from tabulate import tabulate
 
 
 class JobbergateApi:

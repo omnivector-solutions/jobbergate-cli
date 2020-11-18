@@ -2,21 +2,20 @@
 from datetime import datetime
 import getpass
 from pathlib import Path
-import requests
 import sys
 
-import jwt
-
 import click
+import jwt
+import requests
 
 from jobbergate_cli.jobbergate_api_wrapper import JobbergateApi
 from jobbergate_cli.jobbergate_common import (
-    JOBBERGATE_JOB_SCRIPT_CONFIG,
-    JOBBERGATE_JOB_SUBMISSION_CONFIG,
-    JOBBERGATE_API_JWT_PATH,
     JOBBERGATE_API_ENDPOINT,
+    JOBBERGATE_API_JWT_PATH,
     JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT,
     JOBBERGATE_APPLICATION_CONFIG,
+    JOBBERGATE_JOB_SCRIPT_CONFIG,
+    JOBBERGATE_JOB_SUBMISSION_CONFIG,
     JOBBERGATE_USER_TOKEN_DIR,
 )
 

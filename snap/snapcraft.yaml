@@ -6,12 +6,14 @@ description: |
   Create applications, from applications create job-scripts, from job-scripts create job-submissions.
 grade: stable
 confinement: classic
+
 apps:
   jobbergate:
     environment:
       PATH: $SNAP/bin/:$PATH
       PYTHONPATH: $SNAP/lib/python3.8/site-packages/
     command: bin/jobbergate
+
 parts:
   jobbergate-cli:
     plugin: python

@@ -29,3 +29,8 @@ requirements/requirements.txt: setup.py
 		&& pip install . \
 		&& pip freeze > requirements/requirements.txt
 	rm -rf _virtual_tmp
+
+
+format:
+	isort setup.py jobbergate_cli
+	black setup.py jobbergate_cli
