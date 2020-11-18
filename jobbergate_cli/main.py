@@ -29,7 +29,8 @@ class Api(object):
             job_submission_config=JOBBERGATE_JOB_SUBMISSION_CONFIG,
             application_config=JOBBERGATE_APPLICATION_CONFIG,
             api_endpoint=JOBBERGATE_API_ENDPOINT,
-            user_id=user_id)
+            user_id=user_id,
+        )
 
 
 def interactive_get_username_password():
@@ -39,15 +40,14 @@ def interactive_get_username_password():
 
 
 def init_token(username, password):
-    """Get a new token from the api and write it to the token file.
-    """
+    """Get a new token from the api and write it to the token file."""
     resp = requests.post(
         JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT,
-        data={"email": username, "password": password}
+        data={"email": username, "password": password},
     )
     # if resp.status_code == 502:
     #
-    JOBBERGATE_API_JWT_PATH.write_text(resp.json()['token'])
+    JOBBERGATE_API_JWT_PATH.write_text(resp.json()["token"])
 
 
 def is_token_valid():
@@ -58,7 +58,7 @@ def is_token_valid():
 
     if JOBBERGATE_API_JWT_PATH.exists():
         token = decode_token_to_dict(JOBBERGATE_API_JWT_PATH.read_text())
-        if datetime.fromtimestamp(token['exp']) > datetime.now():
+        if datetime.fromtimestamp(token["exp"]) > datetime.now():
             return True
         else:
             return False
@@ -77,6 +77,7 @@ def decode_token_to_dict(encoded_token):
         )
     except jwt.exceptions.InvalidTokenError as e:
         print(e)
+        # FIXME - raise an exception (and catch, then ctx.exit())
         sys.exit()
     return token
 
@@ -89,8 +90,10 @@ def init_api(user_id):
         job_submission_config=JOBBERGATE_JOB_SUBMISSION_CONFIG,
         application_config=JOBBERGATE_APPLICATION_CONFIG,
         api_endpoint=JOBBERGATE_API_ENDPOINT,
-        user_id=user_id)
+        user_id=user_id,
+    )
     return api
+
 
 # Get the cli input arguments
 # args = get_parsed_args(argv)
@@ -111,20 +114,14 @@ def init_api(user_id):
 # Get the cli input arguments
 @click.group()
 @click.option(
-    '--username',
-    '-u',
-    help='Your Jobbergate API Username',
+    "--username",
+    "-u",
+    help="Your Jobbergate API Username",
 )
-@click.option(
-    '--password', '-p',
-    help='Your Jobbergate API password',
-    hide_input=True
-)
+@click.option("--password", "-p", help="Your Jobbergate API password", hide_input=True)
 @click.version_option()
 @click.pass_context
-def main(ctx,
-         username,
-         password):
+def main(ctx, username, password):
     """
     Controls flow.
 
@@ -139,35 +136,28 @@ def main(ctx,
 
     if not is_token_valid():
         if username and password:
-            ctx.obj['username'] = username
-            ctx.obj['password'] = password
+            ctx.obj["username"] = username
+            ctx.obj["password"] = password
         else:
             username, password = interactive_get_username_password()
-            ctx.obj['username'] = username
-            ctx.obj['password'] = password
+            ctx.obj["username"] = username
+            ctx.obj["password"] = password
         try:
             init_token(username, password)
         except KeyError:
-            print(
-                f"Auth Failed for username: {username}, Please Try again"
-            )
-            sys.exit(0)
+            print(f"Auth Failed for username: {username}, Please Try again")
+            sys.exit(0)  # FIXME - ctx.exit() instead
         except requests.exceptions.ConnectionError:
-            print(
-                "Auth failed to establish connection with API,Please Try again"
-            )
-            sys.exit(0)
+            print("Auth failed to establish connection with API,Please Try again")
+            sys.exit(0)  # FIXME - ctx.exit() instead
 
-    ctx.obj['token'] = decode_token_to_dict(
-        JOBBERGATE_API_JWT_PATH.read_text())
+    ctx.obj["token"] = decode_token_to_dict(JOBBERGATE_API_JWT_PATH.read_text())
 
-    ctx.obj = Api(user_id=ctx.obj['token']['user_id'])
+    ctx.obj = Api(user_id=ctx.obj["token"]["user_id"])
 
 
-@main.command('list-applications')
-@click.option("--all",
-              "all",
-              is_flag=True)
+@main.command("list-applications")
+@click.option("--all", "all", is_flag=True)
 @click.pass_obj
 def list_applications(ctx, all=False):
     """
@@ -181,21 +171,14 @@ def list_applications(ctx, all=False):
     print(ctx.api.list_applications(all))
 
 
-@main.command('create-application')
-@click.option("--name",
-              "-n",
-              "create_application_name")
-@click.option("--application-path",
-              "-a",
-              "create_application_path")
-@click.option("--application-desc",
-              "application_desc",
-              default="")
+@main.command("create-application")
+@click.option("--name", "-n", "create_application_name")
+@click.option("--application-path", "-a", "create_application_path")
+@click.option("--application-desc", "application_desc", default="")
 @click.pass_obj
-def create_application(ctx,
-                       create_application_name,
-                       create_application_path,
-                       application_desc):
+def create_application(
+    ctx, create_application_name, create_application_path, application_desc
+):
     """
     CREATE an application.
 
@@ -204,45 +187,32 @@ def create_application(ctx,
         application-path -- path to dir where application files are
     """
     out = ctx.api.create_application(
-            application_name=create_application_name,
-            application_path=create_application_path,
-            application_desc=application_desc,
+        application_name=create_application_name,
+        application_path=create_application_path,
+        application_desc=application_desc,
     )
     print(out)
 
 
-@main.command('get-application')
-@click.option("--id",
-              "-i",
-              "application_id")
+@main.command("get-application")
+@click.option("--id", "-i", "application_id")
 @click.pass_obj
-def get_application(ctx,
-                    application_id):
+def get_application(ctx, application_id):
     """
     GET an Application.
 
     Keyword Arguments:
         id -- id of application to be returned
     """
-    print(ctx.api.get_application(
-        application_id=application_id))
+    print(ctx.api.get_application(application_id=application_id))
 
 
-@main.command('update-application')
-@click.option("--id",
-              "-i",
-              "update_application_id")
-@click.option("--application-path",
-              "-a",
-              "application_path")
-@click.option("--application-desc",
-              "application_desc",
-              default="")
+@main.command("update-application")
+@click.option("--id", "-i", "update_application_id")
+@click.option("--application-path", "-a", "application_path")
+@click.option("--application-desc", "application_desc", default="")
 @click.pass_obj
-def update_application(ctx,
-                       update_application_id,
-                       application_path,
-                       application_desc):
+def update_application(ctx, update_application_id, application_path, application_desc):
     """
     UPDATE an Application.
 
@@ -251,20 +221,17 @@ def update_application(ctx,
         application-path  --  path to dir for updated application files
         application-desc  --  optional new application description
     """
-    print(ctx.api.update_application(
-        update_application_id,
-        application_path,
-        application_desc
-    ))
+    print(
+        ctx.api.update_application(
+            update_application_id, application_path, application_desc
+        )
+    )
 
 
-@main.command('delete-application')
-@click.option("--id",
-              "-i",
-              "delete_application_id")
+@main.command("delete-application")
+@click.option("--id", "-i", "delete_application_id")
 @click.pass_obj
-def delete_application(ctx,
-                       delete_application_id):
+def delete_application(ctx, delete_application_id):
     """
     DELETE an Application.
 
@@ -274,10 +241,8 @@ def delete_application(ctx,
     print(ctx.api.delete_application(delete_application_id))
 
 
-@main.command('list-job-scripts')
-@click.option("--all",
-              "all",
-              is_flag=True)
+@main.command("list-job-scripts")
+@click.option("--all", "all", is_flag=True)
 @click.pass_obj
 def list_job_scripts(ctx, all=False):
     """
@@ -291,31 +256,25 @@ def list_job_scripts(ctx, all=False):
     print(ctx.api.list_job_scripts(all))
 
 
-@main.command('create-job-script')
-@click.option("--name",
-              "-n",
-              "create_job_script_name",
-              default="default_script_name")
-@click.option("--application-id",
-              "-i",
-              "create_job_script_application_id")
-@click.option("--param-file",
-              "param_file",
-              type=click.Path(),)
-@click.option("--fast",
-              "-f",
-              "fast",
-              is_flag=True)
-@click.option("--debug",
-              "debug",
-              is_flag=True)
+@main.command("create-job-script")
+@click.option("--name", "-n", "create_job_script_name", default="default_script_name")
+@click.option("--application-id", "-i", "create_job_script_application_id")
+@click.option(
+    "--param-file",
+    "param_file",
+    type=click.Path(),
+)
+@click.option("--fast", "-f", "fast", is_flag=True)
+@click.option("--debug", "debug", is_flag=True)
 @click.pass_obj
-def create_job_script(ctx,
-                      create_job_script_name,
-                      create_job_script_application_id,
-                      param_file=None,
-                      fast=False,
-                      debug=False):
+def create_job_script(
+    ctx,
+    create_job_script_name,
+    create_job_script_application_id,
+    param_file=None,
+    fast=False,
+    debug=False,
+):
     """
     CREATE a Job Script.
 
@@ -329,25 +288,22 @@ def create_job_script(ctx,
                             instead of asking user
         debug           --  optional parameter to view job script data in CLI output
     """
-    print(ctx.api.create_job_script(
-        create_job_script_name,
-        create_job_script_application_id,
-        param_file,
-        fast,
-        debug))
+    print(
+        ctx.api.create_job_script(
+            create_job_script_name,
+            create_job_script_application_id,
+            param_file,
+            fast,
+            debug,
+        )
+    )
 
 
-@main.command('get-job-script')
-@click.option("--id",
-              "-i",
-              "get_job_script_id")
-@click.option("--as-string",
-              "as_str",
-              is_flag=True)
+@main.command("get-job-script")
+@click.option("--id", "-i", "get_job_script_id")
+@click.option("--as-string", "as_str", is_flag=True)
 @click.pass_obj
-def get_job_script(ctx,
-                   get_job_script_id,
-                   as_str):
+def get_job_script(ctx, get_job_script_id, as_str):
     """
     GET a Job Script.
 
@@ -357,16 +313,11 @@ def get_job_script(ctx,
     print(ctx.api.get_job_script(get_job_script_id, as_str))
 
 
-@main.command('update-job-script')
-@click.option("--id",
-              "-i",
-              "update_job_script_id")
-@click.option("--job-script",
-              "job_script_data_as_string")
+@main.command("update-job-script")
+@click.option("--id", "-i", "update_job_script_id")
+@click.option("--job-script", "job_script_data_as_string")
 @click.pass_obj
-def update_job_script(ctx,
-                      update_job_script_id,
-                      job_script_data_as_string):
+def update_job_script(ctx, update_job_script_id, job_script_data_as_string):
     """
     UPDATE a Job Script.
 
@@ -376,19 +327,13 @@ def update_job_script(ctx,
                        format: string form of dictionary with main script as entry "application.sh" \n
                        e.g. '{"application.sh":"#!/bin/bash \\n hostname"}'
     """
-    print(ctx.api.update_job_script(
-        update_job_script_id,
-        job_script_data_as_string)
-    )
+    print(ctx.api.update_job_script(update_job_script_id, job_script_data_as_string))
 
 
-@main.command('delete-job-script')
-@click.option("--id",
-              "-i",
-              "delete_job_script_id")
+@main.command("delete-job-script")
+@click.option("--id", "-i", "delete_job_script_id")
 @click.pass_obj
-def delete_job_script(ctx,
-                      delete_job_script_id):
+def delete_job_script(ctx, delete_job_script_id):
     """
     DELETE a Job Script.
 
@@ -398,10 +343,8 @@ def delete_job_script(ctx,
     print(ctx.api.delete_job_script(delete_job_script_id))
 
 
-@main.command('list-job-submissions')
-@click.option("--all",
-              "all",
-              is_flag=True)
+@main.command("list-job-submissions")
+@click.option("--all", "all", is_flag=True)
 @click.pass_obj
 def list_job_submissions(ctx, all=False):
     """
@@ -415,19 +358,17 @@ def list_job_submissions(ctx, all=False):
     print(ctx.api.list_job_submissions(all))
 
 
-@main.command('create-job-submission')
-@click.option("--job-script-id",
-              "-i",
-              "create_job_submission_job_script_id")
-@click.option("--name",
-              "create_job_submission_name")
-@click.option("--dry-run",
-              "render_only")
+@main.command("create-job-submission")
+@click.option("--job-script-id", "-i", "create_job_submission_job_script_id")
+@click.option("--name", "create_job_submission_name")
+@click.option("--dry-run", "render_only")
 @click.pass_obj
-def create_job_submission(ctx,
-                          create_job_submission_job_script_id,
-                          create_job_submission_name="",
-                          render_only=None):
+def create_job_submission(
+    ctx,
+    create_job_submission_job_script_id,
+    create_job_submission_name="",
+    render_only=None,
+):
     """
     CREATE Job Submission.
 
@@ -437,19 +378,19 @@ def create_job_submission(ctx,
         dry-run       -- create record in API and return data to CLI
                          but DO NOT submit job
     """
-    print(ctx.api.create_job_submission(
-        job_script_id=create_job_submission_job_script_id,
-        job_submission_name=create_job_submission_name,
-        render_only=render_only))
+    print(
+        ctx.api.create_job_submission(
+            job_script_id=create_job_submission_job_script_id,
+            job_submission_name=create_job_submission_name,
+            render_only=render_only,
+        )
+    )
 
 
-@main.command('get-job-submission')
-@click.option("--id",
-              "-i",
-              "get_job_submission_id")
+@main.command("get-job-submission")
+@click.option("--id", "-i", "get_job_submission_id")
 @click.pass_obj
-def get_job_submission(ctx,
-                       get_job_submission_id):
+def get_job_submission(ctx, get_job_submission_id):
     """
     GET a Job Submission.
 
@@ -459,13 +400,10 @@ def get_job_submission(ctx,
     print(ctx.api.get_job_submission(get_job_submission_id))
 
 
-@main.command('update-job-submission')
-@click.option("--id",
-              "-i",
-              "update_job_submission_id")
+@main.command("update-job-submission")
+@click.option("--id", "-i", "update_job_submission_id")
 @click.pass_obj
-def update_job_submission(ctx,
-                          update_job_submission_id):
+def update_job_submission(ctx, update_job_submission_id):
     """
     UPDATE a Job Submission.
 
@@ -475,13 +413,10 @@ def update_job_submission(ctx,
     print(ctx.api.update_job_submission(update_job_submission_id))
 
 
-@main.command('delete-job-submission')
-@click.option("--id",
-              "-i",
-              "delete_job_submission_id")
+@main.command("delete-job-submission")
+@click.option("--id", "-i", "delete_job_submission_id")
 @click.pass_obj
-def delete_job_submission(ctx,
-                          delete_job_submission_id):
+def delete_job_submission(ctx, delete_job_submission_id):
     """
     Delete a Job Submission.
 

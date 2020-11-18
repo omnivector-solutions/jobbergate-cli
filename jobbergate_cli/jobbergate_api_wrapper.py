@@ -17,22 +17,22 @@ from jobbergate_cli.jobbergate_common import (
     JOBBERGATE_APPLICATION_MODULE_FILE_NAME,
     JOBBERGATE_APPLICATION_MODULE_PATH,
     JOBBERGATE_CACHE_DIR,
-    TAR_NAME
+    TAR_NAME,
 )
 
 from tabulate import tabulate
 
 
-
 class JobbergateApi:
-
-    def __init__(self,
-                 token=None,
-                 job_script_config=None,
-                 job_submission_config=None,
-                 application_config=None,
-                 api_endpoint=None,
-                 user_id=None):
+    def __init__(
+        self,
+        token=None,
+        job_script_config=None,
+        job_submission_config=None,
+        application_config=None,
+        api_endpoint=None,
+        user_id=None,
+    ):
         """Initialize JobbergateAPI."""
 
         self.token = token
@@ -43,25 +43,22 @@ class JobbergateApi:
         self.user_id = user_id
         # Suppress from list- and create- application:
         self.application_suppress = [
-            'application_config',
-            'application_file',
-            'created_at',
-            'updated_at',
-            'application_dir_listing',
-            'application_location',
-            'application_dir_listing_acquired'
+            "application_config",
+            "application_file",
+            "created_at",
+            "updated_at",
+            "application_dir_listing",
+            "application_location",
+            "application_dir_listing_acquired",
         ]
         self.job_script_suppress = [
-            'created_at',
-            'updated_at',
-            'job_script_data_as_string'
+            "created_at",
+            "updated_at",
+            "job_script_data_as_string",
         ]
-        self.job_submission_suppress = ['created_at', 'updated_at']
+        self.job_submission_suppress = ["created_at", "updated_at"]
 
-    def tardir(self,
-               path,
-               tar_name,
-               tar_list):
+    def tardir(self, path, tar_name, tar_list):
         """
         Compress application files to a tar file.
 
@@ -78,21 +75,13 @@ class JobbergateApi:
                 for file in files:
                     if "templates" in root:
                         archive.add(
-                            os.path.join(root, file),
-                            arcname=f"/templates/{file}"
+                            os.path.join(root, file), arcname=f"/templates/{file}"
                         )
                     else:
-                        archive.add(
-                            os.path.join(root, file),
-                            arcname=file
-                            )
+                        archive.add(os.path.join(root, file), arcname=file)
         archive.close()
 
-    def jobbergate_request(self,
-                           method,
-                           endpoint,
-                           data=None,
-                           files=None):
+    def jobbergate_request(self, method, endpoint, data=None, files=None):
         """
         Submit HTTP requests.
 
@@ -107,33 +96,34 @@ class JobbergateApi:
             try:
                 response = requests.get(
                     endpoint,
-                    headers={'Authorization': 'JWT ' + self.token},
-                    verify=False)
+                    headers={"Authorization": "JWT " + self.token},
+                    verify=False,
+                )
                 if response.status_code == 200:
                     response = response.json()
                 elif response.status_code == 403:
                     response = self.error_handle(
                         error=f"User is not Authorized to access {endpoint}",
-                        solution="Please contact your admin for permission"
+                        solution="Please contact your admin for permission",
                     )
                     return response
                 elif response.status_code == 404:
                     response = self.error_handle(
                         error=f"Could not delete object at {endpoint}",
-                        solution="Please confirm the id and try again"
+                        solution="Please confirm the id and try again",
                     )
                     return response
                 else:
                     response = self.error_handle(
                         error=f"Failed to access {endpoint}",
-                        solution="Please check credentials or report server error"
+                        solution="Please check credentials or report server error",
                     )
                     return response
 
             except requests.exceptions.ConnectionError:
                 response = self.error_handle(
                     error="Failed to establish connection with API",
-                    solution="Please try submitting again"
+                    solution="Please try submitting again",
                 )
                 return response
         if method == "PUT":
@@ -142,35 +132,35 @@ class JobbergateApi:
                     endpoint,
                     data=data,
                     files=files,
-                    headers={'Authorization': 'JWT ' + self.token},
-                    verify=False)#.json()
+                    headers={"Authorization": "JWT " + self.token},
+                    verify=False,
+                )  # .json()
                 if response.status_code == 403:
                     response = self.error_handle(
                         error=f"User is not Authorized to access {endpoint}",
-                        solution="Please contact your admin for permission"
+                        solution="Please contact your admin for permission",
                     )
                     return response
                 else:
                     response = response.json()
-            except Exception as e:
+            except Exception:
                 response = "PUT request failed"
                 return response
 
         if method == "DELETE":
             response = requests.delete(
-                endpoint,
-                headers={'Authorization': 'JWT ' + self.token},
-                verify=False)
+                endpoint, headers={"Authorization": "JWT " + self.token}, verify=False
+            )
             if response.status_code == 403:
                 response = self.error_handle(
                     error=f"User is not Authorized to access {endpoint}",
-                    solution="Please contact your admin for permission"
+                    solution="Please contact your admin for permission",
                 )
                 return response
             elif response.status_code == 404:
                 response = self.error_handle(
                     error=f"Could not delete object at {endpoint}",
-                    solution="Please confirm the id and try again"
+                    solution="Please confirm the id and try again",
                 )
                 return response
             else:
@@ -181,12 +171,13 @@ class JobbergateApi:
                 endpoint,
                 data=data,
                 files=files,
-                headers={'Authorization': 'JWT ' + self.token},
-                verify=False)
+                headers={"Authorization": "JWT " + self.token},
+                verify=False,
+            )
             if full_response.status_code == 400:
                 response = self.error_handle(
                     error=f"Error with data uploaded: {full_response.text}",
-                    solution="Please resolve issue and re submit"
+                    solution="Please resolve issue and re submit",
                 )
                 return response
             elif full_response.status_code == 500:
@@ -198,12 +189,12 @@ class JobbergateApi:
                 # end_point = error.find("COOKIES")
                 response = self.error_handle(
                     error=f"Server Error generated: {error[start_point:end_point]}",
-                    solution="Please alert Omnivector for resolution"
+                    solution="Please alert Omnivector for resolution",
                 )
             elif full_response.status_code == 403:
                 response = self.error_handle(
                     error=f"User is not Authorized to access {endpoint}",
-                    solution="Please contact your admin for permission"
+                    solution="Please contact your admin for permission",
                 )
                 return response
 
@@ -213,7 +204,7 @@ class JobbergateApi:
             else:
                 response = self.error_handle(
                     error=f"Unhandled response code from server: {full_response.status_code}",
-                    solution="Please alert Omnivector for resolution"
+                    solution="Please alert Omnivector for resolution",
                 )
 
         return response
@@ -223,11 +214,7 @@ class JobbergateApi:
         cmd = ["/snap/bin/sbatch", filename]
         for arg in argv:
             cmd.append(arg)
-        p = Popen(
-            cmd,
-            stdin=PIPE,
-            stdout=PIPE,
-            stderr=PIPE)
+        p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         output, err = p.communicate(b"sbatch output")
 
         rc = p.returncode
@@ -236,31 +223,28 @@ class JobbergateApi:
 
     def tabulate_decorator(func):
         """Decorator to tabulate each response."""
+
         def wrapper(*args, **kwargs):
             # getting the returned value
             response = func(*args, **kwargs)
             if type(response) == list:
                 tabulate_response = tabulate(
-                    (my_dict for my_dict in response),
-                    headers="keys"
+                    (my_dict for my_dict in response), headers="keys"
                 )
             elif type(response) == dict:
-                tabulate_response = tabulate(
-                    response.items()
-                )
+                tabulate_response = tabulate(response.items())
             # error response
             elif type(response) == str:
                 tabulate_response = response
 
             return tabulate_response
+
         return wrapper
 
     def import_jobbergate_application_module(self):
         """Import jobbergate.py for generating questions."""
         spec = importlib.util.spec_from_file_location(
-            "JobbergateApplication",
-            JOBBERGATE_APPLICATION_MODULE_PATH
-
+            "JobbergateApplication", JOBBERGATE_APPLICATION_MODULE_PATH
         )
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
@@ -368,7 +352,10 @@ class JobbergateApi:
 
         if isinstance(question, appform.Const):
             return inquirer.Text(
-                question.variablename, message="", default=question.default, ignore=True,
+                question.variablename,
+                message="",
+                default=question.default,
+                ignore=True,
             )
 
     def error_handle(self, error, solution):
@@ -379,10 +366,7 @@ class JobbergateApi:
             error     -- error generated
             solution  -- recommended  solution specific to each error
         """
-        response = {
-            "error": error,
-            "solution": solution
-        }
+        response = {"error": error, "solution": solution}
         return response
 
     def application_error_check(self, application_path):
@@ -398,20 +382,19 @@ class JobbergateApi:
 
         # check for required files
         local_jobbergate_application_dir = pathlib.Path(application_path)
-        local_jobbergate_application_module = \
-            local_jobbergate_application_dir / \
-            JOBBERGATE_APPLICATION_MODULE_FILE_NAME
-        local_jobbergate_application_config = \
-            local_jobbergate_application_dir / \
-            JOBBERGATE_APPLICATION_CONFIG_FILE_NAME
+        local_jobbergate_application_module = (
+            local_jobbergate_application_dir / JOBBERGATE_APPLICATION_MODULE_FILE_NAME
+        )
+        local_jobbergate_application_config = (
+            local_jobbergate_application_dir / JOBBERGATE_APPLICATION_CONFIG_FILE_NAME
+        )
 
         if not local_jobbergate_application_dir.exists():
             check = self.error_handle(
                 error="invalid application path supplied",
                 solution=(
-                    f"{application_path} is invalid, please "
-                    "review and try again"
-                )
+                    f"{application_path} is invalid, please " "review and try again"
+                ),
             )
             error_check.append(check)
         if not local_jobbergate_application_module.exists():
@@ -423,7 +406,7 @@ class JobbergateApi:
                 solution=(
                     f"Please ensure {JOBBERGATE_APPLICATION_MODULE_FILE_NAME} "
                     "is in application path provided"
-                )
+                ),
             )
             error_check.append(check)
         if not local_jobbergate_application_config.exists():
@@ -435,7 +418,7 @@ class JobbergateApi:
                 solution=(
                     f"Please ensure {JOBBERGATE_APPLICATION_CONFIG_FILE_NAME} "
                     "is in application path provided"
-                )
+                ),
             )
             error_check.append(check)
 
@@ -452,16 +435,12 @@ class JobbergateApi:
                     will be returned
         """
         response = self.jobbergate_request(
-            method="GET",
-            endpoint=f"{self.api_endpoint}/job-script/"
+            method="GET", endpoint=f"{self.api_endpoint}/job-script/"
         )
 
         try:
             response = [
-                {
-                    k: v for k, v in d.items()
-                    if k not in self.job_script_suppress
-                }
+                {k: v for k, v in d.items() if k not in self.job_script_suppress}
                 for d in response
             ]
         except:
@@ -470,19 +449,13 @@ class JobbergateApi:
         if all:
             return response
         else:
-            response = [
-                d for d in response
-                if d['job_script_owner'] == self.user_id
-            ]
+            response = [d for d in response if d["job_script_owner"] == self.user_id]
             return response
 
     @tabulate_decorator
-    def create_job_script(self,
-                          job_script_name,
-                          application_id,
-                          param_file,
-                          fast,
-                          debug):
+    def create_job_script(
+        self, job_script_name, application_id, param_file, fast, debug
+    ):
         """
         CREATE a Job Script.
 
@@ -500,52 +473,47 @@ class JobbergateApi:
         if application_id is None:
             response = self.error_handle(
                 error="--application-id for the job script not defined",
-                solution="Please try again with --application-id specified"
+                solution="Please try again with --application-id specified",
             )
             return response
 
         if job_script_name is None:
             response = self.error_handle(
                 error="--name for the job script not defined",
-                solution="Please try again with --name specified"
+                solution="Please try again with --name specified",
             )
             return response
 
         self.validation_check = {}
         data = self.job_script_config
-        data['job_script_name'] = job_script_name
-        data['application'] = application_id
-        data['job_script_owner'] = self.user_id
+        data["job_script_name"] = job_script_name
+        data["application"] = application_id
+        data["job_script_owner"] = self.user_id
 
         if param_file:
             is_param_file = os.path.isfile(param_file)
             if is_param_file is False:
                 response = self.error_handle(
                     error=f"invalid --parameter-file supplied: {param_file}",
-                    solution="Provide the full path to a valid parameter file"
+                    solution="Provide the full path to a valid parameter file",
                 )
                 return response
 
-            with open(param_file, 'rb') as fh:
+            with open(param_file, "rb") as fh:
                 supplied_params = json.loads(fh.read())
         else:
             supplied_params = {}
 
         app_data = self.jobbergate_request(
-            method="GET",
-            endpoint=f"{self.api_endpoint}/application/{application_id}"
+            method="GET", endpoint=f"{self.api_endpoint}/application/{application_id}"
         )
-        if 'error' in app_data.keys():
+        if "error" in app_data.keys():
             return app_data
 
         # Get the jobbergate application python module
-        JOBBERGATE_APPLICATION_MODULE_PATH.write_text(
-            app_data['application_file']
-        )
+        JOBBERGATE_APPLICATION_MODULE_PATH.write_text(app_data["application_file"])
         # Get the jobbergate application yaml config
-        JOBBERGATE_APPLICATION_CONFIG_PATH.write_text(
-            app_data['application_config']
-        )
+        JOBBERGATE_APPLICATION_CONFIG_PATH.write_text(app_data["application_config"])
 
         # Load the jobbergate yaml
         config = JOBBERGATE_APPLICATION_CONFIG_PATH.read_text()
@@ -556,20 +524,17 @@ class JobbergateApi:
         application = module.JobbergateApplication(param_dict)
 
         # Add all parameters from parameter file
-        param_dict['jobbergate_config'].update(supplied_params)
+        param_dict["jobbergate_config"].update(supplied_params)
 
         # Begin question assembly, starting in "mainflow" method
-        param_dict['jobbergate_config']['nextworkflow'] = "mainflow"
+        param_dict["jobbergate_config"]["nextworkflow"] = "mainflow"
 
-        while "nextworkflow" in param_dict['jobbergate_config']:
+        while "nextworkflow" in param_dict["jobbergate_config"]:
             method_to_call = getattr(
-                application,
-                param_dict['jobbergate_config'].pop("nextworkflow")
+                application, param_dict["jobbergate_config"].pop("nextworkflow")
             )  # Use and remove from the dict
 
-            workflow_questions = method_to_call(
-                data=param_dict['jobbergate_config']
-            )
+            workflow_questions = method_to_call(data=param_dict["jobbergate_config"])
 
             questions = []
             auto_answers = {}
@@ -578,8 +543,8 @@ class JobbergateApi:
                 field = workflow_questions.pop(0)
                 # Use pre-defined answer or ask user
                 if field.variablename in supplied_params.keys():
-                    pass # No further action needed, case kept here to visualize priority
-                elif fast and field.default != None:
+                    pass  # No further action needed, case kept here to visualize priority
+                elif fast and field.default is not None:
                     print(f"Default value used: {field.variablename}={field.default}")
                     auto_answers[field.variablename] = field.default
                 else:
@@ -589,36 +554,36 @@ class JobbergateApi:
 
             workflow_answers = inquirer.prompt(questions, raise_keyboard_interrupt=True)
             workflow_answers.update(auto_answers)
-            param_dict['jobbergate_config'].update(workflow_answers)
+            param_dict["jobbergate_config"].update(workflow_answers)
 
         param_filename = f"{JOBBERGATE_CACHE_DIR}/param_dict.json"
 
-        param_file = open(param_filename, 'w')
+        param_file = open(param_filename, "w")
         json.dump(param_dict, param_file)
         param_file.close()
 
         # TODO: Put below in function after testing - DRY
-        files = {'upload_file': open(param_filename, 'rb')}
+        files = {"upload_file": open(param_filename, "rb")}
 
         # Possibly overwrite script name
-        if 'job_script_name' in param_dict['jobbergate_config']:
-            data['job_script_name'] = param_dict['jobbergate_config']['job_script_name']
+        if "job_script_name" in param_dict["jobbergate_config"]:
+            data["job_script_name"] = param_dict["jobbergate_config"]["job_script_name"]
 
         response = self.jobbergate_request(
             method="POST",
             endpoint=f"{self.api_endpoint}/job-script/",
             data=data,
-            files=files
+            files=files,
         )
-        if 'error' in response.keys():
+        if "error" in response.keys():
             return response
 
         try:
-            rendered_dict = json.loads(response['job_script_data_as_string'])
+            rendered_dict = json.loads(response["job_script_data_as_string"])
         except:
             response = self.error_handle(
                 error="could not load job_script_data_as_string from response",
-                solution=f"Please review response: {response}"
+                solution=f"Please review response: {response}",
             )
             return response
 
@@ -627,32 +592,38 @@ class JobbergateApi:
             job_script_data_as_string += "\n\nNEW_FILE\n\n"
             job_script_data_as_string += value
 
-        response['job_script_data_as_string'] = job_script_data_as_string
+        response["job_script_data_as_string"] = job_script_data_as_string
 
         if debug is False:
-            del response['job_script_data_as_string']
+            del response["job_script_data_as_string"]
 
         # Check if user wants to submit immediately
         if fast:
             submit = True
         else:
-            submit = inquirer.prompt([inquirer.Confirm('sub', message='Would you like to submit this immediately?', default=True)])['sub']
+            submit = inquirer.prompt(
+                [
+                    inquirer.Confirm(
+                        "sub",
+                        message="Would you like to submit this immediately?",
+                        default=True,
+                    )
+                ]
+            )["sub"]
 
         # Write local copy of script and supporting files
         submission_result = self.create_job_submission(
             job_script_id=response["id"],
             render_only=not submit,
-            job_submission_name=response['job_script_name']
+            job_submission_name=response["job_script_name"],
         )
         if submit:
-            response['submission_result'] = submission_result
+            response["submission_result"] = submission_result
 
         return response
 
     @tabulate_decorator
-    def get_job_script(self,
-                       job_script_id,
-                       as_str):
+    def get_job_script(self, job_script_id, as_str):
         """
         GET a Job Script.
 
@@ -663,18 +634,17 @@ class JobbergateApi:
         if job_script_id is None:
             response = self.error_handle(
                 error="--id not defined",
-                solution="Please try again with --id specified"
+                solution="Please try again with --id specified",
             )
             return response
 
         response = self.jobbergate_request(
-            method="GET",
-            endpoint=f"{self.api_endpoint}/job-script/{job_script_id}"
+            method="GET", endpoint=f"{self.api_endpoint}/job-script/{job_script_id}"
         )
-        if 'error' in response.keys():
+        if "error" in response.keys():
             return response
 
-        rendered_dict = json.loads(response['job_script_data_as_string'])
+        rendered_dict = json.loads(response["job_script_data_as_string"])
         if as_str:
             return rendered_dict["application.sh"]
         else:
@@ -683,14 +653,12 @@ class JobbergateApi:
                 job_script_data_as_string += "\nNEW_FILE\n"
                 job_script_data_as_string += value
 
-            response['job_script_data_as_string'] = job_script_data_as_string
+            response["job_script_data_as_string"] = job_script_data_as_string
 
             return response
 
     @tabulate_decorator
-    def update_job_script(self,
-                          job_script_id,
-                          job_script_data_as_string):
+    def update_job_script(self, job_script_id, job_script_data_as_string):
         """
         UPDATE a Job Script.
 
@@ -701,34 +669,32 @@ class JobbergateApi:
         if job_script_id is None:
             response = self.error_handle(
                 error="--id not defined",
-                solution="Please try again with --id specified"
+                solution="Please try again with --id specified",
             )
             return response
         if job_script_data_as_string is None:
             response = self.error_handle(
                 error="--job-script not defined",
-                solution=f"Provide data to update ID: {job_script_id}"
+                solution=f"Provide data to update ID: {job_script_id}",
             )
             return response
 
         data = self.jobbergate_request(
-            method="GET",
-            endpoint=f"{self.api_endpoint}/job-script/{job_script_id}"
+            method="GET", endpoint=f"{self.api_endpoint}/job-script/{job_script_id}"
         )
-        if 'error' in data.keys():
+        if "error" in data.keys():
             return data
-        data['job_script_data_as_string'] = job_script_data_as_string
+        data["job_script_data_as_string"] = job_script_data_as_string
         response = self.jobbergate_request(
             method="PUT",
             endpoint=f"{self.api_endpoint}/job-script/{job_script_id}/",
-            data=data
+            data=data,
         )
 
         return response
 
     @tabulate_decorator
-    def delete_job_script(self,
-                          job_script_id):
+    def delete_job_script(self, job_script_id):
         """
         DELETE a Job Script.
 
@@ -738,13 +704,12 @@ class JobbergateApi:
         if job_script_id is None:
             response = self.error_handle(
                 error="--id not defined",
-                solution="Please try again with --job-script-id specified"
+                solution="Please try again with --job-script-id specified",
             )
             return response
 
         response = self.jobbergate_request(
-            method="DELETE",
-            endpoint=f"{self.api_endpoint}/job-script/{job_script_id}"
+            method="DELETE", endpoint=f"{self.api_endpoint}/job-script/{job_script_id}"
         )
 
         return response
@@ -761,16 +726,12 @@ class JobbergateApi:
                     will be returned
         """
         response = self.jobbergate_request(
-            method="GET",
-            endpoint=f"{self.api_endpoint}/job-submission/"
+            method="GET", endpoint=f"{self.api_endpoint}/job-submission/"
         )
 
         try:
             response = [
-                {
-                    k: v for k, v in d.items()
-                    if k not in self.job_submission_suppress
-                }
+                {k: v for k, v in d.items() if k not in self.job_submission_suppress}
                 for d in response
             ]
         except:
@@ -779,14 +740,13 @@ class JobbergateApi:
         if all:
             return response
         else:
-            response = [d for d in response if d['job_submission_owner'] == self.user_id]
+            response = [
+                d for d in response if d["job_submission_owner"] == self.user_id
+            ]
             return response
 
     @tabulate_decorator
-    def create_job_submission(self,
-                              job_script_id,
-                              render_only,
-                              job_submission_name=""):
+    def create_job_submission(self, job_script_id, render_only, job_submission_name=""):
         """
         CREATE Job Submission.
 
@@ -799,36 +759,32 @@ class JobbergateApi:
         if job_script_id is None:
             response = self.error_handle(
                 error="--job-script-id not defined",
-                solution="Please try again with --job-script-id specified"
+                solution="Please try again with --job-script-id specified",
             )
             return response
 
         data = self.job_submission_config
-        data['job_submission_name'] = job_submission_name
-        data['job_script'] = job_script_id
-        data['job_submission_owner'] = self.user_id
+        data["job_submission_name"] = job_submission_name
+        data["job_script"] = job_script_id
+        data["job_submission_owner"] = self.user_id
 
         job_script = self.jobbergate_request(
-            method="GET",
-            endpoint=f"{self.api_endpoint}/job-script/{job_script_id}"
+            method="GET", endpoint=f"{self.api_endpoint}/job-script/{job_script_id}"
         )
-        if 'error' in job_script.keys():
+        if "error" in job_script.keys():
             return job_script
 
-        application_id = job_script['application']
+        application_id = job_script["application"]
 
         application = self.jobbergate_request(
-            method="GET",
-            endpoint=f"{self.api_endpoint}/application/{application_id}"
+            method="GET", endpoint=f"{self.api_endpoint}/application/{application_id}"
         )
-        if 'error' in application.keys():
+        if "error" in application.keys():
             return application
 
-        application_name = application['application_name']
+        application_name = application["application_name"]
 
-        rendered_dict = json.loads(
-            job_script['job_script_data_as_string']
-        )
+        rendered_dict = json.loads(job_script["job_script_data_as_string"])
 
         script_filename = f'{job_script["job_script_name"]}.job'
         for key, value in rendered_dict.items():
@@ -842,9 +798,9 @@ class JobbergateApi:
             response = self.jobbergate_request(
                 method="POST",
                 endpoint=f"{self.api_endpoint}/job-submission/",
-                data=data
+                data=data,
             )
-            if 'error' in response.keys():
+            if "error" in response.keys():
                 return response
         else:
             try:
@@ -852,7 +808,7 @@ class JobbergateApi:
             except FileNotFoundError:
                 response = self.error_handle(
                     error="Failed to execute submission",
-                    solution="Please confirm slurm sbatch is available"
+                    solution="Please confirm slurm sbatch is available",
                 )
                 return response
 
@@ -860,25 +816,24 @@ class JobbergateApi:
                 print(output)
                 find = output.find("job") + 4
                 slurm_job_id = output[find:]
-                data['slurm_job_id'] = slurm_job_id
+                data["slurm_job_id"] = slurm_job_id
                 response = self.jobbergate_request(
                     method="POST",
                     endpoint=f"{self.api_endpoint}/job-submission/",
-                    data=data
+                    data=data,
                 )
-                if 'error' in response.keys():
+                if "error" in response.keys():
                     return response
             else:
                 response = self.error_handle(
                     error=f"Failed to execute submission with error: {err}",
-                    solution="Please resolve error or contact for assistance"
+                    solution="Please resolve error or contact for assistance",
                 )
                 return response
         return response
 
     @tabulate_decorator
-    def get_job_submission(self,
-                           job_submission_id):
+    def get_job_submission(self, job_submission_id):
         """
         GET a Job Submission.
 
@@ -888,20 +843,19 @@ class JobbergateApi:
         if job_submission_id is None:
             response = self.error_handle(
                 error="--id not defined",
-                solution="Please try again with --id specified"
+                solution="Please try again with --id specified",
             )
             return response
 
         response = self.jobbergate_request(
             method="GET",
-            endpoint=f"{self.api_endpoint}/job-submission/{job_submission_id}"
+            endpoint=f"{self.api_endpoint}/job-submission/{job_submission_id}",
         )
 
         return response
 
     @tabulate_decorator
-    def update_job_submission(self,
-                              job_submission_id):
+    def update_job_submission(self, job_submission_id):
         """
         UPDATE a Job Submission.
 
@@ -911,26 +865,25 @@ class JobbergateApi:
         if job_submission_id is None:
             response = self.error_handle(
                 error="--id not defined",
-                solution="Please try again with --id specified"
+                solution="Please try again with --id specified",
             )
             return response
 
         data = self.jobbergate_request(
             method="GET",
-            endpoint=f"{self.api_endpoint}/job-submission/{job_submission_id}"
+            endpoint=f"{self.api_endpoint}/job-submission/{job_submission_id}",
         )
-        if 'error' in data.keys():
+        if "error" in data.keys():
             return data
         # TODO how to collect data that will updated for the job-submission
         response = self.jobbergate_request(
             method="PUT",
-            endpoint=f"{self.api_endpoint}/job-submission/{job_submission_id}/"
+            endpoint=f"{self.api_endpoint}/job-submission/{job_submission_id}/",
         )
         return response
 
     @tabulate_decorator
-    def delete_job_submission(self,
-                              job_submission_id):
+    def delete_job_submission(self, job_submission_id):
         """
         Delete a Job Submission.
 
@@ -940,13 +893,13 @@ class JobbergateApi:
         if job_submission_id is None:
             response = self.error_handle(
                 error="--id not defined",
-                solution="Please try again with --id specified"
+                solution="Please try again with --id specified",
             )
             return response
 
         response = self.jobbergate_request(
             method="DELETE",
-            endpoint=f"{self.api_endpoint}/job-submission/{job_submission_id}"
+            endpoint=f"{self.api_endpoint}/job-submission/{job_submission_id}",
         )
 
         return response
@@ -963,15 +916,11 @@ class JobbergateApi:
                     will be returned
         """
         response = self.jobbergate_request(
-            method="GET",
-            endpoint=f"{self.api_endpoint}/application/"
+            method="GET", endpoint=f"{self.api_endpoint}/application/"
         )
         try:
             response = [
-                {
-                    k: v for k, v in d.items()
-                    if k not in self.application_suppress
-                }
+                {k: v for k, v in d.items() if k not in self.application_suppress}
                 for d in response
             ]
         except:
@@ -983,17 +932,11 @@ class JobbergateApi:
         if all:
             return response
         else:
-            response = [
-                d for d in response
-                if d['application_owner'] == self.user_id
-            ]
+            response = [d for d in response if d["application_owner"] == self.user_id]
             return response
 
     @tabulate_decorator
-    def create_application(self,
-                           application_name,
-                           application_path,
-                           application_desc):
+    def create_application(self, application_name, application_path, application_desc):
         """
         CREATE an application.
 
@@ -1005,14 +948,14 @@ class JobbergateApi:
         if application_name is None:
             response = self.error_handle(
                 error="--name not defined",
-                solution="Please try again with --name specified"
+                solution="Please try again with --name specified",
             )
             parameter_check.append(response)
 
         if application_path is None:
             response = self.error_handle(
                 error="--application-path not defined",
-                solution="Please try again with --application-path specified"
+                solution="Please try again with --application-path specified",
             )
             parameter_check.append(response)
         if len(parameter_check) > 0:
@@ -1026,27 +969,24 @@ class JobbergateApi:
             return response
 
         data = self.application_config
-        data['application_name'] = application_name
-        data['application_owner'] = self.user_id
+        data["application_name"] = application_name
+        data["application_owner"] = self.user_id
 
         if application_desc:
-            data['application_description'] = application_desc
+            data["application_description"] = application_desc
 
-        tar_list = [
-            application_path,
-            os.path.join(application_path, "templates")
-        ]
+        tar_list = [application_path, os.path.join(application_path, "templates")]
         self.tardir(application_path, TAR_NAME, tar_list)
 
-        files = {'upload_file': open(TAR_NAME, 'rb')}
+        files = {"upload_file": open(TAR_NAME, "rb")}
 
         response = self.jobbergate_request(
             method="POST",
             endpoint=f"{self.api_endpoint}/application/",
             data=data,
-            files=files
+            files=files,
         )
-        if 'error' in response.keys():
+        if "error" in response.keys():
             return response
 
         try:
@@ -1061,8 +1001,7 @@ class JobbergateApi:
         return response
 
     @tabulate_decorator
-    def get_application(self,
-                        application_id):
+    def get_application(self, application_id):
         """
         GET an Application.
 
@@ -1070,18 +1009,13 @@ class JobbergateApi:
             application_id -- id of application to be returned
         """
         response = self.jobbergate_request(
-            method="GET",
-            endpoint=f"{self.api_endpoint}/application/{application_id}"
+            method="GET", endpoint=f"{self.api_endpoint}/application/{application_id}"
         )
 
         return response
 
     @tabulate_decorator
-    def update_application(self,
-                           application_id,
-                           application_path,
-                           application_desc
-                           ):
+    def update_application(self, application_id, application_path, application_desc):
         """
         UPDATE an Application.
 
@@ -1093,7 +1027,7 @@ class JobbergateApi:
         if application_path is None:
             response = self.error_handle(
                 error="--application-path not defined",
-                solution="Please try again with --application-path specified"
+                solution="Please try again with --application-path specified",
             )
             return response
 
@@ -1104,33 +1038,29 @@ class JobbergateApi:
             return response
 
         data = self.jobbergate_request(
-            method="GET",
-            endpoint=f"{self.api_endpoint}/application/{application_id}"
+            method="GET", endpoint=f"{self.api_endpoint}/application/{application_id}"
         )
-        if 'error' in data.keys():
+        if "error" in data.keys():
             return data
 
-        del data['id']
-        del data['created_at']
-        del data['updated_at']
+        del data["id"]
+        del data["created_at"]
+        del data["updated_at"]
         if application_desc:
-            data['application_description'] = application_desc
+            data["application_description"] = application_desc
 
-        tar_list = [
-            application_path,
-            os.path.join(application_path, "templates")
-        ]
+        tar_list = [application_path, os.path.join(application_path, "templates")]
         self.tardir(application_path, TAR_NAME, tar_list)
 
-        files = {'upload_file': open(TAR_NAME, 'rb')}
+        files = {"upload_file": open(TAR_NAME, "rb")}
 
         response = self.jobbergate_request(
             method="PUT",
             endpoint=f"{self.api_endpoint}/application/{application_id}/",
             data=data,
-            files=files
+            files=files,
         )
-        if 'error' in response.keys():
+        if "error" in response.keys():
             return response
 
         try:
@@ -1144,8 +1074,7 @@ class JobbergateApi:
         return response
 
     @tabulate_decorator
-    def delete_application(self,
-                           application_id):
+    def delete_application(self, application_id):
         """
         DELETE an Application.
 
@@ -1154,7 +1083,7 @@ class JobbergateApi:
         """
         response = self.jobbergate_request(
             method="DELETE",
-            endpoint=f"{self.api_endpoint}/application/{application_id}"
+            endpoint=f"{self.api_endpoint}/application/{application_id}",
         )
 
         return response

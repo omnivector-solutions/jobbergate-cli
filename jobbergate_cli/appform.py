@@ -1,7 +1,7 @@
 """
 Appform
 =======
-Abstraction layer for questions. Each classe represents different question
+Abstraction layer for questions. Each class represents different question
 types, and QuestionBase"""
 
 from collections import deque
