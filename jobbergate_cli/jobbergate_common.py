@@ -1,3 +1,6 @@
+"""
+Constants used throughout the tool
+"""
 import os
 from pathlib import Path
 
@@ -6,23 +9,24 @@ import urllib3
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-JOBBERGATE_CACHE_DIR = Path.home() / ".jobbergate"
 
-JOBBERGATE_USER_TOKEN_DIR = JOBBERGATE_CACHE_DIR / "token"
+# load these two from the environment, with these defaults.
+JOBBERGATE_CACHE_DIR = os.environ.get(
+    "JOBBERGATE_CACHE_DIR", Path.home() / ".jobbergate"
+)
+JOBBERGATE_API_ENDPOINT = os.environ.get(
+    "JOBBERGATE_API_ENDPOINT", "https://jobbergate-api-production.omnivector.solutions"
+)
+# for reference: staging: "https://jobbergate-api-staging.omnivector.solutions"
 
-JOBBERGATE_API_JWT_PATH = JOBBERGATE_USER_TOKEN_DIR / "jobbergate.token"
-
-JOBBERGATE_CACHE_DIR = Path.home() / ".jobbergate"
-
-JOBBERGATE_API_ENDPOINT = "https://jobbergate-api-production.omnivector.solutions"
-# JOBBERGATE_API_ENDPOINT = "https://jobbergate-api-staging.omnivector.solutions"
-
+# the rest of the strings can be derived
 JOBBERGATE_USER_TOKEN_DIR = JOBBERGATE_CACHE_DIR / "token"
 
 JOBBERGATE_API_JWT_PATH = JOBBERGATE_USER_TOKEN_DIR / "jobbergate.token"
 
 JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT = f"{JOBBERGATE_API_ENDPOINT}/api-token-auth/"
 
+# FIXME - this vvv string doesn't appear in any of our code at https://github.com/omnivector-solutions
 JOBBERGATE_APPLICATION_S3_BASE_PATH = "jobbergate-resources"
 
 
