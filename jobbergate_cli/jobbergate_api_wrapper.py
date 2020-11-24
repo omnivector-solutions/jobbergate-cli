@@ -11,7 +11,7 @@ import requests
 from tabulate import tabulate
 import yaml
 
-from jobbergate_cli import appform
+from jobbergate_cli import appform, client
 from jobbergate_cli.jobbergate_common import (
     JOBBERGATE_APPLICATION_CONFIG_FILE_NAME,
     JOBBERGATE_APPLICATION_CONFIG_PATH,
@@ -93,7 +93,7 @@ class JobbergateApi:
         """
         if method == "GET":
             try:
-                response = requests.get(
+                response = client.get(
                     endpoint,
                     headers={"Authorization": "JWT " + self.token},
                     verify=False,
@@ -127,7 +127,7 @@ class JobbergateApi:
                 return response
         if method == "PUT":
             try:
-                response = requests.put(
+                response = client.put(
                     endpoint,
                     data=data,
                     files=files,
@@ -147,7 +147,7 @@ class JobbergateApi:
                 return response
 
         if method == "DELETE":
-            response = requests.delete(
+            response = client.delete(
                 endpoint, headers={"Authorization": "JWT " + self.token}, verify=False
             )
             if response.status_code == 403:
@@ -166,7 +166,7 @@ class JobbergateApi:
                 response = response.text
 
         if method == "POST":
-            full_response = requests.post(
+            full_response = client.post(
                 endpoint,
                 data=data,
                 files=files,

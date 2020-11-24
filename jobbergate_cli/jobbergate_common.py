@@ -1,6 +1,7 @@
 """
 Constants used throughout the tool
 """
+from configparser import ConfigParser
 import os
 from pathlib import Path
 
@@ -18,6 +19,11 @@ JOBBERGATE_API_ENDPOINT = os.environ.get(
     "JOBBERGATE_API_ENDPOINT", "https://jobbergate-api-production.omnivector.solutions"
 )
 # for reference: staging: "https://jobbergate-api-staging.omnivector.solutions"
+
+# enable http tracing, accepts e.g. "1", "true", "0", "false"
+JOBBERGATE_DEBUG = ConfigParser.BOOLEAN_STATES.get(
+    os.environ.get("JOBBERGATE_DEBUG", "false").lower()
+)
 
 # the rest of the strings can be derived
 JOBBERGATE_USER_TOKEN_DIR = JOBBERGATE_CACHE_DIR / "token"

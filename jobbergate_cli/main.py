@@ -8,12 +8,14 @@ import click
 import jwt
 import requests
 
+from jobbergate_cli import client
 from jobbergate_cli.jobbergate_api_wrapper import JobbergateApi
 from jobbergate_cli.jobbergate_common import (
     JOBBERGATE_API_ENDPOINT,
     JOBBERGATE_API_JWT_PATH,
     JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT,
     JOBBERGATE_APPLICATION_CONFIG,
+    JOBBERGATE_DEBUG,
     JOBBERGATE_JOB_SCRIPT_CONFIG,
     JOBBERGATE_JOB_SUBMISSION_CONFIG,
     JOBBERGATE_USER_TOKEN_DIR,
@@ -40,13 +42,13 @@ def interactive_get_username_password():
 
 def init_token(username, password):
     """Get a new token from the api and write it to the token file."""
-    resp = requests.post(
+    resp = client.post(
         JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT,
         data={"email": username, "password": password},
     )
-    # if resp.status_code == 502:
-    #
-    JOBBERGATE_API_JWT_PATH.write_text(resp.json()["token"])
+    data = resp.json()
+    ret = data.get("token")
+    JOBBERGATE_API_JWT_PATH.write_text(ret)
 
 
 def is_token_valid():
@@ -133,6 +135,9 @@ def main(ctx, username, password):
     # create dir for token if it doesnt exist
     Path(JOBBERGATE_USER_TOKEN_DIR).mkdir(parents=True, exist_ok=True)
 
+    if JOBBERGATE_DEBUG:
+        client.debug_requests_on()
+
     if not is_token_valid():
         if username and password:
             ctx.obj["username"] = username
@@ -144,10 +149,10 @@ def main(ctx, username, password):
         try:
             init_token(username, password)
         except KeyError:
-            print(f"Auth Failed for username: {username}, Please Try again")
+            print(f"Auth Failed for username: {username}, please try again")
             sys.exit(0)  # FIXME - ctx.exit() instead
         except requests.exceptions.ConnectionError:
-            print("Auth failed to establish connection with API,Please Try again")
+            print("Auth failed to establish connection with API, please try again")
             sys.exit(0)  # FIXME - ctx.exit() instead
 
     ctx.obj["token"] = decode_token_to_dict(JOBBERGATE_API_JWT_PATH.read_text())
