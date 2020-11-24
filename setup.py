@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="jobbergate-cli",
-    packages=find_packages(include=["jobbergate_cli"]),
+    packages=find_packages(include=["jobbergate_cli", "jobbergate_cli.*"]),
     version="0.0.1+dev",
     license="MIT",
     long_description=open("README.md").read(),
@@ -24,6 +24,8 @@ setup(
             "isort",
             "pytest",
             "pytest-cov",
+            "pytest-freezegun",
+            "pytest-responsemock",
             "tox",
             "wheel",
         ],

@@ -5,7 +5,15 @@ from http.client import HTTPConnection
 import logging
 
 # import locally so we can patch them when tracing
-from requests import Session
+from requests import Session, delete, get, post, put
+
+
+(
+    get,
+    post,
+    put,
+    delete,
+)  # importable from here, we may patch them out if debugging is turned on
 
 
 urllib3_logger = logging.getLogger("requests.packages.urllib3")
@@ -18,9 +26,11 @@ def debug_body_printer(max_bytes):
     """
     -> function which can print the response body, for debugging, as a hook
     """
+
     def debug_body_print(response, *a, **kw):
         data = response.content[:max_bytes]
         urllib3_logger.debug(data)
+
     return debug_body_print
 
 
