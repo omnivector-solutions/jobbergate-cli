@@ -43,7 +43,7 @@ def get_running_jobs(user_only=True):
         # Skip last line (empty), strip quotation marks
         ID_alternatives = cmd_results.stdout.decode().split("\n")[:-1]
         ID_alternatives = [j.strip('"') for j in ID_alternatives]
-    except:
+    except:  # noqa: E722
         print("Could not retrieve queue information from SLURM.")
         return []
     return ID_alternatives

@@ -18,6 +18,11 @@ lint: # Run linter
 	tox -e lint
 
 
+test:
+	tox -e unit
+	# TODO: tox -e functional?
+
+
 help: # Display target comments in 'make help'
 	grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 

@@ -442,7 +442,7 @@ class JobbergateApi:
                 {k: v for k, v in d.items() if k not in self.job_script_suppress}
                 for d in response
             ]
-        except:
+        except:  # noqa: E722
             return response
 
         if all:
@@ -579,7 +579,7 @@ class JobbergateApi:
 
         try:
             rendered_dict = json.loads(response["job_script_data_as_string"])
-        except:
+        except:  # noqa: E722
             response = self.error_handle(
                 error="could not load job_script_data_as_string from response",
                 solution=f"Please review response: {response}",
@@ -733,7 +733,7 @@ class JobbergateApi:
                 {k: v for k, v in d.items() if k not in self.job_submission_suppress}
                 for d in response
             ]
-        except:
+        except:  # noqa: E722
             return response
 
         if all:
@@ -922,7 +922,7 @@ class JobbergateApi:
                 {k: v for k, v in d.items() if k not in self.application_suppress}
                 for d in response
             ]
-        except:
+        except:  # noqa: E722
             return response
 
         # Sort
