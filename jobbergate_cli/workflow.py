@@ -12,6 +12,7 @@ Work flow module that could add pre and post functions to workflows"""
 
 from functools import partial, wraps
 
+
 prefuncs = {}
 postfuncs = {}
 
