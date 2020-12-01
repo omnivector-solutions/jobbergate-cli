@@ -5,7 +5,7 @@ Jobbergate CLI client
 
 # Usage
 ```bash
-jobbergate-cli -h
+jobbergate -h
 ```
 
 
