@@ -151,6 +151,9 @@ def main(ctx, username, password):
         except KeyError:
             print(f"Auth Failed for username: {username}, please try again")
             sys.exit(0)  # FIXME - ctx.exit() instead
+        except TypeError:
+            print("Password cannot be empty, please try again")
+            sys.exit(0)  # FIXME - ctx.exit() instead
         except requests.exceptions.ConnectionError:
             print("Auth failed to establish connection with API, please try again")
             sys.exit(0)  # FIXME - ctx.exit() instead
