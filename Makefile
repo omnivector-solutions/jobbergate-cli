@@ -1,12 +1,11 @@
 # SETTINGS
 # Use one shell for all commands in a target recipe
 .ONESHELL:
-# Set default goal
-.DEFAULT_GOAL := help
-# Use bash shell in Make instead of sh
-SHELL := /bin/bash
+.DEFAULT_GOAL 	:= help
+SHELL 			:= /bin/bash
+.PHONY			:= clean lint test help format snap
 
-VERSION = $(python setup.py --version)
+include	snap.mk
 
 
 clean: # Remove .tox and build dirs
@@ -39,3 +38,10 @@ requirements/requirements.txt: setup.py
 format:
 	isort setup.py jobbergate_cli
 	black setup.py jobbergate_cli
+
+
+snap: $(SNAP_TARGET)
+
+
+$(SNAP_TARGET):
+	snapcraft --use-lxd
