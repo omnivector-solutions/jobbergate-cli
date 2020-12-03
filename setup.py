@@ -1,16 +1,37 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
-raw_reqs = open("requirements/requirements.txt", "r").read().splitlines()
 
 setup(
-    name='jobbergate-cli',
-    packages=find_packages(include=['jobbergate_cli']),
-    version='0.0.1',
-    license='MIT',
-    long_description=open('README.md').read(),
-    install_requires=raw_reqs,
+    name="jobbergate-cli",
+    packages=find_packages(include=["jobbergate_cli", "jobbergate_cli.*"]),
+    version="0.0.1+dev",
+    license="MIT",
+    long_description=open("README.md").read(),
+    install_requires=[
+        "click",
+        "inquirer",
+        "pyjwt",
+        "requests",
+        "tabulate",
+        "urllib3",
+        "pyyaml",
+    ],
+    extras_require={
+        "dev": [
+            "black",
+            "coverage",
+            "flake8",
+            "isort",
+            "pytest",
+            "pytest-cov",
+            "pytest-freezegun",
+            "pytest-responsemock",
+            "tox",
+            "wheel",
+        ],
+    },
     # data_files=[('config', ['config/*.json'])],
-    entry_points = {
-        'console_scripts': ['jobbergate-cli=jobbergate_cli.main:main'],
-    }
+    entry_points={
+        "console_scripts": ["jobbergate=jobbergate_cli.main:main"],
+    },
 )

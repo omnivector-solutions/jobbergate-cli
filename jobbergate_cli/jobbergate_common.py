@@ -1,29 +1,39 @@
+"""
+Constants used throughout the tool
+"""
+from configparser import ConfigParser
 import os
-import urllib3
 from pathlib import Path
+
+import urllib3
 
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-JOBBERGATE_CACHE_DIR = Path.home() / ".jobbergate"
 
-JOBBERGATE_USER_TOKEN_DIR = JOBBERGATE_CACHE_DIR / "token"
+# load these two from the environment, with these defaults.
+JOBBERGATE_CACHE_DIR = os.environ.get(
+    "JOBBERGATE_CACHE_DIR", Path.home() / ".jobbergate"
+)
+JOBBERGATE_API_ENDPOINT = os.environ.get(
+    "JOBBERGATE_API_ENDPOINT", "https://jobbergate-api-production.omnivector.solutions"
+)
+# for reference: staging: "https://jobbergate-api-staging.omnivector.solutions"
 
-JOBBERGATE_API_JWT_PATH = JOBBERGATE_USER_TOKEN_DIR / "jobbergate.token"
+# enable http tracing, accepts e.g. "1", "true", "0", "false"
+JOBBERGATE_DEBUG = ConfigParser.BOOLEAN_STATES.get(
+    os.environ.get("JOBBERGATE_DEBUG", "false").lower()
+)
 
-JOBBERGATE_CACHE_DIR = Path.home() / ".jobbergate"
-
-JOBBERGATE_API_ENDPOINT = "https://jobbergate-api-production.omnivector.solutions"
-# JOBBERGATE_API_ENDPOINT = "https://jobbergate-api-staging.omnivector.solutions"
-
+# the rest of the strings can be derived
 JOBBERGATE_USER_TOKEN_DIR = JOBBERGATE_CACHE_DIR / "token"
 
 JOBBERGATE_API_JWT_PATH = JOBBERGATE_USER_TOKEN_DIR / "jobbergate.token"
 
 JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT = f"{JOBBERGATE_API_ENDPOINT}/api-token-auth/"
 
+# FIXME - this vvv string doesn't appear in any of our code at https://github.com/omnivector-solutions
 JOBBERGATE_APPLICATION_S3_BASE_PATH = "jobbergate-resources"
-
 
 
 JOBBERGATE_APPLICATION_CONFIG = {
@@ -32,7 +42,7 @@ JOBBERGATE_APPLICATION_CONFIG = {
     "application_location": "TEST_LOC",
     "application_owner": "",
     "application_file": "",
-    "application_config": ""
+    "application_config": "",
 }
 
 JOBBERGATE_JOB_SCRIPT_CONFIG = {
@@ -40,30 +50,34 @@ JOBBERGATE_JOB_SCRIPT_CONFIG = {
     "job_script_description": "TEST_DESC",
     "job_script_data_as_string": "TEST_DATA_AS_STR",
     "job_script_owner": "",
-    "application": ""
+    "application": "",
 }
 
 JOBBERGATE_JOB_SUBMISSION_CONFIG = {
     "job_submission_name": "",
     "job_submission_description": "TEST_DESC",
     "job_submission_owner": "",
-    "job_script": ""
+    "job_script": "",
 }
 
 JOBBERGATE_APPLICATION_MODULE_FILE_NAME = "jobbergate.py"
 
 JOBBERGATE_APPLICATION_CONFIG_FILE_NAME = "jobbergate.yaml"
 
-JOBBERGATE_APPLICATION_MODULE_PATH = \
+JOBBERGATE_APPLICATION_MODULE_PATH = (
     JOBBERGATE_CACHE_DIR / JOBBERGATE_APPLICATION_MODULE_FILE_NAME
+)
 
-JOBBERGATE_APPLICATION_CONFIG_PATH = \
+JOBBERGATE_APPLICATION_CONFIG_PATH = (
     JOBBERGATE_CACHE_DIR / JOBBERGATE_APPLICATION_CONFIG_FILE_NAME
+)
 
 TAR_NAME = "jobbergate.tar.gz"
 
-JOBBERGATE_APPLICATION_MODULE_PATH = \
+JOBBERGATE_APPLICATION_MODULE_PATH = (
     JOBBERGATE_CACHE_DIR / JOBBERGATE_APPLICATION_MODULE_FILE_NAME
+)
 
-JOBBERGATE_APPLICATION_CONFIG_PATH = \
+JOBBERGATE_APPLICATION_CONFIG_PATH = (
     JOBBERGATE_CACHE_DIR / JOBBERGATE_APPLICATION_CONFIG_FILE_NAME
+)

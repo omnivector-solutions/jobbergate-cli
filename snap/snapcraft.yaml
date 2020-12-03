@@ -1,0 +1,24 @@
+name: jobbergate-cli
+base: core20
+adopt-info: jobbergate-cli
+summary: Job script creation utility.
+description: |
+  Create applications, from applications create job-scripts, from job-scripts create job-submissions.
+grade: stable
+confinement: classic
+
+apps:
+  jobbergate:
+    environment:
+      PATH: $SNAP/bin/:$PATH
+      PYTHONPATH: $SNAP/lib/python3.8/site-packages/
+    command: bin/jobbergate
+
+parts:
+  jobbergate-cli:
+    plugin: python
+    parse-info: ['setup.py']
+    python-packages: [wheel]
+    source: .
+    stage-packages:
+      - libpython3.8
