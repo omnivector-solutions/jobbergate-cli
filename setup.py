@@ -9,12 +9,14 @@ setup(
     long_description=open("README.md").read(),
     install_requires=[
         "click",
+        # required for click.version_option()
+        "importlib_metadata ; python_version < '3.8'",
         "inquirer",
         "pyjwt",
+        "pyyaml",
         "requests",
         "tabulate",
         "urllib3",
-        "pyyaml",
     ],
     extras_require={
         "dev": [

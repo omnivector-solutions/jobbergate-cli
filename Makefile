@@ -11,6 +11,7 @@ include	snap.mk
 clean: # Remove .tox and build dirs
 	rm -rf .tox/
 	rm -rf venv/
+	rm $(SNAP_TARGET)
 
 
 lint: # Run linter

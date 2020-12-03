@@ -1,5 +1,8 @@
 name: jobbergate-cli
-base: core20
+
+# core18 has Python 3.6, so it is similar to centos7
+base: core18
+
 adopt-info: jobbergate-cli
 summary: Job script creation utility.
 description: |
