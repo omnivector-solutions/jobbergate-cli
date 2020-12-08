@@ -152,7 +152,7 @@ def main(ctx, username, password):
             print(f"Auth Failed for username: {username}, please try again")
             sys.exit(0)  # FIXME - ctx.exit() instead
         except TypeError:
-            print("Password cannot be empty, please try again")
+            print("Incorrect username/password, please try again")
             sys.exit(0)  # FIXME - ctx.exit() instead
         except requests.exceptions.ConnectionError:
             print("Auth failed to establish connection with API, please try again")
@@ -269,7 +269,7 @@ def list_job_scripts(ctx, all=False):
 @click.option(
     "--param-file",
     "param_file",
-    type=click.Path(),
+    type=click.Path()
 )
 @click.option("--fast", "-f", "fast", is_flag=True)
 @click.option("--debug", "debug", is_flag=True)
@@ -367,7 +367,7 @@ def list_job_submissions(ctx, all=False):
 
 @main.command("create-job-submission")
 @click.option("--job-script-id", "-i", "create_job_submission_job_script_id")
-@click.option("--name", "create_job_submission_name")
+@click.option("--name", "-n", "create_job_submission_name")
 @click.option("--dry-run", "render_only")
 @click.pass_obj
 def create_job_submission(
