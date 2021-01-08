@@ -266,11 +266,7 @@ def list_job_scripts(ctx, all=False):
 @main.command("create-job-script")
 @click.option("--name", "-n", "create_job_script_name", default="default_script_name")
 @click.option("--application-id", "-i", "create_job_script_application_id")
-@click.option(
-    "--param-file",
-    "param_file",
-    type=click.Path()
-)
+@click.option("--param-file", "param_file", type=click.Path())
 @click.option("--fast", "-f", "fast", is_flag=True)
 @click.option("--debug", "debug", is_flag=True)
 @click.pass_obj

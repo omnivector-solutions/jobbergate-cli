@@ -12,7 +12,7 @@ setup(
         # required for click.version_option()
         "importlib_metadata ; python_version < '3.8'",
         "inquirer",
-        "pyjwt",
+        "pyjwt<2",  # FIXME pyjwt >= 2 requires an algorithms argument that breaks tests
         "pyyaml",
         "requests",
         "tabulate",
