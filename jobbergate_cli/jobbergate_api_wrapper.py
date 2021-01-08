@@ -549,7 +549,10 @@ class JobbergateApi:
                 else:
                     # Prepare question for user
                     question = self.assemble_questions(field)
-                    questions.append(question)
+                    if isinstance(question, list):
+                        questions.extend(question)
+                    else:
+                        questions.append(question)
 
             workflow_answers = inquirer.prompt(questions, raise_keyboard_interrupt=True)
             workflow_answers.update(auto_answers)
