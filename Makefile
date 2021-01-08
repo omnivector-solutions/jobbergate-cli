@@ -45,4 +45,4 @@ snap: $(SNAP_TARGET)
 
 
 $(SNAP_TARGET):
-	snapcraft --use-lxd
+	sg lxd -c 'snapcraft --use-lxd'
