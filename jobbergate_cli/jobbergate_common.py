@@ -16,9 +16,9 @@ JOBBERGATE_CACHE_DIR = os.environ.get(
     "JOBBERGATE_CACHE_DIR", Path.home() / ".jobbergate"
 )
 JOBBERGATE_API_ENDPOINT = os.environ.get(
-    "JOBBERGATE_API_ENDPOINT", "https://jobbergate-api-production.omnivector.solutions"
+    "JOBBERGATE_API_ENDPOINT", "https://jobbergate-api.omnivector.solutions"
 )
-# for reference: staging: "https://jobbergate-api-staging.omnivector.solutions"
+# for reference: staging: "https://jobbergate-api-staging-eu-north-1.omnivector.solutions"
 
 # enable http tracing, accepts e.g. "1", "true", "0", "false"
 JOBBERGATE_DEBUG = ConfigParser.BOOLEAN_STATES.get(

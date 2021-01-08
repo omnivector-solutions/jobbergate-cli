@@ -1,10 +1,12 @@
 from setuptools import find_packages, setup
 
 
+__version__ = "0.0.1+dev"
+
 setup(
     name="jobbergate-cli",
     packages=find_packages(include=["jobbergate_cli", "jobbergate_cli.*"]),
-    version="0.0.1+dev",
+    version=__version__,
     license="MIT",
     long_description=open("README.md").read(),
     install_requires=[
