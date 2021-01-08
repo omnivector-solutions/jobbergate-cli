@@ -65,7 +65,6 @@ jobs:
         id: vars
         shell: bash
         run: |
-          echo "::set-output name=release_version::$(echo $(git branch | grep '*' | awk '{print $2}') | sed 's/[a-z-]*\///g')"
           echo "::set-output name=snap_file::$(ls *.snap)"
           echo "::set-output name=git_sha::$(git rev-parse HEAD)"
 
