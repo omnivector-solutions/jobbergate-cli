@@ -5,9 +5,10 @@ import json
 import pathlib
 from unittest.mock import create_autospec, patch
 
-from pytest import fixture, mark
+import click.testing
+from pytest import deprecated_call, fixture, mark, warns
 
-from jobbergate_cli import main
+from jobbergate_cli import jobbergate_api_wrapper, main
 
 
 @fixture
@@ -98,3 +99,20 @@ def test_init_token(
     with token_responder:
         main.init_token("unittests@omnivector.solutions", "unit tests")
         assert bool(main.is_token_valid()) == is_valid
+
+
+@fixture
+def runner():
+    return click.testing.CliRunner()
+
+
+def test_list_applications(runner, recwarn):
+    """
+    Does this subcommand invoke the api?
+
+    Does it also issue a warning for a deprecated flag?
+    """
+    api = create_autospec(jobbergate_api_wrapper.JobbergateApi)
+    api.list_applications.return_value = "hello"
+    with deprecated_call():
+        runner.invoke(main.list_applications, ["--all"], obj=api)
