@@ -108,7 +108,7 @@ class JobbergateApi:
                     return response
                 elif response.status_code == 404:
                     response = self.error_handle(
-                        error=f"Could not delete object at {endpoint}",
+                        error=f"Could not find object at {endpoint}",
                         solution="Please confirm the id and try again",
                     )
                     return response
