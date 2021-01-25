@@ -930,6 +930,9 @@ class JobbergateApi:
 
         # Sort
         response.sort(key=lambda app: app["id"], reverse=True)
+        # Cap description length
+        for app in (app for app in response if len(app["application_description"])>75):
+            app["application_description"] = app["application_description"][:72]+"..."
 
         if all:
             return response
