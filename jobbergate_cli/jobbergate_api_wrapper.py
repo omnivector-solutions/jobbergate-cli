@@ -931,8 +931,8 @@ class JobbergateApi:
         # Sort
         response.sort(key=lambda app: app["id"], reverse=True)
         # Cap description length
-        for app in (app for app in response if len(app["application_description"])>75):
-            app["application_description"] = app["application_description"][:72]+"..."
+        for app in response:
+            app["application_description"] = _fit_line(app["application_description"])
 
         if all:
             return response
@@ -1092,3 +1092,27 @@ class JobbergateApi:
         )
 
         return response
+
+
+def _fit_line(s: str, n: int = 79):
+    """
+    Smartly ellipsize a line to fit in n (default 79) characters.
+
+    This method ensures only one line will be displayed, and an ellipsis is only used
+    if there are several characters to be hidden.
+    """
+    assert n >= 15
+    snip = n - 8
+
+    truncate = False
+    s = s.strip()
+    if "\n" in s:
+        truncate = True
+    s = s.split("\n")[0].strip()
+    if len(s) > n:
+        truncate = True
+
+    if truncate:
+        return s[:snip] + "..."
+
+    return s
