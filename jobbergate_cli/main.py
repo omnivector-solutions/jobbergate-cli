@@ -3,6 +3,7 @@ from datetime import datetime
 import getpass
 from pathlib import Path
 import sys
+import warnings
 
 import click
 import jwt
@@ -175,7 +176,12 @@ def list_applications(ctx, all=False):
                 if NOT specified then only the user's applications
                 will be returned
     """
-    print(ctx.api.list_applications(all))
+    if all:
+        warnings.warn(
+            "--all is deprecated, this is now the default behavior. This option will be removed in a future release.",
+            DeprecationWarning,
+        )
+    print(ctx.api.list_applications(True))
 
 
 @main.command("create-application")
