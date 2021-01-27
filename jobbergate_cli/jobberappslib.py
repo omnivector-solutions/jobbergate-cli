@@ -4,31 +4,6 @@ import subprocess
 import sys
 
 
-def get_output_file():
-    """Returns the output file name, extracted from the command line."""
-    # TODO cleanup?
-    scriptout = "?"
-    ind = 2
-    while ind < len(sys.argv):
-        if sys.argv[ind] in ["-f", "--fast"]:
-            ind = ind + 1
-        elif sys.argv[ind] in [
-            "-a",
-            "--answerfile",
-            "-p",
-            "--prefill",
-            "-s",
-            "--saveanswers",
-            "-t",
-            "--template",
-        ]:
-            ind = ind + 2
-        else:
-            scriptout = sys.argv[ind]
-            break
-    return scriptout
-
-
 def get_running_jobs(user_only=True):
     """Returns a list of the user's currently running jobs, as given by SLURM."""
     cmd_args = [
