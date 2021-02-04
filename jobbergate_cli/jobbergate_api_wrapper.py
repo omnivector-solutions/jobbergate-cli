@@ -521,10 +521,10 @@ class JobbergateApi:
         except:  # noqa: E722
             response = self.error_handle(
                 error="Could not load application's yaml file",
-                solution=f"Please review yaml file formatting."
+                solution="Please review yaml file formatting."
             )
             return response
-        
+
         # Exec the jobbergate application python module
         module = self.import_jobbergate_application_module()
         application = module.JobbergateApplication(param_dict)
@@ -548,7 +548,7 @@ class JobbergateApi:
                     solution=f"Please implement {method_to_call.__name__} in your class."
                 )
                 return response
-            
+
             questions = []
             auto_answers = {}
 
