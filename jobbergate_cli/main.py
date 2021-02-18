@@ -268,6 +268,7 @@ def list_job_scripts(ctx, all=False):
 @click.option("--application-id", "-i", "create_job_script_application_id")
 @click.option("--param-file", "param_file", type=click.Path())
 @click.option("--fast", "-f", "fast", is_flag=True)
+@click.option("--no-submit", "no_submit", is_flag=True)
 @click.option("--debug", "debug", is_flag=True)
 @click.pass_obj
 def create_job_script(
@@ -276,6 +277,7 @@ def create_job_script(
     create_job_script_application_id,
     param_file=None,
     fast=False,
+    no_submit=False,
     debug=False,
 ):
     """
@@ -289,6 +291,7 @@ def create_job_script(
                             jobbergate.py is triggered
         fast            --  optional parameter to use default answers (when available)
                             instead of asking user
+        no-submit       --  optional parameter to not even ask about submitting job
         debug           --  optional parameter to view job script data in CLI output
     """
     print(
@@ -297,6 +300,7 @@ def create_job_script(
             create_job_script_application_id,
             param_file,
             fast,
+            no_submit,
             debug,
         )
     )
