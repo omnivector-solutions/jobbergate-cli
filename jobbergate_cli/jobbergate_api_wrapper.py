@@ -568,7 +568,8 @@ class JobbergateApi:
         files = {"upload_file": open(param_filename, "rb")}
 
         # Possibly overwrite script name
-        if "job_script_name" in param_dict["jobbergate_config"]:
+        if "job_script_name" in param_dict["jobbergate_config"] and \
+           param_dict["jobbergate_config"]["job_script_name"] != "":
             data["job_script_name"] = param_dict["jobbergate_config"]["job_script_name"]
 
         response = self.jobbergate_request(
