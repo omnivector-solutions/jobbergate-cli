@@ -5,6 +5,7 @@ import os
 import pathlib
 from subprocess import PIPE, Popen
 import tarfile
+from urllib.parse import urljoin
 
 import inquirer
 import requests
@@ -108,8 +109,8 @@ class JobbergateApi:
                     return response
                 elif response.status_code == 404:
                     response = self.error_handle(
-                        error=f"Could not delete object at {endpoint}",
-                        solution="Please confirm the id and try again",
+                        error=f"Could not find object at {endpoint}",
+                        solution="Please confirm the URL or the id and try again",
                     )
                     return response
                 else:
@@ -434,7 +435,7 @@ class JobbergateApi:
                     will be returned
         """
         response = self.jobbergate_request(
-            method="GET", endpoint=f"{self.api_endpoint}/job-script/"
+            method="GET", endpoint=urljoin(self.api_endpoint, "/job-script/")
         )
 
         try:
@@ -504,7 +505,7 @@ class JobbergateApi:
             supplied_params = {}
 
         app_data = self.jobbergate_request(
-            method="GET", endpoint=f"{self.api_endpoint}/application/{application_id}"
+            method="GET", endpoint=urljoin(self.api_endpoint, f"/application/{application_id}")
         )
         if "error" in app_data.keys():
             return app_data
@@ -573,7 +574,7 @@ class JobbergateApi:
 
         response = self.jobbergate_request(
             method="POST",
-            endpoint=f"{self.api_endpoint}/job-script/",
+            endpoint=urljoin(self.api_endpoint, "/job-script/"),
             data=data,
             files=files,
         )
@@ -641,7 +642,7 @@ class JobbergateApi:
             return response
 
         response = self.jobbergate_request(
-            method="GET", endpoint=f"{self.api_endpoint}/job-script/{job_script_id}"
+            method="GET", endpoint=urljoin(self.api_endpoint, f"/job-script/{job_script_id}")
         )
         if "error" in response.keys():
             return response
@@ -682,14 +683,14 @@ class JobbergateApi:
             return response
 
         data = self.jobbergate_request(
-            method="GET", endpoint=f"{self.api_endpoint}/job-script/{job_script_id}"
+            method="GET", endpoint=urljoin(self.api_endpoint, f"/job-script/{job_script_id}")
         )
         if "error" in data.keys():
             return data
         data["job_script_data_as_string"] = job_script_data_as_string
         response = self.jobbergate_request(
             method="PUT",
-            endpoint=f"{self.api_endpoint}/job-script/{job_script_id}/",
+            endpoint=urljoin(self.api_endpoint, f"/job-script/{job_script_id}/"),
             data=data,
         )
 
@@ -711,7 +712,7 @@ class JobbergateApi:
             return response
 
         response = self.jobbergate_request(
-            method="DELETE", endpoint=f"{self.api_endpoint}/job-script/{job_script_id}"
+            method="DELETE", endpoint=urljoin(self.api_endpoint, f"/job-script/{job_script_id}")
         )
 
         return response
@@ -728,7 +729,7 @@ class JobbergateApi:
                     will be returned
         """
         response = self.jobbergate_request(
-            method="GET", endpoint=f"{self.api_endpoint}/job-submission/"
+            method="GET", endpoint=urljoin(self.api_endpoint, "/job-submission/")
         )
 
         try:
@@ -771,7 +772,7 @@ class JobbergateApi:
         data["job_submission_owner"] = self.user_id
 
         job_script = self.jobbergate_request(
-            method="GET", endpoint=f"{self.api_endpoint}/job-script/{job_script_id}"
+            method="GET", endpoint=urljoin(self.api_endpoint, f"/job-script/{job_script_id}")
         )
         if "error" in job_script.keys():
             return job_script
@@ -779,7 +780,7 @@ class JobbergateApi:
         application_id = job_script["application"]
 
         application = self.jobbergate_request(
-            method="GET", endpoint=f"{self.api_endpoint}/application/{application_id}"
+            method="GET", endpoint=urljoin(self.api_endpoint, f"/application/{application_id}")
         )
         if "error" in application.keys():
             return application
@@ -799,7 +800,7 @@ class JobbergateApi:
         if render_only:
             response = self.jobbergate_request(
                 method="POST",
-                endpoint=f"{self.api_endpoint}/job-submission/",
+                endpoint=urljoin(self.api_endpoint, "/job-submission/"),
                 data=data,
             )
             if "error" in response.keys():
@@ -821,7 +822,7 @@ class JobbergateApi:
                 data["slurm_job_id"] = slurm_job_id
                 response = self.jobbergate_request(
                     method="POST",
-                    endpoint=f"{self.api_endpoint}/job-submission/",
+                    endpoint=urljoin(self.api_endpoint, "/job-submission/"),
                     data=data,
                 )
                 if "error" in response.keys():
@@ -851,7 +852,7 @@ class JobbergateApi:
 
         response = self.jobbergate_request(
             method="GET",
-            endpoint=f"{self.api_endpoint}/job-submission/{job_submission_id}",
+            endpoint=urljoin(self.api_endpoint, f"/job-submission/{job_submission_id}"),
         )
 
         return response
@@ -873,14 +874,14 @@ class JobbergateApi:
 
         data = self.jobbergate_request(
             method="GET",
-            endpoint=f"{self.api_endpoint}/job-submission/{job_submission_id}",
+            endpoint=urljoin(self.api_endpoint, f"/job-submission/{job_submission_id}"),
         )
         if "error" in data.keys():
             return data
         # TODO how to collect data that will updated for the job-submission
         response = self.jobbergate_request(
             method="PUT",
-            endpoint=f"{self.api_endpoint}/job-submission/{job_submission_id}/",
+            endpoint=urljoin(self.api_endpoint, f"/job-submission/{job_submission_id}/"),
         )
         return response
 
@@ -901,7 +902,7 @@ class JobbergateApi:
 
         response = self.jobbergate_request(
             method="DELETE",
-            endpoint=f"{self.api_endpoint}/job-submission/{job_submission_id}",
+            endpoint=urljoin(self.api_endpoint, f"/job-submission/{job_submission_id}"),
         )
 
         return response
@@ -918,7 +919,7 @@ class JobbergateApi:
                     will be returned
         """
         response = self.jobbergate_request(
-            method="GET", endpoint=f"{self.api_endpoint}/application/"
+            method="GET", endpoint=urljoin(self.api_endpoint, "/application/")
         )
         try:
             response = [
@@ -984,7 +985,7 @@ class JobbergateApi:
 
         response = self.jobbergate_request(
             method="POST",
-            endpoint=f"{self.api_endpoint}/application/",
+            endpoint=urljoin(self.api_endpoint, "/application/"),
             data=data,
             files=files,
         )
@@ -1011,7 +1012,7 @@ class JobbergateApi:
             application_id -- id of application to be returned
         """
         response = self.jobbergate_request(
-            method="GET", endpoint=f"{self.api_endpoint}/application/{application_id}"
+            method="GET", endpoint=urljoin(self.api_endpoint, f"/application/{application_id}")
         )
 
         return response
@@ -1040,7 +1041,7 @@ class JobbergateApi:
             return response
 
         data = self.jobbergate_request(
-            method="GET", endpoint=f"{self.api_endpoint}/application/{application_id}"
+            method="GET", endpoint=urljoin(self.api_endpoint, f"/application/{application_id}")
         )
         if "error" in data.keys():
             return data
@@ -1058,7 +1059,7 @@ class JobbergateApi:
 
         response = self.jobbergate_request(
             method="PUT",
-            endpoint=f"{self.api_endpoint}/application/{application_id}/",
+            endpoint=urljoin(self.api_endpoint, f"/application/{application_id}/"),
             data=data,
             files=files,
         )
@@ -1085,7 +1086,7 @@ class JobbergateApi:
         """
         response = self.jobbergate_request(
             method="DELETE",
-            endpoint=f"{self.api_endpoint}/application/{application_id}",
+            endpoint=urljoin(self.api_endpoint, f"/application/{application_id}"),
         )
 
         return response
