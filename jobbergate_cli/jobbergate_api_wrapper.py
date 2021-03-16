@@ -469,7 +469,7 @@ class JobbergateApi:
 
     @tabulate_decorator
     def create_job_script(
-        self, job_script_name, application_id, param_file, fast, debug
+        self, job_script_name, application_id, param_file, sbatch_params, fast, debug
     ):
         """
         CREATE a Job Script.
@@ -480,6 +480,7 @@ class JobbergateApi:
             param-file      --  optional parameter file for populating templates.
                                 if this is not provided, the question askin in
                                 jobbergate.py is triggered
+            sbatch-params   --  optional parameter to submit raw sbatch paramters
             fast            --  optional parameter to use default answers (when available)
                                 instead of asking user
             debug           --  optional parameter to view job script data
@@ -609,6 +610,8 @@ class JobbergateApi:
         for key, value in rendered_dict.items():
             job_script_data_as_string += "\n\nNEW_FILE\n\n"
             job_script_data_as_string += value
+
+        job_script_data_as_string = inject_sbatch_params(job_script_data_as_string, sbatch_params)
 
         response["job_script_data_as_string"] = job_script_data_as_string
 
