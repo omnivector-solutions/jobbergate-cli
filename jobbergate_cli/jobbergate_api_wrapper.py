@@ -23,6 +23,21 @@ from jobbergate_cli.jobbergate_common import (
 )
 
 
+def inject_sbatch_params(job_script_data_as_string, sbatch_params):
+    first_sbatch_index = job_script_data_as_string.find("#SBATCH")
+    string_slice = job_script_data_as_string[first_sbatch_index:]
+    line_end = string_slice.find("\n") + first_sbatch_index + 1
+
+    inner_string = ""
+    for parameter in sbatch_params.split():
+        inner_string += "#SBATCH " + parameter + "\n"
+
+    new_job_script_data_as_string = (job_script_data_as_string[:line_end] +
+                                     inner_string +
+                                     job_script_data_as_string[line_end:])
+    return new_job_script_data_as_string
+
+
 class JobbergateApi:
     def __init__(
         self,
