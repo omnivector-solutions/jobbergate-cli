@@ -611,7 +611,8 @@ class JobbergateApi:
             job_script_data_as_string += "\n\nNEW_FILE\n\n"
             job_script_data_as_string += value
 
-        job_script_data_as_string = inject_sbatch_params(job_script_data_as_string, sbatch_params)
+        if sbatch_params:
+            job_script_data_as_string = inject_sbatch_params(job_script_data_as_string, sbatch_params)
 
         response["job_script_data_as_string"] = job_script_data_as_string
 
