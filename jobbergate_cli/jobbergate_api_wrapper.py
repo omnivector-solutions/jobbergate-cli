@@ -574,7 +574,9 @@ class JobbergateApi:
             data["job_script_name"] = param_dict["jobbergate_config"]["job_script_name"]
 
         if sbatch_params:
-            data["sbatch_params"] = sbatch_params
+            for i, param in enumerate(sbatch_params):
+                data["sbatch_params_" + str(i)] = param
+            data["sbatch_params_len"] = len(sbatch_params)
 
         response = self.jobbergate_request(
             method="POST",
