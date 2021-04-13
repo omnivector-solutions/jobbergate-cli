@@ -44,10 +44,10 @@ def init_token(username, password):
     """Get a new token from the api and write it to the token file."""
     resp = client.post(
         JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT,
-        data={"email": username, "password": password},
+        data={"username": username, "password": password},
     )
     data = resp.json()
-    ret = data.get("token")
+    ret = data.get("access_token")
     JOBBERGATE_API_JWT_PATH.write_text(ret)
 
 
@@ -160,7 +160,7 @@ def main(ctx, username, password):
 
     ctx.obj["token"] = decode_token_to_dict(JOBBERGATE_API_JWT_PATH.read_text())
 
-    ctx.obj = Api(user_id=ctx.obj["token"]["user_id"])
+    ctx.obj = Api(1)
 
 
 @main.command("list-applications")

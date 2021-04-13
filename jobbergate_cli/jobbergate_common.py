@@ -31,7 +31,7 @@ JOBBERGATE_USER_TOKEN_DIR = JOBBERGATE_CACHE_DIR / "token"
 
 JOBBERGATE_API_JWT_PATH = JOBBERGATE_USER_TOKEN_DIR / "jobbergate.token"
 
-JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT = urljoin(JOBBERGATE_API_ENDPOINT, "api-token-auth/")
+JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT = urljoin(JOBBERGATE_API_ENDPOINT, "token/")
 
 # FIXME - this vvv string doesn't appear in any of our code at https://github.com/omnivector-solutions
 JOBBERGATE_APPLICATION_S3_BASE_PATH = "jobbergate-resources"

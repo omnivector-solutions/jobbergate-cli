@@ -171,7 +171,7 @@ class JobbergateApi:
                 endpoint,
                 data=data,
                 files=files,
-                headers={"Authorization": "JWT " + self.token},
+                headers={"Authorization": "Bearer " + self.token},
                 verify=False,
             )
             if full_response.status_code == 400:
@@ -979,7 +979,6 @@ class JobbergateApi:
 
         data = self.application_config
         data["application_name"] = application_name
-        data["application_owner"] = self.user_id
 
         if application_desc:
             data["application_description"] = application_desc
