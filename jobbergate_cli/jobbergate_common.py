@@ -40,8 +40,8 @@ JOBBERGATE_APPLICATION_S3_BASE_PATH = "jobbergate-resources"
 JOBBERGATE_APPLICATION_CONFIG = {
     "application_name": "",
     "application_description": "",
-    "application_location": "TEST_LOC",
-    "application_owner": "",
+    # "application_location": "TEST_LOC",
+    # "application_owner": "",
     "application_file": "",
     "application_config": "",
 }

@@ -4,6 +4,8 @@ import json
 import os
 import pathlib
 from subprocess import PIPE, Popen
+from os import listdir
+from os.path import exists, isfile
 import tarfile
 from urllib.parse import urljoin
 
@@ -985,6 +987,21 @@ class JobbergateApi:
 
         tar_list = [application_path, os.path.join(application_path, "templates")]
         self.tardir(application_path, TAR_NAME, tar_list)
+        with open(os.path.join(application_path, "jobbergate.py")) as app_file:
+            application_file = app_file.read()
+        with open(os.path.join(application_path, "jobbergate.yaml")) as config_file:
+            application_config_dict = yaml.safe_load(config_file.read())
+        templates = []
+        if exists(templates_folder := os.path.join(application_path, "templates")):
+            for template in listdir(templates_folder):
+                if isfile(os.path.join(templates_folder, template)):
+                    templates.append(os.path.join("templates", template))
+
+        application_config_dict["jobbergate_config"]["template_files"] = templates
+        application_config = yaml.dump(application_config_dict)
+
+        data["application_config"] = application_config
+        data["application_file"] = application_file
 
         files = {"upload_file": open(TAR_NAME, "rb")}
 
