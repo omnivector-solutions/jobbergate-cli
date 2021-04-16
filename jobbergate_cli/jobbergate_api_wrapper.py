@@ -151,7 +151,7 @@ class JobbergateApi:
 
         if method == "DELETE":
             response = client.delete(
-                endpoint, headers={"Authorization": "JWT " + self.token}, verify=False
+                endpoint, headers={"Authorization": "Bearer " + self.token}, verify=False
             )
             if response.status_code == 403:
                 response = self.error_handle(
@@ -1104,7 +1104,7 @@ class JobbergateApi:
         """
         response = self.jobbergate_request(
             method="DELETE",
-            endpoint=urljoin(self.api_endpoint, f"/application/{application_id}"),
+            endpoint=urljoin(self.api_endpoint, f"/applications/{application_id}"),
         )
 
         return response
