@@ -98,7 +98,7 @@ class JobbergateApi:
             try:
                 response = client.get(
                     endpoint,
-                    headers={"Authorization": "JWT " + self.token},
+                    headers={"Authorization": "Bearer " + self.token},
                     verify=False,
                 )
                 if response.status_code == 200:
@@ -927,7 +927,7 @@ class JobbergateApi:
                     will be returned
         """
         response = self.jobbergate_request(
-            method="GET", endpoint=urljoin(self.api_endpoint, "/applications/")
+            method="GET", endpoint=urljoin(self.api_endpoint, f"/applications/?{all=}")
         )
         try:
             response = [
@@ -940,11 +940,7 @@ class JobbergateApi:
         # Sort
         response.sort(key=lambda app: app["id"], reverse=True)
 
-        if all:
-            return response
-        else:
-            response = [d for d in response if d["application_owner"] == self.user_id]
-            return response
+        return response
 
     @tabulate_decorator
     def create_application(self, application_name, application_path, application_desc):
@@ -1034,7 +1030,7 @@ class JobbergateApi:
             application_id -- id of application to be returned
         """
         response = self.jobbergate_request(
-            method="GET", endpoint=urljoin(self.api_endpoint, f"/application/{application_id}")
+            method="GET", endpoint=urljoin(self.api_endpoint, f"/applications/{application_id}")
         )
 
         return response
