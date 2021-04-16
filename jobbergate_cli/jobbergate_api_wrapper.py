@@ -927,7 +927,7 @@ class JobbergateApi:
                     will be returned
         """
         response = self.jobbergate_request(
-            method="GET", endpoint=urljoin(self.api_endpoint, "/application/")
+            method="GET", endpoint=urljoin(self.api_endpoint, "/applications/")
         )
         try:
             response = [
@@ -1007,7 +1007,7 @@ class JobbergateApi:
 
         response = self.jobbergate_request(
             method="POST",
-            endpoint=urljoin(self.api_endpoint, "/application/"),
+            endpoint=urljoin(self.api_endpoint, "/applications/"),
             data=data,
             files=files,
         )
