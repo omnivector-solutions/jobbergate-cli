@@ -217,20 +217,31 @@ def get_application(ctx, application_id):
 @main.command("update-application")
 @click.option("--id", "-i", "update_application_id")
 @click.option("--application-path", "-a", "application_path")
+@click.option("--name", "-n", "update_application_name", default="")
 @click.option("--application-desc", "application_desc", default="")
 @click.pass_obj
-def update_application(ctx, update_application_id, application_path, application_desc):
+def update_application(
+    ctx,
+    update_application_id,
+    application_path,
+    update_application_name,
+    application_desc,
+):
     """
     UPDATE an Application.
 
     Keyword Arguments:
         id                --  id application to update
+        name              --  Name of the application
         application-path  --  path to dir for updated application files
         application-desc  --  optional new application description
     """
     print(
         ctx.api.update_application(
-            update_application_id, application_path, application_desc
+            update_application_id,
+            application_path,
+            update_application_name,
+            application_desc,
         )
     )
 

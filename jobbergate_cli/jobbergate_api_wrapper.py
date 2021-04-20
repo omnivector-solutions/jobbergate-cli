@@ -134,7 +134,7 @@ class JobbergateApi:
                     endpoint,
                     data=data,
                     files=files,
-                    headers={"Authorization": "JWT " + self.token},
+                    headers={"Authorization": "Bearer " + self.token},
                     verify=False,
                 )  # .json()
                 if response.status_code == 403:
@@ -151,7 +151,9 @@ class JobbergateApi:
 
         if method == "DELETE":
             response = client.delete(
-                endpoint, headers={"Authorization": "Bearer " + self.token}, verify=False
+                endpoint,
+                headers={"Authorization": "Bearer " + self.token},
+                verify=False,
             )
             if response.status_code == 403:
                 response = self.error_handle(
@@ -508,7 +510,8 @@ class JobbergateApi:
             supplied_params = {}
 
         app_data = self.jobbergate_request(
-            method="GET", endpoint=urljoin(self.api_endpoint, f"/application/{application_id}")
+            method="GET",
+            endpoint=urljoin(self.api_endpoint, f"/application/{application_id}"),
         )
         if "error" in app_data.keys():
             return app_data
@@ -650,7 +653,8 @@ class JobbergateApi:
             return response
 
         response = self.jobbergate_request(
-            method="GET", endpoint=urljoin(self.api_endpoint, f"/job-script/{job_script_id}")
+            method="GET",
+            endpoint=urljoin(self.api_endpoint, f"/job-script/{job_script_id}"),
         )
         if "error" in response.keys():
             return response
@@ -691,7 +695,8 @@ class JobbergateApi:
             return response
 
         data = self.jobbergate_request(
-            method="GET", endpoint=urljoin(self.api_endpoint, f"/job-script/{job_script_id}")
+            method="GET",
+            endpoint=urljoin(self.api_endpoint, f"/job-script/{job_script_id}"),
         )
         if "error" in data.keys():
             return data
@@ -720,7 +725,8 @@ class JobbergateApi:
             return response
 
         response = self.jobbergate_request(
-            method="DELETE", endpoint=urljoin(self.api_endpoint, f"/job-script/{job_script_id}")
+            method="DELETE",
+            endpoint=urljoin(self.api_endpoint, f"/job-script/{job_script_id}"),
         )
 
         return response
@@ -780,7 +786,8 @@ class JobbergateApi:
         data["job_submission_owner"] = self.user_id
 
         job_script = self.jobbergate_request(
-            method="GET", endpoint=urljoin(self.api_endpoint, f"/job-script/{job_script_id}")
+            method="GET",
+            endpoint=urljoin(self.api_endpoint, f"/job-script/{job_script_id}"),
         )
         if "error" in job_script.keys():
             return job_script
@@ -788,7 +795,8 @@ class JobbergateApi:
         application_id = job_script["application"]
 
         application = self.jobbergate_request(
-            method="GET", endpoint=urljoin(self.api_endpoint, f"/application/{application_id}")
+            method="GET",
+            endpoint=urljoin(self.api_endpoint, f"/application/{application_id}"),
         )
         if "error" in application.keys():
             return application
@@ -889,7 +897,9 @@ class JobbergateApi:
         # TODO how to collect data that will updated for the job-submission
         response = self.jobbergate_request(
             method="PUT",
-            endpoint=urljoin(self.api_endpoint, f"/job-submission/{job_submission_id}/"),
+            endpoint=urljoin(
+                self.api_endpoint, f"/job-submission/{job_submission_id}/"
+            ),
         )
         return response
 
@@ -1030,19 +1040,23 @@ class JobbergateApi:
             application_id -- id of application to be returned
         """
         response = self.jobbergate_request(
-            method="GET", endpoint=urljoin(self.api_endpoint, f"/applications/{application_id}")
+            method="GET",
+            endpoint=urljoin(self.api_endpoint, f"/applications/{application_id}"),
         )
 
         return response
 
     @tabulate_decorator
-    def update_application(self, application_id, application_path, application_desc):
+    def update_application(
+        self, application_id, application_path, application_name, application_desc
+    ):
         """
         UPDATE an Application.
 
         Keyword Arguments:
             application_id    -- id application to update
             application_path  --  path to dir for updated application files
+            application_name  --  optional new application name
             application_desc  --  optional new application description
         """
         if application_path is None:
@@ -1058,26 +1072,38 @@ class JobbergateApi:
             response = error_check
             return response
 
-        data = self.jobbergate_request(
-            method="GET", endpoint=urljoin(self.api_endpoint, f"/application/{application_id}")
-        )
-        if "error" in data.keys():
-            return data
+        data = self.application_config
 
-        del data["id"]
-        del data["created_at"]
-        del data["updated_at"]
+        if application_name:
+            data["application_name"] = application_name
         if application_desc:
             data["application_description"] = application_desc
 
         tar_list = [application_path, os.path.join(application_path, "templates")]
         self.tardir(application_path, TAR_NAME, tar_list)
 
+        with open(os.path.join(application_path, "jobbergate.py")) as app_file:
+            application_file = app_file.read()
+        with open(os.path.join(application_path, "jobbergate.yaml")) as config_file:
+            application_config_dict = yaml.safe_load(config_file.read())
+
+        templates = []
+        if exists(templates_folder := os.path.join(application_path, "templates")):
+            for template in listdir(templates_folder):
+                if isfile(os.path.join(templates_folder, template)):
+                    templates.append(os.path.join("templates", template))
+
+        application_config_dict["jobbergate_config"]["template_files"] = templates
+        application_config = yaml.dump(application_config_dict)
+
+        data["application_config"] = application_config
+        data["application_file"] = application_file
+
         files = {"upload_file": open(TAR_NAME, "rb")}
 
         response = self.jobbergate_request(
             method="PUT",
-            endpoint=urljoin(self.api_endpoint, f"/application/{application_id}/"),
+            endpoint=urljoin(self.api_endpoint, f"/applications/{application_id}"),
             data=data,
             files=files,
         )
