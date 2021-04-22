@@ -492,8 +492,7 @@ class JobbergateApi:
         self.validation_check = {}
         data = self.job_script_config
         data["job_script_name"] = job_script_name
-        data["application"] = application_id
-        data["job_script_owner"] = self.user_id
+        data["application_id"] = application_id
 
         if param_file:
             is_param_file = os.path.isfile(param_file)
@@ -511,7 +510,7 @@ class JobbergateApi:
 
         app_data = self.jobbergate_request(
             method="GET",
-            endpoint=urljoin(self.api_endpoint, f"/application/{application_id}"),
+            endpoint=urljoin(self.api_endpoint, f"/applications/{application_id}"),
         )
         if "error" in app_data.keys():
             return app_data
@@ -570,6 +569,7 @@ class JobbergateApi:
         param_file = open(param_filename, "w")
         json.dump(param_dict, param_file)
         param_file.close()
+        data["param_dict"] = json.dumps(param_dict)
 
         # TODO: Put below in function after testing - DRY
         files = {"upload_file": open(param_filename, "rb")}
@@ -579,13 +579,11 @@ class JobbergateApi:
             data["job_script_name"] = param_dict["jobbergate_config"]["job_script_name"]
 
         if sbatch_params:
-            for i, param in enumerate(sbatch_params):
-                data["sbatch_params_" + str(i)] = param
-            data["sbatch_params_len"] = len(sbatch_params)
+            data["sbatch_params"] = sbatch_params
 
         response = self.jobbergate_request(
             method="POST",
-            endpoint=urljoin(self.api_endpoint, "/job-script/"),
+            endpoint=urljoin(self.api_endpoint, "/job-scripts/"),
             data=data,
             files=files,
         )
