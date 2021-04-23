@@ -50,7 +50,7 @@ JOBBERGATE_APPLICATION_CONFIG = {
 JOBBERGATE_JOB_SCRIPT_CONFIG = {
     "job_script_name": "",
     "job_script_description": "TEST_DESC",
-    "job_script_data_as_string": "TEST_DATA_AS_STR",
+    # "job_script_data_as_string": "TEST_DATA_AS_STR",
     "job_script_owner": "",
     "application": "",
 }
