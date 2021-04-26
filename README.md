@@ -8,6 +8,11 @@ Jobbergate CLI client
 jobbergate --help
 ```
 
+### It is possible to use raw sbatch parameters in create-job-script
+Use the `--sbatch-params` multiple times to use as many parameters as needed in the following format
+```bash
+jobbergate create-job-script --sbatch-params='-N 10' --sbatch-params='--comment=some_comment'
+```
 
 ## Release Process & Criteria
 

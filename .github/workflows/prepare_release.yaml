@@ -52,20 +52,18 @@ jobs:
           git config user.name omnivector-qa
           git config user.email admin@omnivector.solutions
 
-      - name: "Install Snapcraft"
-        uses: samuelmeuli/action-snapcraft@v1
-        with:
-          use_lxd: true
-
-      - name: "Build snap"
-        run: make snap
+      - name: "tar it up"
+        run: |
+          git ls-tree --name-only -z HEAD \
+            | tar --transform 's,^,${{ env.RELEASE_PREFIX }}/,' --null -T- -cvz -f ${{ env.RELEASE_PREFIX }}.tar.gz
 
       - name: "Parse and store git_sha, release_version"
         if: ${{ success() }}
         id: vars
         shell: bash
         run: |
-          echo "::set-output name=snap_file::$(ls *.snap)"
+          echo "::set-output name=release_version::$(echo $(git branch | grep '*' | awk '{print $2}') | sed 's/[a-z-]*\///g')"
+          echo "::set-output name=tarball::$(echo ${{ env.RELEASE_PREFIX }}.tar.gz)"
           echo "::set-output name=git_sha::$(git rev-parse HEAD)"
 
       - name: Archive Artifacts
@@ -74,7 +72,7 @@ jobs:
         with:
           name: ${{ steps.vars.outputs.git_sha }}
           path: |
-            ${{ steps.vars.outputs.snap_file }}
+            ${{ steps.vars.outputs.tarball }}
 
       - uses: Sibz/github-status-action@v1
         if: ${{ success() }}

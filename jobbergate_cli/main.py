@@ -266,6 +266,7 @@ def list_job_scripts(ctx, all=False):
 @main.command("create-job-script")
 @click.option("--name", "-n", "create_job_script_name", default="default_script_name")
 @click.option("--application-id", "-i", "create_job_script_application_id")
+@click.option("--sbatch-params", multiple=True)
 @click.option("--param-file", "param_file", type=click.Path())
 @click.option("--fast", "-f", "fast", is_flag=True)
 @click.option("--no-submit", "no_submit", is_flag=True)
@@ -275,6 +276,7 @@ def create_job_script(
     ctx,
     create_job_script_name,
     create_job_script_application_id,
+    sbatch_params,
     param_file=None,
     fast=False,
     no_submit=False,
@@ -289,6 +291,7 @@ def create_job_script(
         param-file      --  optional parameter file for populating templates.
                             if answers are not provided, the question asking in
                             jobbergate.py is triggered
+        sbatch-params   --  optional parameter to submit raw sbatch parameters
         fast            --  optional parameter to use default answers (when available)
                             instead of asking user
         no-submit       --  optional parameter to not even ask about submitting job
@@ -299,6 +302,7 @@ def create_job_script(
             create_job_script_name,
             create_job_script_application_id,
             param_file,
+            sbatch_params,
             fast,
             no_submit,
             debug,
