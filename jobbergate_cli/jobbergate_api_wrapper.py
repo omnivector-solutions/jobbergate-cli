@@ -454,7 +454,7 @@ class JobbergateApi:
 
     @tabulate_decorator
     def create_job_script(
-        self, job_script_name, application_id, param_file, sbatch_params, fast, debug
+        self, job_script_name, application_id, param_file, sbatch_params, fast, no_submit, debug
     ):
         """
         CREATE a Job Script.
@@ -468,6 +468,7 @@ class JobbergateApi:
             sbatch-params   --  optional parameter to submit raw sbatch parameters
             fast            --  optional parameter to use default answers (when available)
                                 instead of asking user
+            no-submit       --  optional parameter to not even ask about submitting job
             debug           --  optional parameter to view job script data
                                 in CLI output
         """
@@ -607,7 +608,9 @@ class JobbergateApi:
             del response["job_script_data_as_string"]
 
         # Check if user wants to submit immediately
-        if fast:
+        if no_submit:
+            submit = False
+        elif fast:
             submit = True
         else:
             submit = inquirer.prompt(
