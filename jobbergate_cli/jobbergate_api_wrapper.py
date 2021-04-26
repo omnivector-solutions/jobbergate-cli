@@ -454,7 +454,7 @@ class JobbergateApi:
 
     @tabulate_decorator
     def create_job_script(
-        self, job_script_name, application_id, param_file, sbatch_params, fast, no-submit, debug
+        self, job_script_name, application_id, param_file, sbatch_params, fast, no_submit, debug
     ):
         """
         CREATE a Job Script.
