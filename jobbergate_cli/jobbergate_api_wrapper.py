@@ -439,7 +439,7 @@ class JobbergateApi:
                     will be returned
         """
         response = self.jobbergate_request(
-            method="GET", endpoint=urljoin(self.api_endpoint, "/job-script/")
+            method="GET", endpoint=urljoin(self.api_endpoint, "/job-scripts/")
         )
 
         try:
@@ -450,11 +450,7 @@ class JobbergateApi:
         except:  # noqa: E722
             return response
 
-        if all:
-            return response
-        else:
-            response = [d for d in response if d["job_script_owner"] == self.user_id]
-            return response
+        return response
 
     @tabulate_decorator
     def create_job_script(
@@ -652,7 +648,7 @@ class JobbergateApi:
 
         response = self.jobbergate_request(
             method="GET",
-            endpoint=urljoin(self.api_endpoint, f"/job-script/{job_script_id}"),
+            endpoint=urljoin(self.api_endpoint, f"/job-scripts/{job_script_id}"),
         )
         if "error" in response.keys():
             return response
