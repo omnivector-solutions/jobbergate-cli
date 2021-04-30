@@ -737,7 +737,7 @@ class JobbergateApi:
                     will be returned
         """
         response = self.jobbergate_request(
-            method="GET", endpoint=urljoin(self.api_endpoint, "/job-submission/")
+            method="GET", endpoint=urljoin(self.api_endpoint, "/job-submissions/")
         )
 
         try:
@@ -748,13 +748,7 @@ class JobbergateApi:
         except:  # noqa: E722
             return response
 
-        if all:
-            return response
-        else:
-            response = [
-                d for d in response if d["job_submission_owner"] == self.user_id
-            ]
-            return response
+        return response
 
     @tabulate_decorator
     def create_job_submission(self, job_script_id, render_only, job_submission_name=""):
@@ -776,21 +770,21 @@ class JobbergateApi:
 
         data = self.job_submission_config
         data["job_submission_name"] = job_submission_name
-        data["job_script"] = job_script_id
-        data["job_submission_owner"] = self.user_id
+        data["job_script_id"] = job_script_id
+        data["job_submission_owner_id"] = self.user_id
 
         job_script = self.jobbergate_request(
             method="GET",
-            endpoint=urljoin(self.api_endpoint, f"/job-script/{job_script_id}"),
+            endpoint=urljoin(self.api_endpoint, f"/job-scripts/{job_script_id}"),
         )
         if "error" in job_script.keys():
             return job_script
 
-        application_id = job_script["application"]
+        application_id = job_script["application_id"]
 
         application = self.jobbergate_request(
             method="GET",
-            endpoint=urljoin(self.api_endpoint, f"/application/{application_id}"),
+            endpoint=urljoin(self.api_endpoint, f"/applications/{application_id}"),
         )
         if "error" in application.keys():
             return application
@@ -807,11 +801,13 @@ class JobbergateApi:
             # with open(filename, 'w') as write_file:
             #     write_file.write(value)
 
+        data_json = json.dumps(data)
+
         if render_only:
             response = self.jobbergate_request(
                 method="POST",
-                endpoint=urljoin(self.api_endpoint, "/job-submission/"),
-                data=data,
+                endpoint=urljoin(self.api_endpoint, "/job-submissions/"),
+                data=data_json,
             )
             if "error" in response.keys():
                 return response
@@ -830,10 +826,11 @@ class JobbergateApi:
                 find = output.find("job") + 4
                 slurm_job_id = output[find:]
                 data["slurm_job_id"] = slurm_job_id
+                data_json = json.dumps(data)
                 response = self.jobbergate_request(
                     method="POST",
-                    endpoint=urljoin(self.api_endpoint, "/job-submission/"),
-                    data=data,
+                    endpoint=urljoin(self.api_endpoint, "/job-submissions/"),
+                    data=data_json,
                 )
                 if "error" in response.keys():
                     return response
@@ -862,7 +859,7 @@ class JobbergateApi:
 
         response = self.jobbergate_request(
             method="GET",
-            endpoint=urljoin(self.api_endpoint, f"/job-submission/{job_submission_id}"),
+            endpoint=urljoin(self.api_endpoint, f"/job-submissions/{job_submission_id}"),
         )
 
         return response
