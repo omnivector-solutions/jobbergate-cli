@@ -37,6 +37,7 @@ JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT = urljoin(JOBBERGATE_API_ENDPOINT, "token/"
 # FIXME - this vvv string doesn't appear in any of our code at https://github.com/omnivector-solutions
 JOBBERGATE_APPLICATION_S3_BASE_PATH = "jobbergate-resources"
 
+SBATCH_PATH = os.environ.get("SBATCH_PATH", "/usr/bin/scontrol")
 
 JOBBERGATE_APPLICATION_CONFIG = {
     "application_name": "",

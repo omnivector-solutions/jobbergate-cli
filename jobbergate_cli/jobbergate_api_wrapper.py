@@ -21,6 +21,7 @@ from jobbergate_cli.jobbergate_common import (
     JOBBERGATE_APPLICATION_MODULE_FILE_NAME,
     JOBBERGATE_APPLICATION_MODULE_PATH,
     JOBBERGATE_CACHE_DIR,
+    SBATCH_PATH,
     TAR_NAME,
 )
 
@@ -215,7 +216,7 @@ class JobbergateApi:
 
     def jobbergate_run(self, filename, *argv):
         """Execute Job Submission."""
-        cmd = ["/snap/bin/sbatch", filename]
+        cmd = [SBATCH_PATH, filename]
         for arg in argv:
             cmd.append(arg)
         p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
