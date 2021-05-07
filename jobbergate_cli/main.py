@@ -180,21 +180,28 @@ def list_applications(ctx, all=False):
 
 @main.command("create-application")
 @click.option("--name", "-n", "create_application_name")
+@click.option("--identifier", "create_application_identifier")
 @click.option("--application-path", "-a", "create_application_path")
 @click.option("--application-desc", "application_desc", default="")
 @click.pass_obj
 def create_application(
-    ctx, create_application_name, create_application_path, application_desc
+    ctx,
+    create_application_name,
+    create_application_identifier,
+    create_application_path,
+    application_desc,
 ):
     """
     CREATE an application.
 
     Keyword Arguments:
+        identifier       -- identifier of the application
         name             -- Name of the application
         application-path -- path to dir where application files are
     """
     out = ctx.api.create_application(
         application_name=create_application_name,
+        application_identifier=create_application_identifier,
         application_path=create_application_path,
         application_desc=application_desc,
     )
@@ -203,49 +210,67 @@ def create_application(
 
 @main.command("get-application")
 @click.option("--id", "-i", "application_id")
+@click.option("--identifier", "application_identifier")
 @click.pass_obj
-def get_application(ctx, application_id):
+def get_application(ctx, application_id, application_identifier):
     """
     GET an Application.
 
     Keyword Arguments:
-        id -- id of application to be returned
+        id         -- id of application to be returned
+        identifier -- identifier of application to be returned
     """
-    print(ctx.api.get_application(application_id=application_id))
+    print(
+        ctx.api.get_application(
+            application_id=application_id, application_identifier=application_identifier
+        )
+    )
 
 
 @main.command("update-application")
 @click.option("--id", "-i", "update_application_id")
+@click.option("--identifier", "update_application_identifier")
 @click.option("--application-path", "-a", "application_path")
 @click.option("--application-desc", "application_desc", default="")
 @click.pass_obj
-def update_application(ctx, update_application_id, application_path, application_desc):
+def update_application(
+    ctx,
+    update_application_id,
+    application_identifier,
+    application_path,
+    application_desc,
+):
     """
     UPDATE an Application.
 
     Keyword Arguments:
-        id                --  id application to update
-        application-path  --  path to dir for updated application files
-        application-desc  --  optional new application description
+        id                      --  id application to update
+        application-identifier  --  identifier of the application to update
+        application-path        --  path to dir for updated application files
+        application-desc        --  optional new application description
     """
     print(
         ctx.api.update_application(
-            update_application_id, application_path, application_desc
+            update_application_id, application_identifier, application_path, application_desc
         )
     )
 
 
 @main.command("delete-application")
 @click.option("--id", "-i", "delete_application_id")
+@click.option("--identifier", "delete_application_identifier")
 @click.pass_obj
-def delete_application(ctx, delete_application_id):
+def delete_application(ctx, delete_application_id, delete_application_identifier):
     """
     DELETE an Application.
 
     Keyword Arguments:
         id -- id of application to delete
+        identifier -- unique string of application to delete
     """
-    print(ctx.api.delete_application(delete_application_id))
+    print(
+        ctx.api.delete_application(delete_application_id, delete_application_identifier)
+    )
 
 
 @main.command("list-job-scripts")
