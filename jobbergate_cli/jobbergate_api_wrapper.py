@@ -455,42 +455,64 @@ class JobbergateApi:
 
     @tabulate_decorator
     def create_job_script(
-        self, job_script_name, application_id, param_file, sbatch_params, fast, debug
+        self, job_script_name, application_id, application_identifier, param_file, sbatch_params, fast, debug
     ):
         """
         CREATE a Job Script.
 
         Keyword Arguments:
-            name            --  Name for job script
-            application-id  --  id of the application for the job script
-            param-file      --  optional parameter file for populating templates.
-                                if this is not provided, the question askin in
-                                jobbergate.py is triggered
-            sbatch-params   --  optional parameter to submit raw sbatch parameters
-            fast            --  optional parameter to use default answers (when available)
-                                instead of asking user
-            debug           --  optional parameter to view job script data
-                                in CLI output
+            name                    --  Name for job script
+            application-id          --  id of the application for the job script
+            application-identifier  --  identifier of the application for the job script
+            param-file              --  optional parameter file for populating templates.
+                                        if this is not provided, the question askin in
+                                        jobbergate.py is triggered
+            sbatch-params           --  optional parameter to submit raw sbatch parameters
+            fast                    --  optional parameter to use default answers (when available)
+                                        instead of asking user
+            debug                   --  optional parameter to view job script data
+                                        in CLI output
         """
-        if application_id is None:
+        parameter_check = []
+        if application_id and application_identifier:
             response = self.error_handle(
-                error="--application-id for the job script not defined",
-                solution="Please try again with --application-id specified",
+                error="both identifier and id supplied",
+                solution="Please try again with only one",
             )
-            return response
+            parameter_check.append(response)
+
+        if not application_id and not application_identifier:
+            response = self.error_handle(
+                error="--application-id and --aplication-identifier for the job script not defined",
+                solution="Please try again with one of them specified",
+            )
+            parameter_check.append(response)
 
         if job_script_name is None:
             response = self.error_handle(
                 error="--name for the job script not defined",
                 solution="Please try again with --name specified",
             )
+            parameter_check.append(response)
+
+        if len(parameter_check) > 0:
+            response = parameter_check
             return response
 
         self.validation_check = {}
         data = self.job_script_config
         data["job_script_name"] = job_script_name
-        data["application"] = application_id
         data["job_script_owner"] = self.user_id
+        app_data = None
+
+        if application_identifier:
+            app_data = self.jobbergate_request(
+                method="GET",
+                endpoint=urljoin(self.api_endpoint, f"/application/?identifier={application_identifier}"),
+            )
+            application_id = app_data.get("id")
+
+        data["application"] = application_id
 
         if param_file:
             is_param_file = os.path.isfile(param_file)
@@ -506,10 +528,11 @@ class JobbergateApi:
         else:
             supplied_params = {}
 
-        app_data = self.jobbergate_request(
-            method="GET",
-            endpoint=urljoin(self.api_endpoint, f"/application/{application_id}"),
-        )
+        if not app_data:
+            app_data = self.jobbergate_request(
+                method="GET",
+                endpoint=urljoin(self.api_endpoint, f"/application/{application_id}"),
+            )
         if "error" in app_data.keys():
             return app_data
 

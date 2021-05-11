@@ -291,6 +291,7 @@ def list_job_scripts(ctx, all=False):
 @main.command("create-job-script")
 @click.option("--name", "-n", "create_job_script_name", default="default_script_name")
 @click.option("--application-id", "-i", "create_job_script_application_id")
+@click.option("--application-identifier", "create_job_script_application_identifier")
 @click.option("--sbatch-params", multiple=True)
 @click.option("--param-file", "param_file", type=click.Path())
 @click.option("--fast", "-f", "fast", is_flag=True)
@@ -300,6 +301,7 @@ def create_job_script(
     ctx,
     create_job_script_name,
     create_job_script_application_id,
+    create_job_script_application_identifier,
     sbatch_params,
     param_file=None,
     fast=False,
@@ -309,20 +311,22 @@ def create_job_script(
     CREATE a Job Script.
 
     Keyword Arguments:
-        name            --  Name for job script
-        application-id  --  id of the application for the job script
-        param-file      --  optional parameter file for populating templates.
-                            if answers are not provided, the question asking in
-                            jobbergate.py is triggered
-        sbatch-params   --  optional parameter to submit raw sbatch parameters
-        fast            --  optional parameter to use default answers (when available)
-                            instead of asking user
-        debug           --  optional parameter to view job script data in CLI output
+        name                    --  Name for job script
+        application-id          --  id of the application for the job script
+        application-identifier  --  identifier of the application for the job script
+        param-file              --  optional parameter file for populating templates.
+                                    if answers are not provided, the question asking in
+                                    jobbergate.py is triggered
+        sbatch-params           --  optional parameter to submit raw sbatch parameters
+        fast                    --  optional parameter to use default answers (when available)
+                                    instead of asking user
+        debug                   --  optional parameter to view job script data in CLI output
     """
     print(
         ctx.api.create_job_script(
             create_job_script_name,
             create_job_script_application_id,
+            create_job_script_application_identifier,
             param_file,
             sbatch_params,
             fast,
