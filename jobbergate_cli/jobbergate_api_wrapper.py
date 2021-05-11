@@ -476,7 +476,7 @@ class JobbergateApi:
         parameter_check = []
         if application_id and application_identifier:
             response = self.error_handle(
-                error="both identifier and id supplied",
+                error="Both identifier and id supplied",
                 solution="Please try again with only one",
             )
             parameter_check.append(response)
