@@ -1006,13 +1006,6 @@ class JobbergateApi:
             )
             parameter_check.append(response)
 
-        if application_identifier is None:
-            response = self.error_handle(
-                error="--identifier not defined",
-                solution="Please try again with --identifier specified",
-            )
-            parameter_check.append(response)
-
         if len(parameter_check) > 0:
             response = parameter_check
             return response
@@ -1026,7 +1019,9 @@ class JobbergateApi:
         data = self.application_config
         data["application_name"] = application_name
         data["application_owner"] = self.user_id
-        data["application_identifier"] = application_identifier
+
+        if application_identifier:
+            data["application_identifier"] = application_identifier
 
         if application_desc:
             data["application_description"] = application_desc
