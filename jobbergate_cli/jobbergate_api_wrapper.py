@@ -455,42 +455,64 @@ class JobbergateApi:
 
     @tabulate_decorator
     def create_job_script(
-        self, job_script_name, application_id, param_file, sbatch_params, fast, debug
+        self, job_script_name, application_id, application_identifier, param_file, sbatch_params, fast, debug
     ):
         """
         CREATE a Job Script.
 
         Keyword Arguments:
-            name            --  Name for job script
-            application-id  --  id of the application for the job script
-            param-file      --  optional parameter file for populating templates.
-                                if this is not provided, the question askin in
-                                jobbergate.py is triggered
-            sbatch-params   --  optional parameter to submit raw sbatch parameters
-            fast            --  optional parameter to use default answers (when available)
-                                instead of asking user
-            debug           --  optional parameter to view job script data
-                                in CLI output
+            name                    --  Name for job script
+            application-id          --  id of the application for the job script
+            application-identifier  --  identifier of the application for the job script
+            param-file              --  optional parameter file for populating templates.
+                                        if this is not provided, the question askin in
+                                        jobbergate.py is triggered
+            sbatch-params           --  optional parameter to submit raw sbatch parameters
+            fast                    --  optional parameter to use default answers (when available)
+                                        instead of asking user
+            debug                   --  optional parameter to view job script data
+                                        in CLI output
         """
-        if application_id is None:
+        parameter_check = []
+        if application_id and application_identifier:
             response = self.error_handle(
-                error="--application-id for the job script not defined",
-                solution="Please try again with --application-id specified",
+                error="Both identifier and id supplied",
+                solution="Please try again with only one",
             )
-            return response
+            parameter_check.append(response)
+
+        if not application_id and not application_identifier:
+            response = self.error_handle(
+                error="--application-id and --aplication-identifier for the job script not defined",
+                solution="Please try again with one of them specified",
+            )
+            parameter_check.append(response)
 
         if job_script_name is None:
             response = self.error_handle(
                 error="--name for the job script not defined",
                 solution="Please try again with --name specified",
             )
+            parameter_check.append(response)
+
+        if len(parameter_check) > 0:
+            response = parameter_check
             return response
 
         self.validation_check = {}
         data = self.job_script_config
         data["job_script_name"] = job_script_name
-        data["application"] = application_id
         data["job_script_owner"] = self.user_id
+        app_data = None
+
+        if application_identifier:
+            app_data = self.jobbergate_request(
+                method="GET",
+                endpoint=urljoin(self.api_endpoint, f"/application/?identifier={application_identifier}"),
+            )
+            application_id = app_data.get("id")
+
+        data["application"] = application_id
 
         if param_file:
             is_param_file = os.path.isfile(param_file)
@@ -506,9 +528,11 @@ class JobbergateApi:
         else:
             supplied_params = {}
 
-        app_data = self.jobbergate_request(
-            method="GET", endpoint=urljoin(self.api_endpoint, f"/application/{application_id}")
-        )
+        if not app_data:
+            app_data = self.jobbergate_request(
+                method="GET",
+                endpoint=urljoin(self.api_endpoint, f"/application/{application_id}"),
+            )
         if "error" in app_data.keys():
             return app_data
 
@@ -649,7 +673,8 @@ class JobbergateApi:
             return response
 
         response = self.jobbergate_request(
-            method="GET", endpoint=urljoin(self.api_endpoint, f"/job-script/{job_script_id}")
+            method="GET",
+            endpoint=urljoin(self.api_endpoint, f"/job-script/{job_script_id}"),
         )
         if "error" in response.keys():
             return response
@@ -690,7 +715,8 @@ class JobbergateApi:
             return response
 
         data = self.jobbergate_request(
-            method="GET", endpoint=urljoin(self.api_endpoint, f"/job-script/{job_script_id}")
+            method="GET",
+            endpoint=urljoin(self.api_endpoint, f"/job-script/{job_script_id}"),
         )
         if "error" in data.keys():
             return data
@@ -719,7 +745,8 @@ class JobbergateApi:
             return response
 
         response = self.jobbergate_request(
-            method="DELETE", endpoint=urljoin(self.api_endpoint, f"/job-script/{job_script_id}")
+            method="DELETE",
+            endpoint=urljoin(self.api_endpoint, f"/job-script/{job_script_id}"),
         )
 
         return response
@@ -779,7 +806,8 @@ class JobbergateApi:
         data["job_submission_owner"] = self.user_id
 
         job_script = self.jobbergate_request(
-            method="GET", endpoint=urljoin(self.api_endpoint, f"/job-script/{job_script_id}")
+            method="GET",
+            endpoint=urljoin(self.api_endpoint, f"/job-script/{job_script_id}"),
         )
         if "error" in job_script.keys():
             return job_script
@@ -787,7 +815,8 @@ class JobbergateApi:
         application_id = job_script["application"]
 
         application = self.jobbergate_request(
-            method="GET", endpoint=urljoin(self.api_endpoint, f"/application/{application_id}")
+            method="GET",
+            endpoint=urljoin(self.api_endpoint, f"/application/{application_id}"),
         )
         if "error" in application.keys():
             return application
@@ -888,7 +917,9 @@ class JobbergateApi:
         # TODO how to collect data that will updated for the job-submission
         response = self.jobbergate_request(
             method="PUT",
-            endpoint=urljoin(self.api_endpoint, f"/job-submission/{job_submission_id}/"),
+            endpoint=urljoin(
+                self.api_endpoint, f"/job-submission/{job_submission_id}/"
+            ),
         )
         return response
 
@@ -946,7 +977,13 @@ class JobbergateApi:
             return response
 
     @tabulate_decorator
-    def create_application(self, application_name, application_path, application_desc):
+    def create_application(
+        self,
+        application_name,
+        application_identifier,
+        application_path,
+        application_desc,
+    ):
         """
         CREATE an application.
 
@@ -968,6 +1005,14 @@ class JobbergateApi:
                 solution="Please try again with --application-path specified",
             )
             parameter_check.append(response)
+
+        if application_identifier is None:
+            response = self.error_handle(
+                error="--identifier not defined",
+                solution="Please try again with --identifier specified",
+            )
+            parameter_check.append(response)
+
         if len(parameter_check) > 0:
             response = parameter_check
             return response
@@ -981,6 +1026,7 @@ class JobbergateApi:
         data = self.application_config
         data["application_name"] = application_name
         data["application_owner"] = self.user_id
+        data["application_identifier"] = application_identifier
 
         if application_desc:
             data["application_description"] = application_desc
@@ -1011,35 +1057,65 @@ class JobbergateApi:
         return response
 
     @tabulate_decorator
-    def get_application(self, application_id):
+    def get_application(self, application_id, application_identifier):
         """
         GET an Application.
 
         Keyword Arguments:
-            application_id -- id of application to be returned
+            application_id         -- id of application to be returned
+            application_identifier -- id of application to be returned
         """
-        response = self.jobbergate_request(
-            method="GET", endpoint=urljoin(self.api_endpoint, f"/application/{application_id}")
-        )
+        parameter_check = []
+        if application_id and application_identifier:
+            response = self.error_handle(
+                error="both identifier and id supplied",
+                solution="Please try again with only one",
+            )
+            parameter_check.append(response)
+
+        if len(parameter_check) > 0:
+            response = parameter_check
+            return response
+        if application_id:
+            response = self.jobbergate_request(
+                method="GET",
+                endpoint=urljoin(self.api_endpoint, f"/application/{application_id}"),
+            )
+        else:
+            response = self.jobbergate_request(
+                method="GET",
+                endpoint=urljoin(
+                    self.api_endpoint,
+                    f"/application/?identifier={application_identifier}",
+                ),
+            )
 
         return response
 
     @tabulate_decorator
-    def update_application(self, application_id, application_path, application_desc):
+    def update_application(self, application_id, application_identifier, application_path, application_desc):
         """
         UPDATE an Application.
 
         Keyword Arguments:
-            application_id    -- id application to update
-            application_path  --  path to dir for updated application files
-            application_desc  --  optional new application description
+            application_id            -- id application to update
+            application_identifier    -- identifier application to update
+            application_path          --  path to dir for updated application files
+            application_desc          --  optional new application description
         """
+        parameter_check = []
         if application_path is None:
             response = self.error_handle(
                 error="--application-path not defined",
                 solution="Please try again with --application-path specified",
             )
-            return response
+            parameter_check.append(response)
+        if application_id and application_identifier:
+            response = self.error_handle(
+                error="both identifier and id supplied",
+                solution="Please try again with only one",
+            )
+            parameter_check.append(response)
 
         error_check = self.application_error_check(application_path)
 
@@ -1047,9 +1123,17 @@ class JobbergateApi:
             response = error_check
             return response
 
-        data = self.jobbergate_request(
-            method="GET", endpoint=urljoin(self.api_endpoint, f"/application/{application_id}")
-        )
+        if id:
+            data = self.jobbergate_request(
+                method="GET",
+                endpoint=urljoin(self.api_endpoint, f"/application/{application_id}"),
+            )
+        else:
+            data = self.jobbergate_request(
+                method="GET",
+                endpoint=urljoin(self.api_endpoint, f"/application/?identifier={application_identifier}"),
+            )
+
         if "error" in data.keys():
             return data
 
@@ -1084,16 +1168,38 @@ class JobbergateApi:
         return response
 
     @tabulate_decorator
-    def delete_application(self, application_id):
+    def delete_application(self, application_id, application_identifier):
         """
         DELETE an Application.
 
         Keyword Arguments:
-            application_id -- id of application to delete
+            application_id         -- id of application to delete
+            application_identifier -- identifier of application to delete
         """
-        response = self.jobbergate_request(
-            method="DELETE",
-            endpoint=urljoin(self.api_endpoint, f"/application/{application_id}"),
-        )
+        parameter_check = []
+        if application_id and application_identifier:
+            response = self.error_handle(
+                error="both identifier and id supplied",
+                solution="Please try again with only one",
+            )
+            parameter_check.append(response)
+
+        if len(parameter_check) > 0:
+            response = parameter_check
+            return response
+
+        if application_id:
+            response = self.jobbergate_request(
+                method="DELETE",
+                endpoint=urljoin(self.api_endpoint, f"/application/{application_id}"),
+            )
+        else:
+            response = self.jobbergate_request(
+                method="DELETE",
+                endpoint=urljoin(
+                    self.api_endpoint,
+                    f"/application/?identifier={application_identifier}",
+                ),
+            )
 
         return response
