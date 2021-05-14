@@ -595,8 +595,9 @@ class JobbergateApi:
         files = {"upload_file": open(param_filename, "rb")}
 
         # Possibly overwrite script name
-        if "job_script_name" in param_dict["jobbergate_config"]:
-            data["job_script_name"] = param_dict["jobbergate_config"]["job_script_name"]
+        job_script_name_from_param = param_dict["jobbergate_config"]["job_script_name"]
+        if "job_script_name" in param_dict["jobbergate_config"] and job_script_name_from_param != "":
+            data["job_script_name"] = job_script_name_from_param
 
         if sbatch_params:
             for i, param in enumerate(sbatch_params):
