@@ -13,7 +13,7 @@ class JobbergateApplicationBase:
 
     def mainflow(self, data):
         """Implements the main question asking workflow."""
-        raise Exception("Inheriting class must override this method.")
+        raise NotImplementedError("Inheriting class must override this method.")
 
     def get_template_files(self):
         templates = [template for root, directory, template in os.walk("./templates")]

@@ -455,7 +455,7 @@ class JobbergateApi:
 
     @tabulate_decorator
     def create_job_script(
-        self, job_script_name, application_id, application_identifier, param_file, sbatch_params, fast, debug
+        self, job_script_name, application_id, application_identifier, param_file, sbatch_params, fast, no_submit, debug
     ):
         """
         CREATE a Job Script.
@@ -470,6 +470,7 @@ class JobbergateApi:
             sbatch-params           --  optional parameter to submit raw sbatch parameters
             fast                    --  optional parameter to use default answers (when available)
                                         instead of asking user
+            no-submit               --  optional parameter to not even ask about submitting job
             debug                   --  optional parameter to view job script data
                                         in CLI output
         """
@@ -543,7 +544,15 @@ class JobbergateApi:
 
         # Load the jobbergate yaml
         config = JOBBERGATE_APPLICATION_CONFIG_PATH.read_text()
-        param_dict = yaml.load(config, Loader=yaml.FullLoader)
+
+        try:
+            param_dict = yaml.load(config, Loader=yaml.FullLoader)
+        except:  # noqa
+            response = self.error_handle(
+                error="Could not load application's yaml file",
+                solution="Please review yaml file for formatting.",
+            )
+            return response
 
         # Exec the jobbergate application python module
         module = self.import_jobbergate_application_module()
@@ -560,7 +569,14 @@ class JobbergateApi:
                 application, param_dict["jobbergate_config"].pop("nextworkflow")
             )  # Use and remove from the dict
 
-            workflow_questions = method_to_call(data=param_dict["jobbergate_config"])
+            try:
+                workflow_questions = method_to_call(data=param_dict["jobbergate_config"])
+            except NotImplementedError:
+                response = self.error_handle(
+                    error="Abstract method not implemented",
+                    solution=f"Please implement {method_to_call.__name__} in your class.",
+                )
+                return response
 
             questions = []
             auto_answers = {}
@@ -595,8 +611,9 @@ class JobbergateApi:
         files = {"upload_file": open(param_filename, "rb")}
 
         # Possibly overwrite script name
-        if "job_script_name" in param_dict["jobbergate_config"]:
-            data["job_script_name"] = param_dict["jobbergate_config"]["job_script_name"]
+        job_script_name_from_param = param_dict["jobbergate_config"]["job_script_name"]
+        if "job_script_name" in param_dict["jobbergate_config"] and job_script_name_from_param != "":
+            data["job_script_name"] = job_script_name_from_param
 
         if sbatch_params:
             for i, param in enumerate(sbatch_params):
@@ -632,7 +649,9 @@ class JobbergateApi:
             del response["job_script_data_as_string"]
 
         # Check if user wants to submit immediately
-        if fast:
+        if no_submit:
+            submit = False
+        elif fast:
             submit = True
         else:
             submit = inquirer.prompt(
@@ -969,6 +988,8 @@ class JobbergateApi:
 
         # Sort
         response.sort(key=lambda app: app["id"], reverse=True)
+        for app in response:
+            app["application_description"] = _fit_line(app["application_description"])
 
         if all:
             return response
@@ -1198,3 +1219,26 @@ class JobbergateApi:
             )
 
         return response
+
+
+def _fit_line(s: str, n: int = 79):
+    """
+    Smartly ellipsize a line to fit in n (default 79) characters.
+    This method ensures only one line will be displayed, and an ellipsis is only used
+    if there are several characters to be hidden.
+    """
+    assert n >= 15
+    snip = n - 8
+
+    truncate = False
+    s = s.strip()
+    if "\n" in s:
+        truncate = True
+    s = s.split("\n")[0].strip()
+    if len(s) > n:
+        truncate = True
+
+    if truncate:
+        return s[:snip] + "..."
+
+    return s
