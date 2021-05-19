@@ -987,8 +987,12 @@ class JobbergateApi:
         LIST available applications.
 
         Keyword Arguments:
-            all  -- optional parameter that will return all applications, even the ones without identifier
-            user -- optional parameter that will return only the applications from the user
+            all  -- optional parameter that will return all applications, even the ones
+                    without identifier
+            user -- optional parameter that will return only the applications from
+                    the user that have identifier; if both --user and --all is
+                    supplied, then every application for the user will be shown,
+                    even the ones without identifier
         """
         response = self.jobbergate_request(
             method="GET", endpoint=urljoin(self.api_endpoint, "/application/")
@@ -1006,11 +1010,14 @@ class JobbergateApi:
         for app in response:
             app["application_description"] = _fit_line(app["application_description"])
 
+        # List every application of the user
         if all and user:
             response = [d for d in response if d["application_owner"] == self.user_id]
             return response
+        # List all the applications from every user, even the ones without an identifier
         elif all:
             return response
+        # List only the applications of the user that have identifier
         elif user:
             default_applications = [
                 application
@@ -1023,6 +1030,7 @@ class JobbergateApi:
                 if d["application_owner"] == self.user_id
             ]
             return user_applications
+        # If no flag is passed, list all the applications, but only the ones that have identifier
         else:
             default_applications = [
                 application

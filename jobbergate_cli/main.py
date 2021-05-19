@@ -172,8 +172,12 @@ def list_applications(ctx, all=False, user=False):
     LIST available applications.
 
     Keyword Arguments:
-        all  -- optional parameter that will return all applications even the ones without identifier
-        user -- optional parameter that will return only the applications from the user
+        all  -- optional parameter that will return all applications, even the ones
+                without identifier
+        user -- optional parameter that will return only the applications from
+                the user that have identifier;
+    if both --user and --all is supplied, then every application for the user will be shown,
+    even the ones without identifier
     """
     print(ctx.api.list_applications(all, user))
 
