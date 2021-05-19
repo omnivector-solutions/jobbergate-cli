@@ -165,17 +165,17 @@ def main(ctx, username, password):
 
 @main.command("list-applications")
 @click.option("--all", "all", is_flag=True)
+@click.option("--user", "user", is_flag=True)
 @click.pass_obj
-def list_applications(ctx, all=False):
+def list_applications(ctx, all=False, user=False):
     """
     LIST available applications.
 
     Keyword Arguments:
-        all  -- optional parameter that will return all applications
-                if NOT specified then only the user's applications
-                will be returned
+        all  -- optional parameter that will return all applications even the ones without identifier
+        user -- optional parameter that will return only the applications from the user
     """
-    print(ctx.api.list_applications(all))
+    print(ctx.api.list_applications(all, user))
 
 
 @main.command("create-application")

@@ -966,14 +966,13 @@ class JobbergateApi:
 
     # Applications
     @tabulate_decorator
-    def list_applications(self, all):
+    def list_applications(self, all, user):
         """
         LIST available applications.
 
         Keyword Arguments:
-            all  -- optional parameter that will return all applications
-                    if NOT specified then only the user's applications
-                    will be returned
+            all  -- optional parameter that will return all applications, even the ones without identifier
+            user -- optional parameter that will return only the applications from the user
         """
         response = self.jobbergate_request(
             method="GET", endpoint=urljoin(self.api_endpoint, "/application/")
@@ -991,11 +990,15 @@ class JobbergateApi:
         for app in response:
             app["application_description"] = _fit_line(app["application_description"])
 
+        all_applications = response
+        default_applications = [application for application in response if application.get("application_identifier")]
         if all:
-            return response
-        else:
+            return all_applications
+        elif user:
             response = [d for d in response if d["application_owner"] == self.user_id]
             return response
+        else:
+            return default_applications
 
     @tabulate_decorator
     def create_application(
