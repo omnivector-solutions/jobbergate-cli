@@ -231,13 +231,15 @@ def get_application(ctx, application_id, application_identifier):
 @click.option("--id", "-i", "update_application_id")
 @click.option("--identifier", "update_application_identifier")
 @click.option("--application-path", "-a", "application_path")
+@click.option("--update-identifier", "update_identifier")
 @click.option("--application-desc", "application_desc", default="")
 @click.pass_obj
 def update_application(
     ctx,
     update_application_id,
-    application_identifier,
+    update_application_identifier,
     application_path,
+    update_identifier,
     application_desc,
 ):
     """
@@ -247,11 +249,12 @@ def update_application(
         id                      --  id application to update
         application-identifier  --  identifier of the application to update
         application-path        --  path to dir for updated application files
+        update-identifer        --  identifier to be set
         application-desc        --  optional new application description
     """
     print(
         ctx.api.update_application(
-            update_application_id, application_identifier, application_path, application_desc
+            update_application_id, update_application_identifier, application_path, update_identifier, application_desc
         )
     )
 

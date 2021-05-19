@@ -1109,23 +1109,20 @@ class JobbergateApi:
         return response
 
     @tabulate_decorator
-    def update_application(self, application_id, application_identifier, application_path, application_desc):
+    def update_application(
+            self, application_id, application_identifier, application_path, update_identifier, application_desc
+            ):
         """
         UPDATE an Application.
 
         Keyword Arguments:
             application_id            -- id application to update
             application_identifier    -- identifier application to update
-            application_path          --  path to dir for updated application files
-            application_desc          --  optional new application description
+            application_path          -- path to dir for updated application files
+            application_desc          -- optional new application description
+            update_identifier         -- the identifier to be set
         """
         parameter_check = []
-        if application_path is None:
-            response = self.error_handle(
-                error="--application-path not defined",
-                solution="Please try again with --application-path specified",
-            )
-            parameter_check.append(response)
         if application_id and application_identifier:
             response = self.error_handle(
                 error="both identifier and id supplied",
@@ -1133,13 +1130,35 @@ class JobbergateApi:
             )
             parameter_check.append(response)
 
+        if len(parameter_check) > 0:
+            response = parameter_check
+            return response
+
+        if update_identifier:
+            id_field = "application_id" if application_id else "identifier"
+            response = self.jobbergate_request(
+                method="PUT",
+                endpoint=urljoin(
+                    self.api_endpoint,
+                    f"/application-update-identifier/?id={id_field}&new={update_identifier}"
+                ),
+            )
+            return response
+
+        if application_path is None:
+            response = self.error_handle(
+                error="--application-path not defined",
+                solution="Please try again with --application-path specified",
+            )
+            return response
+
         error_check = self.application_error_check(application_path)
 
         if len(error_check) > 0:
             response = error_check
             return response
 
-        if id:
+        if application_id:
             data = self.jobbergate_request(
                 method="GET",
                 endpoint=urljoin(self.api_endpoint, f"/application/{application_id}"),
