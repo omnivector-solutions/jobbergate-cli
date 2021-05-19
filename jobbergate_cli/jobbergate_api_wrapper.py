@@ -990,14 +990,17 @@ class JobbergateApi:
         for app in response:
             app["application_description"] = _fit_line(app["application_description"])
 
-        all_applications = response
-        default_applications = [application for application in response if application.get("application_identifier")]
-        if all:
-            return all_applications
-        elif user:
+        if all and user:
             response = [d for d in response if d["application_owner"] == self.user_id]
             return response
+        elif all:
+            return response
+        elif user:
+            default_applications = [application for application in response if application.get("application_identifier")]
+            user_applications = [d for d in default_applications if d["application_owner"] == self.user_id]
+            return user_applications
         else:
+            default_applications = [application for application in response if application.get("application_identifier")]
             return default_applications
 
     @tabulate_decorator
