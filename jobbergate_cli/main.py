@@ -254,7 +254,11 @@ def update_application(
     """
     print(
         ctx.api.update_application(
-            update_application_id, update_application_identifier, application_path, update_identifier, application_desc
+            update_application_id,
+            update_application_identifier,
+            application_path,
+            update_identifier,
+            application_desc,
         )
     )
 

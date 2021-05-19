@@ -455,7 +455,15 @@ class JobbergateApi:
 
     @tabulate_decorator
     def create_job_script(
-        self, job_script_name, application_id, application_identifier, param_file, sbatch_params, fast, no_submit, debug
+        self,
+        job_script_name,
+        application_id,
+        application_identifier,
+        param_file,
+        sbatch_params,
+        fast,
+        no_submit,
+        debug,
     ):
         """
         CREATE a Job Script.
@@ -509,7 +517,10 @@ class JobbergateApi:
         if application_identifier:
             app_data = self.jobbergate_request(
                 method="GET",
-                endpoint=urljoin(self.api_endpoint, f"/application/?identifier={application_identifier}"),
+                endpoint=urljoin(
+                    self.api_endpoint,
+                    f"/application/?identifier={application_identifier}",
+                ),
             )
             application_id = app_data.get("id")
 
@@ -570,7 +581,9 @@ class JobbergateApi:
             )  # Use and remove from the dict
 
             try:
-                workflow_questions = method_to_call(data=param_dict["jobbergate_config"])
+                workflow_questions = method_to_call(
+                    data=param_dict["jobbergate_config"]
+                )
             except NotImplementedError:
                 response = self.error_handle(
                     error="Abstract method not implemented",
@@ -612,7 +625,10 @@ class JobbergateApi:
 
         # Possibly overwrite script name
         job_script_name_from_param = param_dict["jobbergate_config"]["job_script_name"]
-        if "job_script_name" in param_dict["jobbergate_config"] and job_script_name_from_param != "":
+        if (
+            "job_script_name" in param_dict["jobbergate_config"]
+            and job_script_name_from_param != ""
+        ):
             data["job_script_name"] = job_script_name_from_param
 
         if sbatch_params:
@@ -996,11 +1012,23 @@ class JobbergateApi:
         elif all:
             return response
         elif user:
-            default_applications = [application for application in response if application.get("application_identifier")]
-            user_applications = [d for d in default_applications if d["application_owner"] == self.user_id]
+            default_applications = [
+                application
+                for application in response
+                if application.get("application_identifier")
+            ]
+            user_applications = [
+                d
+                for d in default_applications
+                if d["application_owner"] == self.user_id
+            ]
             return user_applications
         else:
-            default_applications = [application for application in response if application.get("application_identifier")]
+            default_applications = [
+                application
+                for application in response
+                if application.get("application_identifier")
+            ]
             return default_applications
 
     @tabulate_decorator
@@ -1116,8 +1144,13 @@ class JobbergateApi:
 
     @tabulate_decorator
     def update_application(
-            self, application_id, application_identifier, application_path, update_identifier, application_desc
-            ):
+        self,
+        application_id,
+        application_identifier,
+        application_path,
+        update_identifier,
+        application_desc,
+    ):
         """
         UPDATE an Application.
 
@@ -1147,7 +1180,7 @@ class JobbergateApi:
                 method="PUT",
                 endpoint=urljoin(
                     self.api_endpoint,
-                    f"/application-update-identifier/?{id_field}={id_value}&new={update_identifier}"
+                    f"/application-update-identifier/?{id_field}={id_value}&new={update_identifier}",
                 ),
             )
             return response
@@ -1173,7 +1206,10 @@ class JobbergateApi:
         else:
             data = self.jobbergate_request(
                 method="GET",
-                endpoint=urljoin(self.api_endpoint, f"/application/?identifier={application_identifier}"),
+                endpoint=urljoin(
+                    self.api_endpoint,
+                    f"/application/?identifier={application_identifier}",
+                ),
             )
 
         if "error" in data.keys():
