@@ -1139,11 +1139,12 @@ class JobbergateApi:
 
         if update_identifier:
             id_field = "application_id" if application_id else "identifier"
+            id_value = application_id if application_id else application_identifier
             response = self.jobbergate_request(
                 method="PUT",
                 endpoint=urljoin(
                     self.api_endpoint,
-                    f"/application-update-identifier/?id={id_field}&new={update_identifier}"
+                    f"/application-update-identifier/?{id_field}={id_value}&new={update_identifier}"
                 ),
             )
             return response
