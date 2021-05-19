@@ -111,7 +111,7 @@ class JobbergateApi:
                 elif response.status_code == 404:
                     response = self.error_handle(
                         error=f"Could not find object at {endpoint}",
-                        solution="Please confirm the URL or the id and try again",
+                        solution="Please confirm the URL, id or the application identifier and try again",
                     )
                     return response
                 else:
