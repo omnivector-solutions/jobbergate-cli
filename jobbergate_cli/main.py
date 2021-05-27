@@ -165,17 +165,21 @@ def main(ctx, username, password):
 
 @main.command("list-applications")
 @click.option("--all", "all", is_flag=True)
+@click.option("--user", "user", is_flag=True)
 @click.pass_obj
-def list_applications(ctx, all=False):
+def list_applications(ctx, all=False, user=False):
     """
     LIST available applications.
 
     Keyword Arguments:
-        all  -- optional parameter that will return all applications
-                if NOT specified then only the user's applications
-                will be returned
+        all  -- optional parameter that will return all applications, even the ones
+                without identifier
+        user -- optional parameter that will return only the applications from
+                the user that have identifier;
+    if both --user and --all is supplied, then every application for the user will be shown,
+    even the ones without identifier
     """
-    print(ctx.api.list_applications(all))
+    print(ctx.api.list_applications(all, user))
 
 
 @main.command("create-application")
@@ -231,13 +235,15 @@ def get_application(ctx, application_id, application_identifier):
 @click.option("--id", "-i", "update_application_id")
 @click.option("--identifier", "update_application_identifier")
 @click.option("--application-path", "-a", "application_path")
+@click.option("--update-identifier", "update_identifier")
 @click.option("--application-desc", "application_desc", default="")
 @click.pass_obj
 def update_application(
     ctx,
     update_application_id,
-    application_identifier,
+    update_application_identifier,
     application_path,
+    update_identifier,
     application_desc,
 ):
     """
@@ -247,11 +253,16 @@ def update_application(
         id                      --  id application to update
         application-identifier  --  identifier of the application to update
         application-path        --  path to dir for updated application files
+        update-identifer        --  identifier to be set
         application-desc        --  optional new application description
     """
     print(
         ctx.api.update_application(
-            update_application_id, application_identifier, application_path, application_desc
+            update_application_id,
+            update_application_identifier,
+            application_path,
+            update_identifier,
+            application_desc,
         )
     )
 

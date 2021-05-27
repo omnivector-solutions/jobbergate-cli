@@ -111,7 +111,7 @@ class JobbergateApi:
                 elif response.status_code == 404:
                     response = self.error_handle(
                         error=f"Could not find object at {endpoint}",
-                        solution="Please confirm the URL or the id and try again",
+                        solution="Please confirm the URL, id or the application identifier and try again",
                     )
                     return response
                 else:
@@ -455,7 +455,15 @@ class JobbergateApi:
 
     @tabulate_decorator
     def create_job_script(
-        self, job_script_name, application_id, application_identifier, param_file, sbatch_params, fast, no_submit, debug
+        self,
+        job_script_name,
+        application_id,
+        application_identifier,
+        param_file,
+        sbatch_params,
+        fast,
+        no_submit,
+        debug,
     ):
         """
         CREATE a Job Script.
@@ -509,7 +517,10 @@ class JobbergateApi:
         if application_identifier:
             app_data = self.jobbergate_request(
                 method="GET",
-                endpoint=urljoin(self.api_endpoint, f"/application/?identifier={application_identifier}"),
+                endpoint=urljoin(
+                    self.api_endpoint,
+                    f"/application/?identifier={application_identifier}",
+                ),
             )
             application_id = app_data.get("id")
 
@@ -570,7 +581,9 @@ class JobbergateApi:
             )  # Use and remove from the dict
 
             try:
-                workflow_questions = method_to_call(data=param_dict["jobbergate_config"])
+                workflow_questions = method_to_call(
+                    data=param_dict["jobbergate_config"]
+                )
             except NotImplementedError:
                 response = self.error_handle(
                     error="Abstract method not implemented",
@@ -612,7 +625,10 @@ class JobbergateApi:
 
         # Possibly overwrite script name
         job_script_name_from_param = param_dict["jobbergate_config"]["job_script_name"]
-        if "job_script_name" in param_dict["jobbergate_config"] and job_script_name_from_param != "":
+        if (
+            "job_script_name" in param_dict["jobbergate_config"]
+            and job_script_name_from_param != ""
+        ):
             data["job_script_name"] = job_script_name_from_param
 
         if sbatch_params:
@@ -966,14 +982,17 @@ class JobbergateApi:
 
     # Applications
     @tabulate_decorator
-    def list_applications(self, all):
+    def list_applications(self, all, user):
         """
         LIST available applications.
 
         Keyword Arguments:
-            all  -- optional parameter that will return all applications
-                    if NOT specified then only the user's applications
-                    will be returned
+            all  -- optional parameter that will return all applications, even the ones
+                    without identifier
+            user -- optional parameter that will return only the applications from
+                    the user that have identifier; if both --user and --all is
+                    supplied, then every application for the user will be shown,
+                    even the ones without identifier
         """
         response = self.jobbergate_request(
             method="GET", endpoint=urljoin(self.api_endpoint, "/application/")
@@ -991,11 +1010,34 @@ class JobbergateApi:
         for app in response:
             app["application_description"] = _fit_line(app["application_description"])
 
-        if all:
-            return response
-        else:
+        # List every application of the user
+        if all and user:
             response = [d for d in response if d["application_owner"] == self.user_id]
             return response
+        # List all the applications from every user, even the ones without an identifier
+        elif all:
+            return response
+        # List only the applications of the user that have identifier
+        elif user:
+            default_applications = [
+                application
+                for application in response
+                if application.get("application_identifier")
+            ]
+            user_applications = [
+                d
+                for d in default_applications
+                if d["application_owner"] == self.user_id
+            ]
+            return user_applications
+        # If no flag is passed, list all the applications, but only the ones that have identifier
+        else:
+            default_applications = [
+                application
+                for application in response
+                if application.get("application_identifier")
+            ]
+            return default_applications
 
     @tabulate_decorator
     def create_application(
@@ -1109,23 +1151,25 @@ class JobbergateApi:
         return response
 
     @tabulate_decorator
-    def update_application(self, application_id, application_identifier, application_path, application_desc):
+    def update_application(
+        self,
+        application_id,
+        application_identifier,
+        application_path,
+        update_identifier,
+        application_desc,
+    ):
         """
         UPDATE an Application.
 
         Keyword Arguments:
             application_id            -- id application to update
             application_identifier    -- identifier application to update
-            application_path          --  path to dir for updated application files
-            application_desc          --  optional new application description
+            application_path          -- path to dir for updated application files
+            application_desc          -- optional new application description
+            update_identifier         -- the identifier to be set
         """
         parameter_check = []
-        if application_path is None:
-            response = self.error_handle(
-                error="--application-path not defined",
-                solution="Please try again with --application-path specified",
-            )
-            parameter_check.append(response)
         if application_id and application_identifier:
             response = self.error_handle(
                 error="both identifier and id supplied",
@@ -1133,13 +1177,36 @@ class JobbergateApi:
             )
             parameter_check.append(response)
 
+        if len(parameter_check) > 0:
+            response = parameter_check
+            return response
+
+        if update_identifier:
+            id_field = "application_id" if application_id else "identifier"
+            id_value = application_id if application_id else application_identifier
+            response = self.jobbergate_request(
+                method="PUT",
+                endpoint=urljoin(
+                    self.api_endpoint,
+                    f"/application-update-identifier/?{id_field}={id_value}&new={update_identifier}",
+                ),
+            )
+            return response
+
+        if application_path is None:
+            response = self.error_handle(
+                error="--application-path not defined",
+                solution="Please try again with --application-path specified",
+            )
+            return response
+
         error_check = self.application_error_check(application_path)
 
         if len(error_check) > 0:
             response = error_check
             return response
 
-        if id:
+        if application_id:
             data = self.jobbergate_request(
                 method="GET",
                 endpoint=urljoin(self.api_endpoint, f"/application/{application_id}"),
@@ -1147,7 +1214,10 @@ class JobbergateApi:
         else:
             data = self.jobbergate_request(
                 method="GET",
-                endpoint=urljoin(self.api_endpoint, f"/application/?identifier={application_identifier}"),
+                endpoint=urljoin(
+                    self.api_endpoint,
+                    f"/application/?identifier={application_identifier}",
+                ),
             )
 
         if "error" in data.keys():
