@@ -6,8 +6,12 @@ import os
 from pathlib import Path
 from urllib.parse import urljoin
 
+from dotenv import load_dotenv
 import urllib3
 
+
+if Path("/etc/default/jobbergate-cli").is_file():
+    load_dotenv("/etc/default/jobbergate-cli")
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
