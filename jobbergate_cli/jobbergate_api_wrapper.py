@@ -497,13 +497,6 @@ class JobbergateApi:
             )
             parameter_check.append(response)
 
-        if job_script_name is None:
-            response = self.error_handle(
-                error="--name for the job script not defined",
-                solution="Please try again with --name specified",
-            )
-            parameter_check.append(response)
-
         if len(parameter_check) > 0:
             response = parameter_check
             return response
@@ -624,9 +617,9 @@ class JobbergateApi:
         files = {"upload_file": open(param_filename, "rb")}
 
         # Possibly overwrite script name
-        job_script_name_from_param = param_dict["jobbergate_config"]["job_script_name"]
+        job_script_name_from_param = param_dict["jobbergate_config"]["job_name"]
         if (
-            "job_script_name" in param_dict["jobbergate_config"]
+            "job_name" in param_dict["jobbergate_config"]
             and job_script_name_from_param != ""
         ):
             data["job_script_name"] = job_script_name_from_param
