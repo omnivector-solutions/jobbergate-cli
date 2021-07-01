@@ -23,7 +23,7 @@ jobs:
           git config user.name omnivector-qa
           git config user.email admin@omnivector.solutions
 
-      - uses: getsentry/craft@0.20.0
+      - uses: getsentry/craft@0.24.4
         name: "Craft Prepare"
         with:
           action: prepare
