@@ -929,7 +929,7 @@ class JobbergateApi:
                     will be returned
         """
         response = self.jobbergate_request(
-            method="GET", endpoint=urljoin(self.api_endpoint, f"/applications/?{all=}")
+            method="GET", endpoint=urljoin(self.api_endpoint, f"/applications/?all={all}")
         )
         try:
             response = [
