@@ -6,8 +6,12 @@ import os
 from pathlib import Path
 from urllib.parse import urljoin
 
+from dotenv import load_dotenv
 import urllib3
 
+
+if Path("/etc/default/jobbergate-cli").is_file():
+    load_dotenv("/etc/default/jobbergate-cli")
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -17,7 +21,8 @@ JOBBERGATE_CACHE_DIR = os.environ.get(
     "JOBBERGATE_CACHE_DIR", Path.home() / ".jobbergate"
 )
 JOBBERGATE_API_ENDPOINT = os.environ.get(
-    "JOBBERGATE_API_ENDPOINT", "https://jobbergate-api-prod-eu-north-1.omnivector.solutions"
+    "JOBBERGATE_API_ENDPOINT",
+    "https://jobbergateapi2-staging.omnivector.solutions",
 )
 # for reference: staging: "https://jobbergate-api-staging-eu-north-1.omnivector.solutions"
 
@@ -31,17 +36,16 @@ JOBBERGATE_USER_TOKEN_DIR = JOBBERGATE_CACHE_DIR / "token"
 
 JOBBERGATE_API_JWT_PATH = JOBBERGATE_USER_TOKEN_DIR / "jobbergate.token"
 
-JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT = urljoin(JOBBERGATE_API_ENDPOINT, "api-token-auth/")
+JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT = urljoin(JOBBERGATE_API_ENDPOINT, "token/")
 
 # FIXME - this vvv string doesn't appear in any of our code at https://github.com/omnivector-solutions
 JOBBERGATE_APPLICATION_S3_BASE_PATH = "jobbergate-resources"
 
+SBATCH_PATH = os.environ.get("SBATCH_PATH", "/usr/bin/sbatch")
 
 JOBBERGATE_APPLICATION_CONFIG = {
     "application_name": "",
     "application_description": "",
-    "application_location": "TEST_LOC",
-    "application_owner": "",
     "application_file": "",
     "application_config": "",
 }
@@ -49,7 +53,6 @@ JOBBERGATE_APPLICATION_CONFIG = {
 JOBBERGATE_JOB_SCRIPT_CONFIG = {
     "job_script_name": "",
     "job_script_description": "TEST_DESC",
-    "job_script_data_as_string": "TEST_DATA_AS_STR",
     "job_script_owner": "",
     "application": "",
 }

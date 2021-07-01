@@ -44,10 +44,10 @@ def init_token(username, password):
     """Get a new token from the api and write it to the token file."""
     resp = client.post(
         JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT,
-        data={"email": username, "password": password},
+        data={"username": username, "password": password},
     )
     data = resp.json()
-    ret = data.get("token")
+    ret = data.get("access_token")
     JOBBERGATE_API_JWT_PATH.write_text(ret)
 
 
@@ -160,7 +160,7 @@ def main(ctx, username, password):
 
     ctx.obj["token"] = decode_token_to_dict(JOBBERGATE_API_JWT_PATH.read_text())
 
-    ctx.obj = Api(user_id=ctx.obj["token"]["user_id"])
+    ctx.obj = Api(1)
 
 
 @main.command("list-applications")
@@ -217,20 +217,31 @@ def get_application(ctx, application_id):
 @main.command("update-application")
 @click.option("--id", "-i", "update_application_id")
 @click.option("--application-path", "-a", "application_path")
+@click.option("--name", "-n", "update_application_name", default="")
 @click.option("--application-desc", "application_desc", default="")
 @click.pass_obj
-def update_application(ctx, update_application_id, application_path, application_desc):
+def update_application(
+    ctx,
+    update_application_id,
+    application_path,
+    update_application_name,
+    application_desc,
+):
     """
     UPDATE an Application.
 
     Keyword Arguments:
         id                --  id application to update
+        name              --  Name of the application
         application-path  --  path to dir for updated application files
         application-desc  --  optional new application description
     """
     print(
         ctx.api.update_application(
-            update_application_id, application_path, application_desc
+            update_application_id,
+            application_path,
+            update_application_name,
+            application_desc,
         )
     )
 

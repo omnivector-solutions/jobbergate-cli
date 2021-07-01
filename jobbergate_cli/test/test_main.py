@@ -43,7 +43,7 @@ def dwf_jwt_token():
 def dwf_jwt_token_response(dwf_jwt_token, response_mock):
     return response_mock(
         f"""
-            POST https://jobbergate-api-staging.omnivector.solutions/api-token-auth/
+            POST https://jobbergateapi2-staging.omnivector.solutions/token/
 
             -> 200 :{dwf_jwt_token["encoded"]}
             """
