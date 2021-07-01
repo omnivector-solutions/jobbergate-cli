@@ -990,7 +990,8 @@ class JobbergateApi:
         with open(os.path.join(application_path, "jobbergate.yaml")) as config_file:
             application_config_dict = yaml.safe_load(config_file.read())
         templates = []
-        if exists(templates_folder := os.path.join(application_path, "templates")):
+        templates_folder = os.path.join(application_path, "templates")
+        if exists(templates_folder):
             for template in listdir(templates_folder):
                 if isfile(os.path.join(templates_folder, template)):
                     templates.append(os.path.join("templates", template))
@@ -1080,7 +1081,8 @@ class JobbergateApi:
             application_config_dict = yaml.safe_load(config_file.read())
 
         templates = []
-        if exists(templates_folder := os.path.join(application_path, "templates")):
+        templates_folder = os.path.join(application_path, "templates")
+        if exists(templates_folder):
             for template in listdir(templates_folder):
                 if isfile(os.path.join(templates_folder, template)):
                     templates.append(os.path.join("templates", template))
