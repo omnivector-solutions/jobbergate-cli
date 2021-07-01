@@ -1,7 +1,7 @@
 from setuptools import find_packages, setup
 
 
-__version__ = "0.6.1+dev"
+__version__ = "2.0.0"
 
 setup(
     name="jobbergate-cli",
