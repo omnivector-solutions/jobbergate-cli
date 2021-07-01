@@ -22,7 +22,7 @@ JOBBERGATE_CACHE_DIR = os.environ.get(
 )
 JOBBERGATE_API_ENDPOINT = os.environ.get(
     "JOBBERGATE_API_ENDPOINT",
-    "https://jobbergate-api-prod-eu-north-1.omnivector.solutions",
+    "https://jobbergateapi2-staging.omnivector.solutions",
 )
 # for reference: staging: "https://jobbergate-api-staging-eu-north-1.omnivector.solutions"
 
