@@ -16,6 +16,7 @@ setup(
         "inquirer",
         "pyjwt<2",  # FIXME pyjwt >= 2 requires an algorithms argument that breaks tests
         "pyyaml",
+        "python-dotenv",
         "requests",
         "tabulate",
         "urllib3",
