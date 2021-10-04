@@ -13,17 +13,23 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - id: extract_branch
+        shell: bash
+        run: |
+          echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+
       - id: set-env
         run: |
           echo 'RELEASE_VERSION=${{ github.event.inputs.version }}' >> $GITHUB_ENV;
           echo 'GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}' >> $GITHUB_ENV;
+          echo 'GITHUB_REF=${{ steps.extract_branch.outputs.branch }}' >> $GITHUB_ENV;
 
       - id: set-git-user
         run: |
           git config user.name omnivector-qa
           git config user.email admin@omnivector.solutions
 
-      - uses: getsentry/craft@0.20.0
+      - uses: getsentry/craft@0.25.3
         name: "Craft Prepare"
         with:
           action: prepare
