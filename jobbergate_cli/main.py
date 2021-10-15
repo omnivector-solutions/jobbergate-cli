@@ -191,7 +191,7 @@ def main(ctx, username, password):
         except requests.exceptions.ConnectionError:
             message = "Auth failed to establish connection with API"
             sentry_sdk.capture_message(message)
-            print(f"$message, please try again")
+            print(f"{message}, please try again")
             sys.exit(0)  # FIXME - ctx.exit() instead
 
     ctx.obj["token"] = decode_token_to_dict(JOBBERGATE_API_JWT_PATH.read_text())
@@ -216,7 +216,6 @@ def list_applications(ctx, all=False, user=False):
     if both --user and --all is supplied, then every application for the user will be shown,
     even the ones without identifier
     """
-    raise ValueError("IT ALL WENT WRONG...")
     print(ctx.api.list_applications(all, user))
 
 
