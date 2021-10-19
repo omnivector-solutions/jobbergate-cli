@@ -9,11 +9,12 @@ Jobbergate CLI client
 Usage
 -----
 
-```bash
-jobbergate --help
-```
+.. code-block:: console
+
+    jobbergate --help
 
 .. note::
+
    It is possible to use raw sbatch parameters in create-job-script
 
    Use the `--sbatch-params` multiple times to use as many parameters as needed in the
@@ -34,12 +35,6 @@ Run:
    make qa
 
 This will run unit tests and linter.
-
-
-Verify snap
-...........
-
-You should ensure that the snap builds successfully and uploads
 
 
 Integration testing
@@ -77,11 +72,13 @@ First, decided on the scope of the release:
 Next, make the release with the selected scope:
 
 .. code-block:: console
+
    make release-<scope>
 
 So, for example, to create a minor release, you would run:
 
 .. code-block:: console
+
    make relase-minor
 
 You must have permission to push commits to the main branch to create a release.
@@ -91,9 +88,9 @@ If the release script fails, contact a maintainer to debug and fix the release.
 
 License
 -------
-* [MIT](LICENSE)
+* `MIT <LICENSE>`_
 
 
 Copyright
 ---------
-* Copyright (c) 2020 OmniVector Solutions <admin@omnivector.solutions>
+* Copyright (c) 2020-2021 OmniVector Solutions <info@omnivector.solutions>

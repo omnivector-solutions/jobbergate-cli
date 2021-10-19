@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "test-release-action"
-version = "1.4.7"
+version = "1.0.6"
 description = "Jobbergate CLI Client"
 authors = ["Omnivector Solutions <info@omnivector.solutions>"]
 license = "MIT"

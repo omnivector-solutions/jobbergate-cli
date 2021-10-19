@@ -3,30 +3,33 @@
 .ONESHELL:
 .DEFAULT_GOAL:=help
 SHELL:=/bin/bash
-.PHONY:=clean lint test help format snap qa install release
 PACKAGE_NAME:=jobbergate_cli
 
-include	snap.mk
-
+.PHONY: install
 install:
 	poetry install
 
+.PHONY: test
 test: install
 	poetry run pytest
 
+.PHONY: lint
 lint: install
 	poetry run black --check ${PACKAGE_NAME}
 	poetry run isort --check ${PACKAGE_NAME}
 	poetry run flake8 --max-line-length=120 --max-complexity=40 ${PACKAGE_NAME}
 
+.PHONY: qa
 qa: test lint
 	echo "All tests pass! Ready for deployment"
 
+.PHONY: format
 format: install
 	poetry run black ${PACKAGE_NAME}
 	poetry run isort ${PACKAGE_NAME}
 
-clean: clean-eggs clean-build
+.PHONY: clean
+clean:
 	@find . -iname '*.pyc' -delete
 	@find . -iname '*.pyo' -delete
 	@find . -iname '*~' -delete
@@ -40,13 +43,10 @@ clean: clean-eggs clean-build
 	@rm -fr dist/
 	@rm -fr *.egg-info
 
+.PHONY: release-%
 release-%:
 	scripts/release.sh $(subst release-,,$@)
 
+.PHONY: help
 help: # Display target comments in 'make help'
 	grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
-
-snap: $(SNAP_TARGET)
-
-$(SNAP_TARGET):
-	sg lxd -c 'snapcraft --use-lxd'
