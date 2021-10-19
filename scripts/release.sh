@@ -89,19 +89,21 @@ replacement+="$(printf %${#version_line}s | tr ' ' '-')"
 perl -0777 -p -i -e "s/Unreleased\s*(-+)/$replacement/gs" CHANGELOG.rst
 
 
-echo "Creating commit for release and pushing to origin"
+echo "Creating commit for release"
 git add pyproject.toml CHANGELOG.rst
 git commit --gpg-sign --message="Created release $version_target"
-git push origin main
+
+
+echo "Creating git tag for release"
+git tag --sign --message="Release $version_target" $version_target
+
+
+echo "Pushing commit and tag to origin"
+git push origin $version_target main
 
 
 echo "Publishing to pypicloud"
 poetry publish --build --repository=pypicloud
-
-
-echo "Creating git tag for release and pushing to origin"
-git tag --sign --message="Release $version_target" $version_target
-git push origin $version_target
 
 
 echo "Release process complete!"
