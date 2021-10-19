@@ -17,9 +17,9 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 # load these two from the environment, with these defaults.
-JOBBERGATE_CACHE_DIR = os.environ.get(
+JOBBERGATE_CACHE_DIR = Path(os.environ.get(
     "JOBBERGATE_CACHE_DIR", Path.home() / ".jobbergate"
-)
+))
 JOBBERGATE_API_ENDPOINT = os.environ.get(
     "JOBBERGATE_API_ENDPOINT",
     "https://jobbergate-api-prod-eu-north-1.omnivector.solutions",
@@ -92,3 +92,12 @@ JOBBERGATE_APPLICATION_CONFIG_PATH = (
 )
 
 SENTRY_DSN = os.environ.get("SENTRY_DSN")
+
+JOBBERGATE_LOG_PATH = JOBBERGATE_CACHE_DIR / 'logs' / 'jobbergate-cli.log'
+
+JOBBERGATE_AWS_ACCESS_KEY_ID = os.environ.get("JOBBERGATE_AWS_ACCESS_KEY_ID")
+JOBBERGATE_AWS_SECRET_ACCESS_KEY = os.environ.get("JOBBERGATE_AWS_SECRET_ACCESS_KEY")
+JOBBERGATE_S3_LOG_BUCKET = os.environ.get(
+    "JOBBERGATE_S3_LOG_BUCKET",
+    "jobbergate-cli-logs",
+)
