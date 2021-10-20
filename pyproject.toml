@@ -6,6 +6,7 @@ authors = ["Omnivector Solutions <info@omnivector.solutions>"]
 license = "MIT"
 packages = [ { include = "jobbergate_cli" } ]
 
+
 [tool.poetry.dependencies]
 python = "^3.8"
 click = "^8.0.1"
