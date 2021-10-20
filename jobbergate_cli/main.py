@@ -4,15 +4,15 @@ import functools
 import getpass
 from pathlib import Path
 import sys
-import tempfile
 import tarfile
+import tempfile
 
 import boto3
 import click
 import jwt
+from loguru import logger
 import requests
 import sentry_sdk
-from loguru import logger
 
 from jobbergate_cli import client
 from jobbergate_cli.jobbergate_api_wrapper import JobbergateApi
@@ -21,15 +21,15 @@ from jobbergate_cli.jobbergate_common import (
     JOBBERGATE_API_JWT_PATH,
     JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT,
     JOBBERGATE_APPLICATION_CONFIG,
+    JOBBERGATE_AWS_ACCESS_KEY_ID,
+    JOBBERGATE_AWS_SECRET_ACCESS_KEY,
     JOBBERGATE_CACHE_DIR,
     JOBBERGATE_DEBUG,
     JOBBERGATE_JOB_SCRIPT_CONFIG,
     JOBBERGATE_JOB_SUBMISSION_CONFIG,
     JOBBERGATE_LOG_PATH,
-    JOBBERGATE_USER_TOKEN_DIR,
-    JOBBERGATE_AWS_ACCESS_KEY_ID,
-    JOBBERGATE_AWS_SECRET_ACCESS_KEY,
     JOBBERGATE_S3_LOG_BUCKET,
+    JOBBERGATE_USER_TOKEN_DIR,
     SENTRY_DSN,
 )
 
@@ -89,6 +89,7 @@ def command_logger(func):
 
     Additionally includes extra context information in the exceptions for use in sentry.
     """
+
     @functools.wraps(func)
     def wrapper(ctx, *args, **kwargs):
         try:
@@ -96,18 +97,17 @@ def command_logger(func):
             if ctx.params:
                 main_message += " with params:"
             logger.debug(
-                "\n  ".join([
-                    main_message,
-                    *[f"{k}={v}" for (k, v) in ctx.params.items()]
-                ])
+                "\n  ".join(
+                    [main_message, *[f"{k}={v}" for (k, v) in ctx.params.items()]]
+                )
             )
             return func(ctx, *args, **kwargs)
         except Exception as err:
             message = "Caught error for {user} ({id_}) in {fn}({args_string})".format(
                 user=ctx.obj["token"]["username"],
                 id_=ctx.obj["token"]["user_id"],
-                fn = func.__name__,
-                args_string=', '.join(
+                fn=func.__name__,
+                args_string=", ".join(
                     list(args) + [f"{k}={v}" for (k, v) in kwargs.items()]
                 ),
             )
@@ -115,6 +115,7 @@ def command_logger(func):
             raise Exception(message) from err
         finally:
             logger.debug(f"Finished command '{ctx.command.name}'")
+
     return wrapper
 
 
@@ -156,7 +157,7 @@ def decode_token_to_dict(encoded_token):
             verify=False,
         )
     except jwt.exceptions.InvalidTokenError as e:
-        logger.error("Invalid token: {e}")
+        logger.error(f"Invalid token: {e}")
         # FIXME - raise an exception (and catch, then ctx.exit())
         sys.exit()
     return token
@@ -164,7 +165,7 @@ def decode_token_to_dict(encoded_token):
 
 def init_api(user_id):
     """Initialize the API for the user's session."""
-    logger.debug(f"Initializing Jobbergate API.")
+    logger.debug("Initializing Jobbergate API.")
     api = JobbergateApi(
         token=JOBBERGATE_API_JWT_PATH.read_text(),
         job_script_config=JOBBERGATE_JOB_SCRIPT_CONFIG,
@@ -245,7 +246,7 @@ def main(ctx, username, password, verbose):
             ctx.obj["username"] = username
             ctx.obj["password"] = password
         else:
-            logger.debug(f"Getting credentials from interactive prompt")
+            logger.debug("Getting credentials from interactive prompt")
             username, password = interactive_get_username_password()
             logger.debug(f"Logging in with interactive credentials for {username}")
             ctx.obj["username"] = username
@@ -672,17 +673,17 @@ def upload_logs(ctx):
     """
     logger.debug("Initializing S3 client")
     s3_client = boto3.client(
-        's3',
+        "s3",
         aws_access_key_id=JOBBERGATE_AWS_ACCESS_KEY_ID,
         aws_secret_access_key=JOBBERGATE_AWS_SECRET_ACCESS_KEY,
     )
 
     tarball_name = "{user}.{timestamp}.tar.gz".format(
         user=ctx.obj["token"]["username"],
-        timestamp=datetime.utcnow().strftime('%Y%m%d.%H%M%S'),
+        timestamp=datetime.utcnow().strftime("%Y%m%d.%H%M%S"),
     )
 
-    logger.debug(f"Creating tarball of user's logs")
+    logger.debug("Creating tarball of user's logs")
     log_dir = JOBBERGATE_LOG_PATH.parent
     with tempfile.TemporaryDirectory() as temp_dir:
         tarball_path = Path(temp_dir) / tarball_name
