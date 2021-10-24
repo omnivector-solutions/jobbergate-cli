@@ -112,18 +112,20 @@ def sentry_handler(func):
 
     Includes extra context information in the exceptions for use in sentry.
     """
+
     @functools.wraps(func)
     def wrapper(api, *args, **kwargs):
         try:
             return func(api, *args, **kwargs)
         except Exception as err:
             user = api.api.user_id
-            args_string = ', '.join(
+            args_string = ", ".join(
                 list(args) + [f"{k}={v}" for (k, v) in kwargs.items()]
             )
             raise Exception(
                 f"Caught error for user {user} in {func.__name__}({args_string})"
             ) from err
+
     return wrapper
 
 
