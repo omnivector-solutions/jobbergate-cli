@@ -212,7 +212,7 @@ def init_sentry():
 @click.version_option()
 @click.pass_context
 def main(ctx, username, password, verbose):
-    """
+    f"""
     Jobbergate CLI.
 
     Provides a command-line interface to the Jobbergate API. Available commands are
@@ -220,9 +220,13 @@ def main(ctx, username, password, verbose):
     available parameters.
 
     If you have not logged in before and you do not include the --username and
-    --password options, you will be prompted for your login info. Your credentials will
-    then be securely saved for use in subsequent commands so you do not need to supply
-    them again. Saved credentials will automatically expire after some time.
+    --password options, you will be prompted for your login info.
+
+    Once your username and password have been authenticated, an auth token is issued by
+    the backend. This token is securely saved locally ({JOBBERGATE_USER_TOKEN_DIR})
+    and attached to the requests issued in subsequent commands so you do not need to
+    supply your credentials every time. After some time, the auth token will expire and
+    you will need to supply your username and password again.
     """
     ctx.ensure_object(dict)
 
