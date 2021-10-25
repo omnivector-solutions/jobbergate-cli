@@ -1,10 +1,12 @@
 [tool.poetry]
-name = "test-release-action"
+name = "jobbergate-cli"
 version = "1.0.6"
 description = "Jobbergate CLI Client"
 authors = ["Omnivector Solutions <info@omnivector.solutions>"]
 license = "MIT"
 packages = [ { include = "jobbergate_cli" } ]
+repository = "https://github.com/omnivector-solutions/jobbergate-cli"
+documentation = "https://omnivector-solutions.github.io/jobbergate-cli"
 
 
 [tool.poetry.dependencies]
