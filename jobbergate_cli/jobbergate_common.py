@@ -18,7 +18,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # load these two from the environment, with these defaults.
 JOBBERGATE_CACHE_DIR = Path(
-    os.environ.get("JOBBERGATE_CACHE_DIR", Path.home() / ".jobbergate")
+    os.environ.get("JOBBERGATE_CACHE_DIR", Path.home() / ".local/share/jobbergate")
 )
 JOBBERGATE_API_ENDPOINT = os.environ.get(
     "JOBBERGATE_API_ENDPOINT",
