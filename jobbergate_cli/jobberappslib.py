@@ -24,7 +24,7 @@ def get_running_jobs(user_only=True):
 
 
 def get_file_list(path=None, search_term="*.*"):
-    """ Returns a list of inputfiles in a directory ( default: pwd) """
+    """Returns a list of input files in a directory ( default: pwd)."""
     if not path:
         path = Path.cwd()
 
