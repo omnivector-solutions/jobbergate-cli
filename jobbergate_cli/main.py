@@ -57,7 +57,7 @@ def init_cache_dir():
     """
     Make sure that the root Jobbergate cache directory exists.
     """
-    JOBBERGATE_CACHE_DIR.mkdir(exist_ok=True)
+    JOBBERGATE_CACHE_DIR.mkdir(exist_ok=True, parents=True)
 
 
 def init_logs(username=None, verbose=False):
