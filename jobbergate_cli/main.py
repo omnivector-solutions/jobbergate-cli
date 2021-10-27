@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from datetime import datetime
+import functools
 import getpass
 from pathlib import Path
 import sys
@@ -7,6 +8,7 @@ import sys
 import click
 import jwt
 import requests
+import sentry_sdk
 
 from jobbergate_cli import client
 from jobbergate_cli.jobbergate_api_wrapper import JobbergateApi
@@ -19,6 +21,7 @@ from jobbergate_cli.jobbergate_common import (
     JOBBERGATE_JOB_SCRIPT_CONFIG,
     JOBBERGATE_JOB_SUBMISSION_CONFIG,
     JOBBERGATE_USER_TOKEN_DIR,
+    SENTRY_DSN,
 )
 
 
@@ -96,6 +99,36 @@ def init_api(user_id):
     return api
 
 
+def init_sentry():
+    """Initialize Sentry."""
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        traces_sample_rate=1.0,
+    )
+
+
+def sentry_handler(func):
+    """Handles exceptions within the decorated function for sentry
+
+    Includes extra context information in the exceptions for use in sentry.
+    """
+
+    @functools.wraps(func)
+    def wrapper(api, *args, **kwargs):
+        try:
+            return func(api, *args, **kwargs)
+        except Exception as err:
+            user = api.api.user_id
+            args_string = ", ".join(
+                list(args) + [f"{k}={v}" for (k, v) in kwargs.items()]
+            )
+            raise Exception(
+                f"Caught error for user {user} in {func.__name__}({args_string})"
+            ) from err
+
+    return wrapper
+
+
 # Get the cli input arguments
 # args = get_parsed_args(argv)
 # Grab the pre-existing token, if doesn't exist
@@ -132,6 +165,9 @@ def main(ctx, username, password):
     """
     ctx.ensure_object(dict)
 
+    if SENTRY_DSN:
+        init_sentry()
+
     # create dir for token if it doesnt exist
     Path(JOBBERGATE_USER_TOKEN_DIR).mkdir(parents=True, exist_ok=True)
 
@@ -155,7 +191,9 @@ def main(ctx, username, password):
             print("Incorrect username/password, please try again")
             sys.exit(0)  # FIXME - ctx.exit() instead
         except requests.exceptions.ConnectionError:
-            print("Auth failed to establish connection with API, please try again")
+            message = "Auth failed to establish connection with API"
+            sentry_sdk.capture_message(message)
+            print(f"{message}, please try again")
             sys.exit(0)  # FIXME - ctx.exit() instead
 
     ctx.obj["token"] = decode_token_to_dict(JOBBERGATE_API_JWT_PATH.read_text())
@@ -167,6 +205,7 @@ def main(ctx, username, password):
 @click.option("--all", "all", is_flag=True)
 @click.option("--user", "user", is_flag=True)
 @click.pass_obj
+@sentry_handler
 def list_applications(ctx, all=False, user=False):
     """
     LIST available applications.
@@ -188,6 +227,7 @@ def list_applications(ctx, all=False, user=False):
 @click.option("--application-path", "-a", "create_application_path")
 @click.option("--application-desc", "application_desc", default="")
 @click.pass_obj
+@sentry_handler
 def create_application(
     ctx,
     create_application_name,
@@ -216,6 +256,7 @@ def create_application(
 @click.option("--id", "-i", "application_id")
 @click.option("--identifier", "application_identifier")
 @click.pass_obj
+@sentry_handler
 def get_application(ctx, application_id, application_identifier):
     """
     GET an Application.
@@ -238,6 +279,7 @@ def get_application(ctx, application_id, application_identifier):
 @click.option("--update-identifier", "update_identifier")
 @click.option("--application-desc", "application_desc", default="")
 @click.pass_obj
+@sentry_handler
 def update_application(
     ctx,
     update_application_id,
@@ -271,6 +313,7 @@ def update_application(
 @click.option("--id", "-i", "delete_application_id")
 @click.option("--identifier", "delete_application_identifier")
 @click.pass_obj
+@sentry_handler
 def delete_application(ctx, delete_application_id, delete_application_identifier):
     """
     DELETE an Application.
@@ -287,6 +330,7 @@ def delete_application(ctx, delete_application_id, delete_application_identifier
 @main.command("list-job-scripts")
 @click.option("--all", "all", is_flag=True)
 @click.pass_obj
+@sentry_handler
 def list_job_scripts(ctx, all=False):
     """
     LIST Job Scripts.
@@ -309,6 +353,7 @@ def list_job_scripts(ctx, all=False):
 @click.option("--no-submit", "no_submit", is_flag=True)
 @click.option("--debug", "debug", is_flag=True)
 @click.pass_obj
+@sentry_handler
 def create_job_script(
     ctx,
     create_job_script_name,
@@ -354,6 +399,7 @@ def create_job_script(
 @click.option("--id", "-i", "get_job_script_id")
 @click.option("--as-string", "as_str", is_flag=True)
 @click.pass_obj
+@sentry_handler
 def get_job_script(ctx, get_job_script_id, as_str):
     """
     GET a Job Script.
@@ -368,6 +414,7 @@ def get_job_script(ctx, get_job_script_id, as_str):
 @click.option("--id", "-i", "update_job_script_id")
 @click.option("--job-script", "job_script_data_as_string")
 @click.pass_obj
+@sentry_handler
 def update_job_script(ctx, update_job_script_id, job_script_data_as_string):
     """
     UPDATE a Job Script.
@@ -384,6 +431,7 @@ def update_job_script(ctx, update_job_script_id, job_script_data_as_string):
 @main.command("delete-job-script")
 @click.option("--id", "-i", "delete_job_script_id")
 @click.pass_obj
+@sentry_handler
 def delete_job_script(ctx, delete_job_script_id):
     """
     DELETE a Job Script.
@@ -397,6 +445,7 @@ def delete_job_script(ctx, delete_job_script_id):
 @main.command("list-job-submissions")
 @click.option("--all", "all", is_flag=True)
 @click.pass_obj
+@sentry_handler
 def list_job_submissions(ctx, all=False):
     """
     LIST Job Submissions.
@@ -414,6 +463,7 @@ def list_job_submissions(ctx, all=False):
 @click.option("--name", "-n", "create_job_submission_name")
 @click.option("--dry-run", "render_only")
 @click.pass_obj
+@sentry_handler
 def create_job_submission(
     ctx,
     create_job_submission_job_script_id,
@@ -441,6 +491,7 @@ def create_job_submission(
 @main.command("get-job-submission")
 @click.option("--id", "-i", "get_job_submission_id")
 @click.pass_obj
+@sentry_handler
 def get_job_submission(ctx, get_job_submission_id):
     """
     GET a Job Submission.
@@ -454,6 +505,7 @@ def get_job_submission(ctx, get_job_submission_id):
 @main.command("update-job-submission")
 @click.option("--id", "-i", "update_job_submission_id")
 @click.pass_obj
+@sentry_handler
 def update_job_submission(ctx, update_job_submission_id):
     """
     UPDATE a Job Submission.
@@ -467,6 +519,7 @@ def update_job_submission(ctx, update_job_submission_id):
 @main.command("delete-job-submission")
 @click.option("--id", "-i", "delete_job_submission_id")
 @click.pass_obj
+@sentry_handler
 def delete_job_submission(ctx, delete_job_submission_id):
     """
     Delete a Job Submission.
