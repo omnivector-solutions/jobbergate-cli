@@ -29,8 +29,10 @@ from jobbergate_cli.jobbergate_common import (
     JOBBERGATE_JOB_SCRIPT_CONFIG,
     JOBBERGATE_JOB_SUBMISSION_CONFIG,
     JOBBERGATE_LOG_PATH,
+    JOBBERGATE_PASSWORD,
     JOBBERGATE_S3_LOG_BUCKET,
     JOBBERGATE_USER_TOKEN_DIR,
+    JOBBERGATE_USERNAME,
     SENTRY_DSN,
 )
 
@@ -255,7 +257,9 @@ def init_sentry():
         available parameters.
 
         If you have not logged in before and you do not include the --username and
-        --password options, you will be prompted for your login info.
+        --password options, you will be prompted for your login info. You may also supply
+        your username and password through the environment variables JOBBERGATE_USERNAME
+        and JOBBERGATE_PASSWORD.
 
         Once your username and password have been authenticated, an auth token is issued by
         the backend. This token is securely saved locally ({JOBBERGATE_USER_TOKEN_DIR})
@@ -267,9 +271,16 @@ def init_sentry():
 @click.option(
     "--username",
     "-u",
+    default=JOBBERGATE_USERNAME,
     help="Your Jobbergate API Username",
 )
-@click.option("--password", "-p", help="Your Jobbergate API password", hide_input=True)
+@click.option(
+    "--password",
+    "-p",
+    default=JOBBERGATE_PASSWORD,
+    help="Your Jobbergate API password",
+    hide_input=True,
+)
 @click.option(
     "--verbose",
     "-v",

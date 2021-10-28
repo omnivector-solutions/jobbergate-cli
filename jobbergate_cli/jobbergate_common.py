@@ -31,6 +31,10 @@ JOBBERGATE_DEBUG = ConfigParser.BOOLEAN_STATES.get(
     os.environ.get("JOBBERGATE_DEBUG", "false").lower()
 )
 
+# grab the username and password from the environment if they are set there
+JOBBERGATE_USERNAME = os.environ.get("JOBBERGATE_USERNAME")
+JOBBERGATE_PASSWORD = os.environ.get("JOBBERGATE_PASSWORD")
+
 # the rest of the strings can be derived
 JOBBERGATE_USER_TOKEN_DIR = JOBBERGATE_CACHE_DIR / "token"
 
