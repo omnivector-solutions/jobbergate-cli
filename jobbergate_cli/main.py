@@ -6,6 +6,7 @@ from pathlib import Path
 import sys
 import tarfile
 import tempfile
+import textwrap
 
 import boto3
 import click
@@ -32,6 +33,24 @@ from jobbergate_cli.jobbergate_common import (
     JOBBERGATE_USER_TOKEN_DIR,
     SENTRY_DSN,
 )
+
+
+# These are used in help text for the application commands below
+APPLICATION_ID_EXPLANATION = """
+
+    This id represents the primary key of the application in the database. It
+    will always be a unique integer. All applications receive an id, so it may
+    be used to target a specific instance of an application whether or not it
+    is provided with a human-friendly "identifier".
+"""
+
+
+APPLICAITON_IDENTIFIER_EXPLANATION = """
+
+    The identifier allows the user to access commonly used applications with a
+    friendly name that is easy to remember. Identifiers should only be used
+    for applicaitons that are frequently used or should be easy to find in the list.
+"""
 
 
 class Api(object):
@@ -64,14 +83,12 @@ def init_logs(username=None, verbose=False):
     """
     Initialize the rotatating file log handler. Logs will be retained for 1 week.
     """
-    # Remove default stderr handler
+    # Remove default stderr handler at level INFO
     logger.remove()
     JOBBERGATE_LOG_PATH.parent.mkdir(exist_ok=True)
 
     if verbose:
-        logger.add(sys.stderr, level="DEBUG")
-    else:
-        logger.add(sys.stderr, format="{message}", level="INFO")
+        logger.add(sys.stdout, level="DEBUG")
 
     logger.add(JOBBERGATE_LOG_PATH, rotation="00:00", retention="1 week", level="DEBUG")
     logger.debug("Logging initialized")
@@ -79,15 +96,13 @@ def init_logs(username=None, verbose=False):
         logger.debug(f"  for user {username}")
 
 
-def dump(out):
-    """A convenience method that dumps output with an extra newline for readability."""
-    logger.info(f"\n{out}")
+def jobbergate_command_wrapper(func):
+    """Wraps a jobbergate command to include logging, error handling, and user output
 
-
-def command_logger(func):
-    """Inserts loging for the command being invoked and its parameters.
-
-    Additionally includes extra context information in the exceptions for use in sentry.
+    Reports the command being called an its parameters to the user log. Includes log
+    lines about starting and finishing the command. Also reports errors to the user
+    as well as sending the error report to Sentry. Finally, prints any output provided
+    by the called command to stdout.
     """
 
     @functools.wraps(func)
@@ -101,7 +116,12 @@ def command_logger(func):
                     [main_message, *[f"{k}={v}" for (k, v) in ctx.params.items()]]
                 )
             )
-            return func(ctx, *args, **kwargs)
+
+            result = func(ctx, *args, **kwargs)
+            if result:
+                print(result)
+            return result
+
         except Exception as err:
             message = "Caught error for {user} ({id_}) in {fn}({args_string})".format(
                 user=ctx.obj["token"]["username"],
@@ -112,7 +132,37 @@ def command_logger(func):
                 ),
             )
             logger.error(message)
-            raise Exception(message) from err
+
+            # This allows us to capture exceptions here and still report them to sentry
+            if SENTRY_DSN:
+                with sentry_sdk.push_scope() as scope:
+                    scope.set_context(
+                        "command_info",
+                        dict(
+                            username=ctx.obj["token"]["username"],
+                            user_id=ctx.obj["token"]["user_id"],
+                            function=func.__name__,
+                            command=ctx.command.name,
+                            args=args,
+                            kwargs=kwargs,
+                        ),
+                    )
+                    sentry_sdk.capture_exception(err)
+                    sentry_sdk.flush()
+
+            print(
+                textwrap.dedent(
+                    f"""
+                    There was an error processing command '{ctx.command.name}'.
+
+                    Please check the parameters and the command documentation. You can check the documentation
+                    at any time by adding '--help' to any command.
+
+                    If the problem persists, please contact Omnivector <info@omnivector.solutions> for support.
+                    """
+                ).strip()
+            )
+
         finally:
             logger.debug(f"Finished command '{ctx.command.name}'")
 
@@ -256,20 +306,20 @@ def main(ctx, username, password, verbose):
             logger.debug(f"Logging in with interactive credentials for {username}")
             ctx.obj["username"] = username
             ctx.obj["password"] = password
+
         try:
             logger.debug(f"Initializing token for {username}")
             init_token(username, password)
-        except KeyError:
-            logger.error(f"Auth Failed for username: {username}, please try again")
-            sys.exit(0)  # FIXME - ctx.exit() instead
-        except TypeError:
-            logger.error("Incorrect username/password, please try again")
-            sys.exit(0)  # FIXME - ctx.exit() instead
-        except requests.exceptions.ConnectionError:
-            message = "Auth failed to establish connection with API"
+        except requests.exceptions.ConnectionError as err:
+            message = f"Auth failed to establish connection with API: {str(err)}"
             sentry_sdk.capture_message(message)
-            logger.error(f"{message}, please try again")
-            sys.exit(0)  # FIXME - ctx.exit() instead
+            logger.error(f"{message}")
+            raise click.ClickException(
+                "Couldn't verify login to the server due to communications problem. Please try again.",
+            )
+        except Exception as err:
+            logger.error(f"Auth Failed for '{username}': {str(err)}")
+            raise click.ClickException(f"Failed to login with '{username}'. Please try again.")
 
     logger.debug("Decoding auth token")
     ctx.obj["token"] = decode_token_to_dict(JOBBERGATE_API_JWT_PATH.read_text())
@@ -298,18 +348,21 @@ def main(ctx, username, password, verbose):
     help="Show only the applications for the current user",
 )
 @click.pass_context
-@command_logger
+@jobbergate_command_wrapper
 def list_applications(ctx, all=False, user=False):
     """
     LIST the available applications.
     """
     api = ctx.obj["api"]
-    dump(api.list_applications(all, user))
+    return api.list_applications(all, user)
 
 
 @main.command("create-application")
 @click.option("--name", "-n", help="Name of the application")
-@click.option("--identifier", help="The identifier of the application")
+@click.option(
+    "--identifier",
+    help=f"The human-friendly identifier of the application. {APPLICAITON_IDENTIFIER_EXPLANATION}",
+)
 @click.option(
     "--application-path",
     "-a",
@@ -321,7 +374,7 @@ def list_applications(ctx, all=False, user=False):
     help="A helpful description of the application",
 )
 @click.pass_context
-@command_logger
+@jobbergate_command_wrapper
 def create_application(
     ctx,
     name,
@@ -333,37 +386,46 @@ def create_application(
     CREATE an application.
     """
     api = ctx.obj["api"]
-    dump(
-        api.create_application(
-            application_name=name,
-            application_identifier=identifier,
-            application_path=application_path,
-            application_desc=application_desc,
-        )
+    return api.create_application(
+        application_name=name,
+        application_identifier=identifier,
+        application_path=application_path,
+        application_desc=application_desc,
     )
 
 
 @main.command("get-application")
-@click.option("--id", "-i", "id_", help="The id of the application to be returned")
-@click.option("--identifier", help="The identifier of the application to be returned")
+@click.option(
+    "--id",
+    "-i",
+    "id_",
+    help=f"The specific id of the application. {APPLICATION_ID_EXPLANATION}",
+)
+@click.option(
+    "--identifier",
+    help=f"The human-friendly identifier of the application. {APPLICAITON_IDENTIFIER_EXPLANATION}",
+)
 @click.pass_context
-@command_logger
+@jobbergate_command_wrapper
 def get_application(ctx, id_, identifier):
     """
     GET an Application.
     """
     api = ctx.obj["api"]
-    dump(
-        api.get_application(
-            application_id=id_,
-            application_identifier=identifier,
-        )
-    )
+    return api.get_application(application_id=id_, application_identifier=identifier)
 
 
 @main.command("update-application")
-@click.option("--id", "-i", "id_", help="The id application to update")
-@click.option("--identifier", help="The identifier of the application to update")
+@click.option(
+    "--id",
+    "-i",
+    "id_",
+    help=f"The specific id application to update. {APPLICATION_ID_EXPLANATION}",
+)
+@click.option(
+    "--identifier",
+    help=f"The human-friendly identifier of the application to update. {APPLICAITON_IDENTIFIER_EXPLANATION}",
+)
 @click.option(
     "--application-path",
     "-a",
@@ -376,7 +438,7 @@ def get_application(ctx, id_, identifier):
     help="Optional new application description",
 )
 @click.pass_context
-@command_logger
+@jobbergate_command_wrapper
 def update_application(
     ctx,
     id_,
@@ -389,28 +451,28 @@ def update_application(
     UPDATE an Application.
     """
     api = ctx.obj["api"]
-    dump(
-        api.update_application(
-            id_,
-            identifier,
-            application_path,
-            update_identifier,
-            application_desc,
-        )
-    )
+    return api.update_application(id_, identifier, application_path, update_identifier, application_desc)
 
 
 @main.command("delete-application")
-@click.option("--id", "-i", "id_", help="The id of the application to delete")
-@click.option("--identifier", help="The identifier of the application to delete")
+@click.option(
+    "--id",
+    "-i",
+    "id_",
+    help=f"The specific id of the application to delete. {APPLICATION_ID_EXPLANATION}",
+)
+@click.option(
+    "--identifier",
+    help=f"The human-friendly identifier of the application to delete. {APPLICAITON_IDENTIFIER_EXPLANATION}",
+)
 @click.pass_context
-@command_logger
+@jobbergate_command_wrapper
 def delete_application(ctx, id_, identifier):
     """
     DELETE an Application.
     """
     api = ctx.obj["api"]
-    dump(api.delete_application(id_, identifier))
+    return api.delete_application(id_, identifier)
 
 
 @main.command("list-job-scripts")
@@ -424,13 +486,13 @@ def delete_application(ctx, id_, identifier):
     """,
 )
 @click.pass_context
-@command_logger
+@jobbergate_command_wrapper
 def list_job_scripts(ctx, all_=False):
     """
     LIST Job Scripts.
     """
     api = ctx.obj["api"]
-    dump(api.list_job_scripts(all_))
+    return api.list_job_scripts(all_)
 
 
 @main.command("create-job-script")
@@ -482,7 +544,7 @@ def list_job_scripts(ctx, all_=False):
     help="Optional parameter to view job script data in CLI output",
 )
 @click.pass_context
-@command_logger
+@jobbergate_command_wrapper
 def create_job_script(
     ctx,
     name,
@@ -498,17 +560,15 @@ def create_job_script(
     CREATE a Job Script.
     """
     api = ctx.obj["api"]
-    dump(
-        api.create_job_script(
-            name,
-            application_id,
-            application_identifier,
-            param_file,
-            sbatch_params,
-            fast,
-            no_submit,
-            debug,
-        )
+    return api.create_job_script(
+        name,
+        application_id,
+        application_identifier,
+        param_file,
+        sbatch_params,
+        fast,
+        no_submit,
+        debug,
     )
 
 
@@ -524,13 +584,13 @@ def create_job_script(
     is_flag=True,
 )
 @click.pass_context
-@command_logger
+@jobbergate_command_wrapper
 def get_job_script(ctx, id_, as_string):
     """
     GET a Job Script.
     """
     api = ctx.obj["api"]
-    dump(api.get_job_script(id_, as_string))
+    return api.get_job_script(id_, as_string)
 
 
 @main.command("update-job-script")
@@ -551,25 +611,25 @@ def get_job_script(ctx, id_, as_string):
     """,
 )
 @click.pass_context
-@command_logger
+@jobbergate_command_wrapper
 def update_job_script(ctx, id_, job_script):
     """
     UPDATE a Job Script.
     """
     api = ctx.obj["api"]
-    dump(api.update_job_script(id_, job_script))
+    return api.update_job_script(id_, job_script)
 
 
 @main.command("delete-job-script")
 @click.option("--id", "-i", "id_", help="The id of job script to delete")
 @click.pass_context
-@command_logger
+@jobbergate_command_wrapper
 def delete_job_script(ctx, id_):
     """
     DELETE a Job Script.
     """
     api = ctx.obj["api"]
-    dump(api.delete_job_script(id_))
+    return api.delete_job_script(id_)
 
 
 @main.command("list-job-submissions")
@@ -583,13 +643,13 @@ def delete_job_script(ctx, id_):
     """,
 )
 @click.pass_context
-@command_logger
+@jobbergate_command_wrapper
 def list_job_submissions(ctx, all_=False):
     """
     LIST Job Submissions.
     """
     api = ctx.obj["api"]
-    dump(api.list_job_submissions(all_))
+    return api.list_job_submissions(all_)
 
 
 @main.command("create-job-submission")
@@ -612,7 +672,7 @@ def list_job_submissions(ctx, all_=False):
     """,
 )
 @click.pass_context
-@command_logger
+@jobbergate_command_wrapper
 def create_job_submission(
     ctx,
     job_script_id,
@@ -623,54 +683,48 @@ def create_job_submission(
     CREATE Job Submission.
     """
     api = ctx.obj["api"]
-    dump(
-        api.create_job_submission(
-            job_script_id=job_script_id,
-            job_submission_name=name,
-            render_only=dry_run,
-        )
-    )
+    return api.create_job_submission(job_script_id=job_script_id, job_submission_name=name, render_only=dry_run)
 
 
 @main.command("get-job-submission")
 @click.option("--id", "-i", "id_", help="The id of the job submission to be returned")
 @click.pass_context
-@command_logger
+@jobbergate_command_wrapper
 def get_job_submission(ctx, id_):
     """
     GET a Job Submission.
     """
     api = ctx.obj["api"]
-    dump(api.get_job_submission(id_))
+    return api.get_job_submission(id_)
 
 
 @main.command("update-job-submission")
 @click.option("--id", "-i", "id_", help="The id of job submission to update")
 @click.pass_context
-@command_logger
+@jobbergate_command_wrapper
 def update_job_submission(ctx, id_):
     """
     UPDATE a Job Submission.
     """
     api = ctx.obj["api"]
-    dump(api.update_job_submission(id_))
+    return api.update_job_submission(id_)
 
 
 @main.command("delete-job-submission")
 @click.option("--id", "-i", "id_", help="The id of job submission to delete")
 @click.pass_context
-@command_logger
+@jobbergate_command_wrapper
 def delete_job_submission(ctx, id_):
     """
     DELETE a Job Submission.
     """
     api = ctx.obj["api"]
-    dump(api.delete_job_submission(id_))
+    return api.delete_job_submission(id_)
 
 
 @main.command("upload-logs")
 @click.pass_context
-@command_logger
+@jobbergate_command_wrapper
 def upload_logs(ctx):
     """
     Uploads user logs to S3 for analysis. Should only be used after an incident that was
@@ -700,12 +754,12 @@ def upload_logs(ctx):
         logger.debug(f"Uploading {tarball_name} to S3")
         s3_client.upload_file(str(tarball_path), JOBBERGATE_S3_LOG_BUCKET, tarball_name)
 
-    logger.info("Upload complete. Please notify Jobbergate support team.")
+    return "Upload complete. Please notify Omnivector <info@omnivector.solution>."
 
 
 @main.command("logout")
 @click.pass_context
-@command_logger
+@jobbergate_command_wrapper
 def logout(ctx):
     """
     Logs out of the jobbergate-cli. Clears the saved user credentials.
