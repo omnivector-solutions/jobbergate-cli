@@ -124,6 +124,8 @@ def jobbergate_command_wrapper(func):
             result = func(ctx, *args, **kwargs)
             if result:
                 print(result)
+
+            logger.debug(f"Finished command '{ctx.command.name}'")
             return result
 
         except Exception as err:
@@ -164,11 +166,10 @@ def jobbergate_command_wrapper(func):
 
                     If the problem persists, please contact Omnivector <info@omnivector.solutions> for support.
                     """
-                ).strip()
+                ).strip(),
+                file=sys.stderr,
             )
-
-        finally:
-            logger.debug(f"Finished command '{ctx.command.name}'")
+            sys.exit(1)
 
     return wrapper
 
@@ -366,6 +367,7 @@ def list_applications(ctx, all=False, user=False):
     """
     LIST the available applications.
     """
+    raise Exception("POOF!")
     api = ctx.obj["api"]
     return api.list_applications(all, user)
 
