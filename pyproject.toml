@@ -8,7 +8,7 @@ packages = [ { include = "jobbergate_cli" } ]
 
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.6.2"
 click = "^8.0.1"
 inquirer = "^2.7.0"
 PyJWT = "<2"
@@ -27,8 +27,6 @@ pytest-freezegun = "^0.4.2"
 pytest-responsemock = "^1.0.1"
 flake8 = "^3.9.2"
 isort = "^5.9.3"
-ipython = "^7.28.0"
-sphinx-view = "^0.3.1"
 pytest-env = "^0.6.2"
 
 [tool.pytest.ini_options]
