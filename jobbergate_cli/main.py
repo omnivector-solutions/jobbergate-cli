@@ -767,7 +767,7 @@ def upload_logs(ctx):
         logger.debug(f"Uploading {tarball_name} to S3")
         s3_client.upload_file(str(tarball_path), JOBBERGATE_S3_LOG_BUCKET, tarball_name)
 
-    return "Upload complete. Please notify Omnivector <info@omnivector.solution>."
+    return "Upload complete. Please notify Omnivector <info@omnivector.solutions>."
 
 
 @main.command("logout")
