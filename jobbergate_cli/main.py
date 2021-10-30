@@ -112,14 +112,12 @@ def jobbergate_command_wrapper(func):
     @functools.wraps(func)
     def wrapper(ctx, *args, **kwargs):
         try:
-            main_message = f"Handling command '{ctx.command.name}'"
+            message = f"Handling command '{ctx.command.name}'"
             if ctx.params:
-                main_message += " with params:"
-            logger.debug(
-                "\n  ".join(
-                    [main_message, *[f"{k}={v}" for (k, v) in ctx.params.items()]]
-                )
-            )
+                message += " with params:"
+                for (key, value) in ctx.params.items():
+                    message += f"\n  {key}={value}"
+            logger.debug(message)
 
             result = func(ctx, *args, **kwargs)
             if result:
