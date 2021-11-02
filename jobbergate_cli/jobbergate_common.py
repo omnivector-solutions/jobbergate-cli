@@ -17,8 +17,8 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 # load these two from the environment, with these defaults.
-JOBBERGATE_CACHE_DIR = os.environ.get(
-    "JOBBERGATE_CACHE_DIR", Path.home() / ".jobbergate"
+JOBBERGATE_CACHE_DIR = Path(
+    os.environ.get("JOBBERGATE_CACHE_DIR", Path.home() / ".local/share/jobbergate")
 )
 JOBBERGATE_API_ENDPOINT = os.environ.get(
     "JOBBERGATE_API_ENDPOINT",
@@ -30,6 +30,10 @@ JOBBERGATE_API_ENDPOINT = os.environ.get(
 JOBBERGATE_DEBUG = ConfigParser.BOOLEAN_STATES.get(
     os.environ.get("JOBBERGATE_DEBUG", "false").lower()
 )
+
+# grab the username and password from the environment if they are set there
+JOBBERGATE_USERNAME = os.environ.get("JOBBERGATE_USERNAME")
+JOBBERGATE_PASSWORD = os.environ.get("JOBBERGATE_PASSWORD")
 
 # the rest of the strings can be derived
 JOBBERGATE_USER_TOKEN_DIR = JOBBERGATE_CACHE_DIR / "token"
@@ -92,3 +96,12 @@ JOBBERGATE_APPLICATION_CONFIG_PATH = (
 )
 
 SENTRY_DSN = os.environ.get("SENTRY_DSN")
+
+JOBBERGATE_LOG_PATH = JOBBERGATE_CACHE_DIR / "logs" / "jobbergate-cli.log"
+
+JOBBERGATE_AWS_ACCESS_KEY_ID = os.environ.get("JOBBERGATE_AWS_ACCESS_KEY_ID")
+JOBBERGATE_AWS_SECRET_ACCESS_KEY = os.environ.get("JOBBERGATE_AWS_SECRET_ACCESS_KEY")
+JOBBERGATE_S3_LOG_BUCKET = os.environ.get(
+    "JOBBERGATE_S3_LOG_BUCKET",
+    "jobbergate-cli-logs",
+)
