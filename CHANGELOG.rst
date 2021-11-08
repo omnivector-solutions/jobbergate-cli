@@ -6,6 +6,9 @@ This file keeps track of all notable changes to jobbergate-cli
 
 Unreleased
 ----------
+
+1.1.1 -- 2021-11-08
+-------------------
 - Removed leftover debug exception to fix ``list-applications`` command
 
 1.1.0 -- 2021-11-05
