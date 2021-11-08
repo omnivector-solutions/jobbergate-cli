@@ -365,7 +365,6 @@ def list_applications(ctx, all=False, user=False):
     """
     LIST the available applications.
     """
-    raise Exception("POOF!")
     api = ctx.obj["api"]
     return api.list_applications(all, user)
 
