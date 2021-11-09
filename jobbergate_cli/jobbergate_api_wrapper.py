@@ -9,7 +9,6 @@ from urllib.parse import urljoin
 
 import inquirer
 import requests
-from tabulate import tabulate
 import yaml
 
 from jobbergate_cli import appform, client
@@ -33,6 +32,7 @@ class JobbergateApi:
         application_config=None,
         api_endpoint=None,
         user_id=None,
+        full_output=False,
     ):
         """Initialize JobbergateAPI."""
 
@@ -43,21 +43,36 @@ class JobbergateApi:
         self.api_endpoint = api_endpoint
         self.user_id = user_id
         # Suppress from list- and create- application:
-        self.application_suppress = [
-            "application_config",
-            "application_file",
-            "created_at",
-            "updated_at",
-            "application_dir_listing",
-            "application_location",
-            "application_dir_listing_acquired",
-        ]
-        self.job_script_suppress = [
-            "created_at",
-            "updated_at",
-            "job_script_data_as_string",
-        ]
-        self.job_submission_suppress = ["created_at", "updated_at"]
+        self.application_suppress = (
+            [
+                "application_config",
+                "application_file",
+                "created_at",
+                "updated_at",
+                "application_dir_listing",
+                "application_location",
+                "application_dir_listing_acquired",
+            ]
+            if not full_output
+            else []
+        )
+        self.job_script_suppress = (
+            [
+                "created_at",
+                "updated_at",
+                "job_script_data_as_string",
+            ]
+            if not full_output
+            else []
+        )
+        self.job_submission_suppress = (
+            [
+                "created_at",
+                "updated_at",
+            ]
+            if not full_output
+            else []
+        )
 
     def tardir(self, path, tar_name, tar_list):
         """
@@ -221,26 +236,6 @@ class JobbergateApi:
         rc = p.returncode
 
         return output.decode("utf-8"), err.decode("utf-8"), rc
-
-    def tabulate_decorator(func):
-        """Decorator to tabulate each response."""
-
-        def wrapper(*args, **kwargs):
-            # getting the returned value
-            response = func(*args, **kwargs)
-            if type(response) == list:
-                tabulate_response = tabulate(
-                    (my_dict for my_dict in response), headers="keys"
-                )
-            elif type(response) == dict:
-                tabulate_response = tabulate(response.items())
-            # error response
-            elif type(response) == str:
-                tabulate_response = response
-
-            return tabulate_response
-
-        return wrapper
 
     def import_jobbergate_application_module(self):
         """Import jobbergate.py for generating questions."""
@@ -425,7 +420,6 @@ class JobbergateApi:
 
         return error_check
 
-    @tabulate_decorator
     def list_job_scripts(self, all):
         """
         LIST Job Scripts.
@@ -453,7 +447,6 @@ class JobbergateApi:
             response = [d for d in response if d["job_script_owner"] == self.user_id]
             return response
 
-    @tabulate_decorator
     def create_job_script(
         self,
         job_script_name,
@@ -617,7 +610,9 @@ class JobbergateApi:
         files = {"upload_file": open(param_filename, "rb")}
 
         # Possibly overwrite script name
-        job_script_name_from_param = param_dict["jobbergate_config"].get("job_script_name")
+        job_script_name_from_param = param_dict["jobbergate_config"].get(
+            "job_script_name"
+        )
         if job_script_name_from_param:
             data["job_script_name"] = job_script_name_from_param
 
@@ -681,7 +676,6 @@ class JobbergateApi:
 
         return response
 
-    @tabulate_decorator
     def get_job_script(self, job_script_id, as_str):
         """
         GET a Job Script.
@@ -717,7 +711,6 @@ class JobbergateApi:
 
             return response
 
-    @tabulate_decorator
     def update_job_script(self, job_script_id, job_script_data_as_string):
         """
         UPDATE a Job Script.
@@ -754,7 +747,6 @@ class JobbergateApi:
 
         return response
 
-    @tabulate_decorator
     def delete_job_script(self, job_script_id):
         """
         DELETE a Job Script.
@@ -777,7 +769,6 @@ class JobbergateApi:
         return response
 
     # Job Submissions
-    @tabulate_decorator
     def list_job_submissions(self, all):
         """
         LIST Job Submissions.
@@ -807,7 +798,6 @@ class JobbergateApi:
             ]
             return response
 
-    @tabulate_decorator
     def create_job_submission(self, job_script_id, render_only, job_submission_name=""):
         """
         CREATE Job Submission.
@@ -896,7 +886,6 @@ class JobbergateApi:
                 return response
         return response
 
-    @tabulate_decorator
     def get_job_submission(self, job_submission_id):
         """
         GET a Job Submission.
@@ -918,7 +907,6 @@ class JobbergateApi:
 
         return response
 
-    @tabulate_decorator
     def update_job_submission(self, job_submission_id):
         """
         UPDATE a Job Submission.
@@ -948,7 +936,6 @@ class JobbergateApi:
         )
         return response
 
-    @tabulate_decorator
     def delete_job_submission(self, job_submission_id):
         """
         Delete a Job Submission.
@@ -971,7 +958,6 @@ class JobbergateApi:
         return response
 
     # Applications
-    @tabulate_decorator
     def list_applications(self, all, user):
         """
         LIST available applications.
@@ -1029,7 +1015,6 @@ class JobbergateApi:
             ]
             return default_applications
 
-    @tabulate_decorator
     def create_application(
         self,
         application_name,
@@ -1104,7 +1089,6 @@ class JobbergateApi:
 
         return response
 
-    @tabulate_decorator
     def get_application(self, application_id, application_identifier):
         """
         GET an Application.
@@ -1140,7 +1124,6 @@ class JobbergateApi:
 
         return response
 
-    @tabulate_decorator
     def update_application(
         self,
         application_id,
@@ -1243,7 +1226,6 @@ class JobbergateApi:
             return response
         return response
 
-    @tabulate_decorator
     def delete_application(self, application_id, application_identifier):
         """
         DELETE an Application.

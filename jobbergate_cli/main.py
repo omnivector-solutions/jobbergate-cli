@@ -2,6 +2,7 @@
 from datetime import datetime
 import functools
 import getpass
+import json
 from pathlib import Path
 import sys
 import tarfile
@@ -14,6 +15,7 @@ import jwt
 from loguru import logger
 import requests
 import sentry_sdk
+from tabulate import tabulate
 
 from jobbergate_cli import client
 from jobbergate_cli.jobbergate_api_wrapper import JobbergateApi
@@ -57,19 +59,6 @@ APPLICATION_IDENTIFIER_EXPLANATION = """
 """
 
 
-class Api(object):
-    def __init__(self, user_id=None):
-        logger.debug("Initializing JobbergateApi")
-        self.api = JobbergateApi(
-            token=JOBBERGATE_API_JWT_PATH.read_text(),
-            job_script_config=JOBBERGATE_JOB_SCRIPT_CONFIG,
-            job_submission_config=JOBBERGATE_JOB_SUBMISSION_CONFIG,
-            application_config=JOBBERGATE_APPLICATION_CONFIG,
-            api_endpoint=JOBBERGATE_API_ENDPOINT,
-            user_id=user_id,
-        )
-
-
 def interactive_get_username_password():
     username = input("Please enter your username: ")
     password = getpass.getpass()
@@ -100,6 +89,26 @@ def init_logs(username=None, verbose=False):
         logger.debug(f"  for user {username}")
 
 
+def tabulate_response(response):
+    """Print a tabulated json response"""
+    if isinstance(response, list):
+        text = tabulate((my_dict for my_dict in response), headers="keys")
+    elif isinstance(response, dict):
+        text = tabulate(response.items())
+    else:
+        text = str(response)
+    print(text)
+
+
+def raw_response(response):
+    """Print a raw, pretty-printed json response"""
+    if isinstance(response, (list, dict)):
+        text = json.dumps(response, indent=2)
+    else:
+        text = str(response)
+    print(text)
+
+
 def jobbergate_command_wrapper(func):
     """Wraps a jobbergate command to include logging, error handling, and user output
 
@@ -121,7 +130,10 @@ def jobbergate_command_wrapper(func):
 
             result = func(ctx, *args, **kwargs)
             if result:
-                print(result)
+                if ctx.obj["raw"]:
+                    raw_response(result)
+                else:
+                    tabulate_response(result)
 
             logger.debug(f"Finished command '{ctx.command.name}'")
             return result
@@ -216,20 +228,6 @@ def decode_token_to_dict(encoded_token):
     return token
 
 
-def init_api(user_id):
-    """Initialize the API for the user's session."""
-    logger.debug("Initializing Jobbergate API.")
-    api = JobbergateApi(
-        token=JOBBERGATE_API_JWT_PATH.read_text(),
-        job_script_config=JOBBERGATE_JOB_SCRIPT_CONFIG,
-        job_submission_config=JOBBERGATE_JOB_SUBMISSION_CONFIG,
-        application_config=JOBBERGATE_APPLICATION_CONFIG,
-        api_endpoint=JOBBERGATE_API_ENDPOINT,
-        user_id=user_id,
-    )
-    return api
-
-
 def init_sentry():
     """Initialize Sentry."""
     logger.debug("Initializing sentry")
@@ -288,10 +286,27 @@ def init_sentry():
     is_flag=True,
     help="Enable verbose logging to the terminal",
 )
+@click.option(
+    "--raw",
+    "-r",
+    is_flag=True,
+    help="Print output as raw json",
+)
+@click.option(
+    "--full",
+    "-f",
+    is_flag=True,
+    help="Print all columns. Must be used with --raw",
+)
 @click.version_option()
 @click.pass_context
-def main(ctx, username, password, verbose):
+def main(ctx, username, password, verbose, raw, full):
     ctx.ensure_object(dict)
+
+    if full and not raw:
+        raise click.ClickException(
+            "--full option must be used with --raw",
+        )
 
     init_cache_dir()
     init_logs(username=username, verbose=verbose)
@@ -331,7 +346,9 @@ def main(ctx, username, password, verbose):
             )
         except Exception as err:
             logger.error(f"Auth Failed for '{username}': {str(err)}")
-            raise click.ClickException(f"Failed to login with '{username}'. Please try again.")
+            raise click.ClickException(
+                f"Failed to login with '{username}'. Please try again."
+            )
 
     logger.debug("Decoding auth token")
     ctx.obj["token"] = decode_token_to_dict(JOBBERGATE_API_JWT_PATH.read_text())
@@ -345,7 +362,9 @@ def main(ctx, username, password, verbose):
         application_config=JOBBERGATE_APPLICATION_CONFIG,
         api_endpoint=JOBBERGATE_API_ENDPOINT,
         user_id=user_id,
+        full_output=full,
     )
+    ctx.obj["raw"] = raw
 
 
 @main.command("list-applications")
@@ -463,7 +482,9 @@ def update_application(
     UPDATE an Application.
     """
     api = ctx.obj["api"]
-    return api.update_application(id_, identifier, application_path, update_identifier, application_desc)
+    return api.update_application(
+        id_, identifier, application_path, update_identifier, application_desc
+    )
 
 
 @main.command("delete-application")
@@ -695,7 +716,9 @@ def create_job_submission(
     CREATE Job Submission.
     """
     api = ctx.obj["api"]
-    return api.create_job_submission(job_script_id=job_script_id, job_submission_name=name, render_only=dry_run)
+    return api.create_job_submission(
+        job_script_id=job_script_id, job_submission_name=name, render_only=dry_run
+    )
 
 
 @main.command("get-job-submission")
