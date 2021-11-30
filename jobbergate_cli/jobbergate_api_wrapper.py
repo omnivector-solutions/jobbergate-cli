@@ -435,7 +435,7 @@ class JobbergateApi:
         response = self.jobbergate_request(
             method="GET",
             endpoint=urljoin(self.api_endpoint, "/job-script/"),
-            params=params
+            params=params,
         )
 
         try:
@@ -988,7 +988,7 @@ class JobbergateApi:
                 reverse=True,
             )
         except Exception:
-            return results
+            return response
 
     def create_application(
         self,
