@@ -6,6 +6,9 @@ This file keeps track of all notable changes to jobbergate-cli
 
 Unreleased
 ----------
+
+1.2.0 -- 2021-12-06
+-------------------
 - Added server-side filtering for list-* sub-commands
 
 1.1.1 -- 2021-11-08
