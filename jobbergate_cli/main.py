@@ -59,9 +59,11 @@ APPLICATION_IDENTIFIER_EXPLANATION = """
 """
 
 
-def interactive_get_username_password():
-    username = input("Please enter your username: ")
-    password = getpass.getpass()
+def interactive_get_username_password(username, password):
+    if not username:
+        username = input("Please enter your username: ")
+    if not password:
+        password = getpass.getpass()
     return username, password
 
 
@@ -74,7 +76,7 @@ def init_cache_dir():
 
 def init_logs(username=None, verbose=False):
     """
-    Initialize the rotatating file log handler. Logs will be retained for 1 week.
+    Initialize the rotating file log handler. Logs will be retained for 1 week.
     """
     # Remove default stderr handler at level INFO
     logger.remove()
@@ -329,7 +331,7 @@ def main(ctx, username, password, verbose, raw, full):
             ctx.obj["password"] = password
         else:
             logger.debug("Getting credentials from interactive prompt")
-            username, password = interactive_get_username_password()
+            username, password = interactive_get_username_password(username, password)
             logger.debug(f"Logging in with interactive credentials for {username}")
             ctx.obj["username"] = username
             ctx.obj["password"] = password
