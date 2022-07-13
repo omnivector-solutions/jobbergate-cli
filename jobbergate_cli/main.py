@@ -54,8 +54,14 @@ APPLICATION_IDENTIFIER_EXPLANATION = """
 
     The identifier allows the user to access commonly used applications with a
     friendly name that is easy to remember. Identifiers should only be used
-    for applicaitons that are frequently used or should be easy to find in the list.
+    for applications that are frequently used or should be easy to find in the list.
     An identifier may be added, removed, or changed on an existing application.
+"""
+
+UPDATE_IDENTIFIER_EXPLANATION = """
+
+    Please, notice this option has priority when specified, and disables the
+    options --application-path and --application-desc.
 """
 
 
@@ -74,7 +80,7 @@ def init_cache_dir():
 
 def init_logs(username=None, verbose=False):
     """
-    Initialize the rotatating file log handler. Logs will be retained for 1 week.
+    Initialize the rotating file log handler. Logs will be retained for 1 week.
     """
     # Remove default stderr handler at level INFO
     logger.remove()
@@ -462,7 +468,10 @@ def get_application(ctx, id_, identifier):
     "-a",
     help="The path to the directory for updated application files",
 )
-@click.option("--update-identifier", help="The application identifier to be set")
+@click.option(
+    "--update-identifier",
+    help=f"The application identifier to be set. {UPDATE_IDENTIFIER_EXPLANATION}",
+)
 @click.option(
     "--application-desc",
     default="",
