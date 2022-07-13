@@ -1167,6 +1167,7 @@ class JobbergateApi:
                     f"/application/?identifier={application_identifier}",
                 ),
             )
+            application_id = data["id"]
 
         if "error" in data.keys():
             return data
