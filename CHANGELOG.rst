@@ -6,6 +6,10 @@ This file keeps track of all notable changes to jobbergate-cli
 
 Unreleased
 ----------
+* Fixed requiring input for both username and password when one of them was already provided.
+* Fixed the descripition for the option --update-identifier for update-application.
+* Fixed application_id was not recovered at update-application when the user selected the application by its identifier.
+* Fixed application_file and application_config, because the columns were not updated in the back-end when updating the application.
 
 1.2.0 -- 2021-12-06
 -------------------
