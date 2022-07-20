@@ -484,7 +484,7 @@ class JobbergateApi:
 
         if not application_id and not application_identifier:
             response = self.error_handle(
-                error="--application-id and --aplication-identifier for the job script not defined",
+                error="--application-id and --application-identifier for the job script not defined",
                 solution="Please try again with one of them specified",
             )
             parameter_check.append(response)
@@ -1167,6 +1167,7 @@ class JobbergateApi:
                     f"/application/?identifier={application_identifier}",
                 ),
             )
+            application_id = data["id"]
 
         if "error" in data.keys():
             return data
@@ -1176,6 +1177,18 @@ class JobbergateApi:
         del data["updated_at"]
         if application_desc:
             data["application_description"] = application_desc
+
+        try:
+            with open(os.path.join(application_path, "jobbergate.py"), "r") as f:
+                data["application_file"] = f.read()
+            with open(os.path.join(application_path, "jobbergate.yaml"), "r") as f:
+                data["application_config"] = f.read()
+        except IOError:
+            response = self.error_handle(
+                error="Files jobbergate.py or jobbergate.yaml not found",
+                solution="Please verify if the files exist on the application path",
+            )
+            return response
 
         tar_list = [application_path, os.path.join(application_path, "templates")]
         self.tardir(application_path, TAR_NAME, tar_list)
