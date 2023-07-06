@@ -6,6 +6,7 @@ This file keeps track of all notable changes to jobbergate-cli
 
 Unreleased
 ----------
+* Improved error handling on login
 * Fixed requiring input for both username and password when one of them was already provided.
 * Fixed the descripition for the option --update-identifier for update-application.
 * Fixed application_id was not recovered at update-application when the user selected the application by its identifier.

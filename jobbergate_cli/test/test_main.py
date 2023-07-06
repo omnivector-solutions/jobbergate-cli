@@ -5,7 +5,8 @@ import json
 import pathlib
 from unittest.mock import create_autospec, patch
 
-from pytest import fixture, mark
+from pytest import fixture, mark, raises
+from requests import HTTPError
 
 from jobbergate_cli import main
 
@@ -98,3 +99,27 @@ def test_init_token(
     with token_responder:
         main.init_token("unittests@omnivector.solutions", "unit tests")
         assert bool(main.is_token_valid()) == is_valid
+
+
+def test_init_token__bad_response(response_mock):
+    bad_response = response_mock(
+        """
+        POST https://jobbergate-api-staging.omnivector.solutions/api-token-auth/
+
+        -> 400 : Unable to log in with provided credentials
+        """
+    )
+    with bad_response, raises(HTTPError):
+        main.init_token("unittests@omnivector.solutions", "unit tests")
+
+
+def test_init_token__no_token(response_mock):
+    bad_response = response_mock(
+        """
+        POST https://jobbergate-api-staging.omnivector.solutions/api-token-auth/
+
+        -> 200 : {}
+        """
+    )
+    with bad_response, raises(ValueError, match="No token found in response"):
+        main.init_token("unittests@omnivector.solutions", "unit tests")

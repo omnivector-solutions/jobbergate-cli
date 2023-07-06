@@ -132,7 +132,7 @@ def jobbergate_command_wrapper(func):
             message = f"Handling command '{ctx.command.name}'"
             if ctx.params:
                 message += " with params:"
-                for (key, value) in ctx.params.items():
+                for key, value in ctx.params.items():
                     message += f"\n  {key}={value}"
             logger.debug(message)
 
@@ -199,9 +199,15 @@ def init_token(username, password):
         JOBBERGATE_API_OBTAIN_TOKEN_ENDPOINT,
         data={"email": username, "password": password},
     )
+    if not resp.ok:
+        logger.error(f"Failed to retrieve a token, got response: {resp.text}")
+        resp.raise_for_status()
+
     data = resp.json()
-    ret = data.get("token")
-    JOBBERGATE_API_JWT_PATH.write_text(ret)
+    token = data.get("token")
+    if not token:
+        raise ValueError("No token found in response")
+    JOBBERGATE_API_JWT_PATH.write_text(token)
 
 
 def is_token_valid():
