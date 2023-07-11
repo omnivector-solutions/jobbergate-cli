@@ -6,6 +6,9 @@ This file keeps track of all notable changes to jobbergate-cli
 
 Unreleased
 ----------
+
+1.2.1a0 -- 2023-07-11
+---------------------
 * Improved error handling on login
 * Fixed requiring input for both username and password when one of them was already provided.
 * Fixed the descripition for the option --update-identifier for update-application.
