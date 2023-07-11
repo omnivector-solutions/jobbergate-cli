@@ -5,14 +5,19 @@ on: pull_request
 jobs:
   test:
     name: "Check quality"
-    runs-on: "ubuntu-latest"
+    runs-on: "ubuntu-20.04"
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - name: Install poetry
+        run: pipx install poetry==1.4.2
+      - uses: actions/setup-python@v4
         with:
-          python-version: 3.8
-          architecture: 'x64'
-      - uses: Gr1N/setup-poetry@v7
+          python-version: "3.6"
+          architecture: "x64"
+          cache: "poetry"
+          cache-dependency-path: |
+            poetry.lock
+            pyproject.toml
       - name: "Run Tests"
         run: |
           make qa
