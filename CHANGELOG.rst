@@ -6,6 +6,7 @@ This file keeps track of all notable changes to jobbergate-cli
 
 Unreleased
 ----------
+* Added deprecation warning for jobbergate command
 
 1.2.1a0 -- 2023-07-11
 ---------------------

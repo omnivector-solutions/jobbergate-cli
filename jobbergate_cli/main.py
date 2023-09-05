@@ -325,6 +325,12 @@ def main(ctx, username, password, verbose, raw, full):
     init_cache_dir()
     init_logs(username=username, verbose=verbose)
 
+    logger.warning(
+        "Deprecation Warning: Please consider migrating to new 'jobbergate', "
+        "since 'jobbergate-legacy' is planned to be decommissioned by week 7-2024.\n"
+        "Refer to https://github.com/omnivector-solutions/jobbergate to check out the new version."
+    )
+
     if SENTRY_DSN:
         logger.debug(f"Initializing Sentry with {SENTRY_DSN}")
         init_sentry()
