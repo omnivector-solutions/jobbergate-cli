@@ -52,6 +52,7 @@ profile = "black"
 
 [tool.poetry.scripts]
 jobbergate = "jobbergate_cli.main:main"
+jobbergate-legacy = "jobbergate_cli.main:main"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
