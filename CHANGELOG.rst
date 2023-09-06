@@ -4,17 +4,14 @@
 
 This file keeps track of all notable changes to jobbergate-cli
 
-Unreleased
-----------
-* Added deprecation warning for jobbergate command
-
-1.2.1a0 -- 2023-07-11
----------------------
+1.2.1 -- 2023-09-06
+-------------------
 * Improved error handling on login
 * Fixed requiring input for both username and password when one of them was already provided.
 * Fixed the descripition for the option --update-identifier for update-application.
 * Fixed application_id was not recovered at update-application when the user selected the application by its identifier.
 * Fixed application_file and application_config, because the columns were not updated in the back-end when updating the application.
+* Added deprecation warning for jobbergate command.
 
 1.2.0 -- 2021-12-06
 -------------------
