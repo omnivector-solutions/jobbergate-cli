@@ -156,6 +156,7 @@ def jobbergate_command_wrapper(func):
                 ),
             )
             logger.error(message)
+            logger.exception(err)
 
             # This allows us to capture exceptions here and still report them to sentry
             if SENTRY_DSN:
