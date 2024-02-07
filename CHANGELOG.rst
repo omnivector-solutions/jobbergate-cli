@@ -6,6 +6,7 @@ This file keeps track of all notable changes to jobbergate-cli
 
 Unreleased
 ----------
+* Added error traceback to the logs to help with debugging [ASP-4625]
 * Improved error handling on login
 * Fixed requiring input for both username and password when one of them was already provided.
 * Fixed the descripition for the option --update-identifier for update-application.
