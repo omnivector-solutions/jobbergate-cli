@@ -6,6 +6,9 @@ This file keeps track of all notable changes to jobbergate-cli
 
 Unreleased
 ----------
+
+1.2.2 -- 2024-02-07
+-------------------
 * Added error traceback to the logs to help with debugging [ASP-4625]
 
 1.2.1 -- 2023-09-06
